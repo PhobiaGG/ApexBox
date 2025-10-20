@@ -38,7 +38,7 @@ export default function SessionDetailScreen() {
         date: date as string,
         fileName: fileName as string,
         time: (fileName as string).replace('.csv', ''),
-        filePath: `${LogService['logsDir']}${date}/${fileName}`,
+        filePath: '',
       };
 
       const data = await LogService.getSessionData(sessionMeta);

@@ -38,23 +38,23 @@ export default function ChartView({ data, title, color, yLabel }: ChartViewProps
         padding={{ top: 20, bottom: 40, left: 50, right: 20 }}
       >
         <VictoryAxis
+          label="Time (s)"
           style={{
             axis: { stroke: COLORS.border },
             tickLabels: { fill: COLORS.textSecondary, fontSize: 10 },
             grid: { stroke: COLORS.border, strokeDasharray: '4' },
             axisLabel: { fill: COLORS.textSecondary, fontSize: 12, padding: 30 },
           }}
-          label="Time (s)"
         />
         <VictoryAxis
           dependentAxis
+          label={yLabel}
           style={{
             axis: { stroke: COLORS.border },
             tickLabels: { fill: COLORS.textSecondary, fontSize: 10 },
             grid: { stroke: COLORS.border, strokeDasharray: '4' },
             axisLabel: { fill: COLORS.textSecondary, fontSize: 12, padding: 35 },
           }}
-          label={yLabel}
         />
         <VictoryLine
           data={data}

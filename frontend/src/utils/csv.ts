@@ -1,0 +1,83 @@
+export interface TelemetrySample {
+  timestamp_ms: number;
+  speed: number;
+  g_force: number;
+  temp: number;
+  humidity: number;
+  lux: number;
+  altitude: number;
+}
+
+export interface SessionStats {
+  peakSpeed: number;
+  avgSpeed: number;
+  peakG: number;
+  avgG: number;
+  minTemp: number;
+  maxTemp: number;
+  minAltitude: number;
+  maxAltitude: number;
+  duration: number;
+  sampleCount: number;
+}
+
+export function parseCSV(csvContent: string): TelemetrySample[] {
+  const lines = csvContent.trim().split('\n');
+  if (lines.length < 2) return [];
+
+  const samples: TelemetrySample[] = [];
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (!line) continue;
+
+    const values = line.split(',');
+    if (values.length < 7) continue;
+
+    samples.push({
+      timestamp_ms: parseFloat(values[0]),
+      speed: parseFloat(values[1]),
+      g_force: parseFloat(values[2]),
+      temp: parseFloat(values[3]),
+      humidity: parseFloat(values[4]),
+      lux: parseFloat(values[5]),
+      altitude: parseFloat(values[6]),
+    });
+  }
+
+  return samples;
+}
+
+export function calculateStats(samples: TelemetrySample[]): SessionStats {
+  if (samples.length === 0) {
+    return {
+      peakSpeed: 0,
+      avgSpeed: 0,
+      peakG: 0,
+      avgG: 0,
+      minTemp: 0,
+      maxTemp: 0,
+      minAltitude: 0,
+      maxAltitude: 0,
+      duration: 0,
+      sampleCount: 0,
+    };
+  }
+
+  const speeds = samples.map(s => s.speed);
+  const gForces = samples.map(s => s.g_force);
+  const temps = samples.map(s => s.temp);
+  const altitudes = samples.map(s => s.altitude);
+
+  return {
+    peakSpeed: Math.max(...speeds),
+    avgSpeed: speeds.reduce((a, b) => a + b, 0) / speeds.length,
+    peakG: Math.max(...gForces),
+    avgG: gForces.reduce((a, b) => a + b, 0) / gForces.length,
+    minTemp: Math.min(...temps),
+    maxTemp: Math.max(...temps),
+    minAltitude: Math.min(...altitudes),
+    maxAltitude: Math.max(...altitudes),
+    duration: samples[samples.length - 1].timestamp_ms / 1000,
+    sampleCount: samples.length,
+  };
+}

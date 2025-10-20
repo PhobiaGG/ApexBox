@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, Dimensions } from 'react-native';
 import { COLORS, SPACING, FONT_SIZE } from '../constants/theme';
-import { VictoryChart, VictoryLine, VictoryAxis, VictoryTheme } from 'victory-native';
+import { VictoryChart, VictoryLine, VictoryAxis } from 'victory-native';
 
 interface ChartData {
   x: number;
@@ -35,7 +35,6 @@ export default function ChartView({ data, title, color, yLabel }: ChartViewProps
       <VictoryChart
         width={screenWidth - 40}
         height={220}
-        theme={VictoryTheme.material}
         padding={{ top: 20, bottom: 40, left: 50, right: 20 }}
       >
         <VictoryAxis
@@ -43,11 +42,9 @@ export default function ChartView({ data, title, color, yLabel }: ChartViewProps
             axis: { stroke: COLORS.border },
             tickLabels: { fill: COLORS.textSecondary, fontSize: 10 },
             grid: { stroke: COLORS.border, strokeDasharray: '4' },
-          }}
-          label="Time (s)"
-          style={{
             axisLabel: { fill: COLORS.textSecondary, fontSize: 12, padding: 30 },
           }}
+          label="Time (s)"
         />
         <VictoryAxis
           dependentAxis
@@ -55,11 +52,9 @@ export default function ChartView({ data, title, color, yLabel }: ChartViewProps
             axis: { stroke: COLORS.border },
             tickLabels: { fill: COLORS.textSecondary, fontSize: 10 },
             grid: { stroke: COLORS.border, strokeDasharray: '4' },
-          }}
-          label={yLabel}
-          style={{
             axisLabel: { fill: COLORS.textSecondary, fontSize: 12, padding: 35 },
           }}
+          label={yLabel}
         />
         <VictoryLine
           data={data}

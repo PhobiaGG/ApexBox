@@ -149,52 +149,38 @@ class LogService {
 
   async getSessionsByDate(): Promise<Record<string, SessionMetadata[]>> {
     try {
+      console.log('[LogService] Getting sessions...');
+      
+      // Use mock sessions for now
       const cached = await AsyncStorage.getItem('sessions_cache');
       if (cached) {
         console.log('[LogService] Using cached sessions');
         return JSON.parse(cached);
       }
 
-      console.log('[LogService] Scanning logs directory:', this.logsDir);
-      
-      // Check if directory exists, if not return empty
-      const dirInfo = await FileSystem.getInfoAsync(this.logsDir);
-      if (!dirInfo.exists) {
-        console.log('[LogService] Logs directory does not exist');
-        return {};
-      }
-
-      const dateFolders = await FileSystem.readDirectoryAsync(this.logsDir);
-      console.log('[LogService] Found date folders:', dateFolders);
-
-      const sessionsByDate: Record<string, SessionMetadata[]> = {};
-
-      for (const dateFolder of dateFolders) {
-        const datePath = this.logsDir + dateFolder + '/';
-        const files = await FileSystem.readDirectoryAsync(datePath);
-        
-        sessionsByDate[dateFolder] = files
-          .filter(f => f.endsWith('.csv'))
-          .map(file => ({
-            date: dateFolder,
-            time: file.replace('.csv', ''),
-            fileName: file,
-            filePath: datePath + file,
-          }));
-      }
-
-      await AsyncStorage.setItem('sessions_cache', JSON.stringify(sessionsByDate));
-      return sessionsByDate;
+      // Return mock sessions
+      console.log('[LogService] Using mock sessions');
+      await AsyncStorage.setItem('sessions_cache', JSON.stringify(MOCK_SESSIONS));
+      return MOCK_SESSIONS;
     } catch (error) {
       console.error('[LogService] Error reading sessions:', error);
-      return {};
+      return MOCK_SESSIONS;
     }
   }
 
   async getSessionData(session: SessionMetadata): Promise<TelemetrySample[]> {
     try {
-      console.log('[LogService] Reading session file:', session.filePath);
-      const content = await FileSystem.readAsStringAsync(session.filePath);
+      console.log('[LogService] Reading session:', session.date, session.fileName);
+      
+      // Use mock CSV data
+      const csvKey = `${session.date}/${session.fileName}`;
+      const content = MOCK_CSV_DATA[csvKey];
+      
+      if (!content) {
+        console.error('[LogService] Mock data not found for:', csvKey);
+        return [];
+      }
+      
       return parseCSV(content);
     } catch (error) {
       console.error('[LogService] Error reading session data:', error);

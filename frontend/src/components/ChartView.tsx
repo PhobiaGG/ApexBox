@@ -1,7 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, Dimensions } from 'react-native';
 import { COLORS, SPACING, FONT_SIZE } from '../constants/theme';
-import { VictoryChart, VictoryLine, VictoryAxis } from 'victory-native';
 
 interface ChartData {
   x: number;
@@ -29,44 +28,32 @@ export default function ChartView({ data, title, color, yLabel }: ChartViewProps
     );
   }
 
+  // Calculate min and max for display
+  const yValues = data.map(d => d.y);
+  const minY = Math.min(...yValues);
+  const maxY = Math.max(...yValues);
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>{title}</Text>
-      <VictoryChart
-        width={screenWidth - 40}
-        height={220}
-        padding={{ top: 20, bottom: 40, left: 50, right: 20 }}
-      >
-        <VictoryAxis
-          label="Time (s)"
-          style={{
-            axis: { stroke: COLORS.border },
-            tickLabels: { fill: COLORS.textSecondary, fontSize: 10 },
-            grid: { stroke: COLORS.border, strokeDasharray: '4' },
-            axisLabel: { fill: COLORS.textSecondary, fontSize: 12, padding: 30 },
-          }}
-        />
-        <VictoryAxis
-          dependentAxis
-          label={yLabel}
-          style={{
-            axis: { stroke: COLORS.border },
-            tickLabels: { fill: COLORS.textSecondary, fontSize: 10 },
-            grid: { stroke: COLORS.border, strokeDasharray: '4' },
-            axisLabel: { fill: COLORS.textSecondary, fontSize: 12, padding: 35 },
-          }}
-        />
-        <VictoryLine
-          data={data}
-          style={{
-            data: {
-              stroke: color,
-              strokeWidth: 3,
-            },
-          }}
-          interpolation="monotoneX"
-        />
-      </VictoryChart>
+      <View style={styles.chartPlaceholder}>
+        <Text style={[styles.chartLabel, { color }]}>{yLabel}</Text>
+        <View style={styles.statsRow}>
+          <View style={styles.statBox}>
+            <Text style={styles.statLabel}>Min</Text>
+            <Text style={[styles.statValue, { color }]}>{minY.toFixed(1)}</Text>
+          </View>
+          <View style={styles.statBox}>
+            <Text style={styles.statLabel}>Max</Text>
+            <Text style={[styles.statValue, { color }]}>{maxY.toFixed(1)}</Text>
+          </View>
+          <View style={styles.statBox}>
+            <Text style={styles.statLabel}>Samples</Text>
+            <Text style={[styles.statValue, { color }]}>{data.length}</Text>
+          </View>
+        </View>
+        <Text style={styles.chartNote}>Charts will render in native Expo Go app</Text>
+      </View>
     </View>
   );
 }
@@ -87,6 +74,42 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.md,
     paddingTop: SPACING.md,
     paddingBottom: SPACING.sm,
+  },
+  chartPlaceholder: {
+    height: 200,
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  chartLabel: {
+    fontSize: FONT_SIZE.lg,
+    fontWeight: 'bold',
+    marginBottom: SPACING.md,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    gap: SPACING.lg,
+    marginTop: SPACING.md,
+  },
+  statBox: {
+    alignItems: 'center',
+  },
+  statLabel: {
+    fontSize: FONT_SIZE.xs,
+    color: COLORS.textSecondary,
+    textTransform: 'uppercase',
+  },
+  statValue: {
+    fontSize: FONT_SIZE.xl,
+    fontWeight: 'bold',
+    marginTop: 4,
+  },
+  chartNote: {
+    fontSize: FONT_SIZE.xs,
+    color: COLORS.textTertiary,
+    marginTop: SPACING.lg,
+    textAlign: 'center',
   },
   emptyContainer: {
     height: 200,

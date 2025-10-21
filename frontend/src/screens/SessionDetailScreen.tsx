@@ -69,13 +69,45 @@ export default function SessionDetailScreen() {
 
   const handleExport = async () => {
     try {
-      Alert.alert(
-        'Export Session',
-        'CSV export feature is ready. In production, this would share the session file.',
-        [{ text: 'OK' }]
-      );
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      setShowShareModal(true);
     } catch (error) {
-      Alert.alert('Error', 'Failed to export session');
+      Alert.alert('Error', 'Failed to prepare share card');
+    }
+  };
+
+  const handleShareSession = async () => {
+    try {
+      setIsGeneratingShare(true);
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
+      // Wait a bit for the modal to render
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // Capture the share card as an image
+      const uri = await captureRef(shareCardRef, {
+        format: 'png',
+        quality: 1,
+      });
+
+      // Share the image
+      const canShare = await Sharing.isAvailableAsync();
+      if (canShare) {
+        await Sharing.shareAsync(uri, {
+          mimeType: 'image/png',
+          dialogTitle: 'Share Session',
+        });
+        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      } else {
+        Alert.alert('Sharing Not Available', 'Sharing is not available on this device');
+      }
+
+      setShowShareModal(false);
+    } catch (error) {
+      console.error('Error sharing session:', error);
+      Alert.alert('Error', 'Failed to share session');
+    } finally {
+      setIsGeneratingShare(false);
     }
   };
 

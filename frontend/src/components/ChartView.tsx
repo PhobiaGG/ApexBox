@@ -1,8 +1,22 @@
 import React from 'react';
-import { View, Text, StyleSheet, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, Dimensions, Platform } from 'react-native';
 import { COLORS, SPACING, FONT_SIZE } from '../constants/theme';
-import { CartesianChart, Line, useChartPressState } from 'victory-native';
-import { Circle, useFont } from '@shopify/react-native-skia';
+
+// Only import Victory-native on native platforms
+let CartesianChart: any, Line: any, useChartPressState: any, Circle: any;
+
+if (Platform.OS !== 'web') {
+  try {
+    const victory = require('victory-native');
+    const skia = require('@shopify/react-native-skia');
+    CartesianChart = victory.CartesianChart;
+    Line = victory.Line;
+    useChartPressState = victory.useChartPressState;
+    Circle = skia.Circle;
+  } catch (e) {
+    console.log('[ChartView] Victory-native not available');
+  }
+}
 
 interface ChartData {
   x: number;
@@ -18,8 +32,72 @@ interface ChartViewProps {
 
 const screenWidth = Dimensions.get('window').width;
 
+// Simple SVG-like chart fallback for web
+function WebChart({ data, color }: { data: ChartData[]; color: string }) {
+  if (data.length === 0) return null;
+
+  const yValues = data.map(d => d.y);
+  const minY = Math.min(...yValues);
+  const maxY = Math.max(...yValues);
+  const rangeY = maxY - minY || 1;
+
+  const chartWidth = screenWidth - SPACING.lg * 4;
+  const chartHeight = 180;
+
+  // Create simple line path
+  const points = data.map((d, i) => {
+    const x = (i / (data.length - 1)) * chartWidth;
+    const y = chartHeight - ((d.y - minY) / rangeY) * chartHeight;
+    return { x, y };
+  });
+
+  return (
+    <View style={[styles.webChartContainer, { height: chartHeight }]}>
+      {/* Grid lines */}
+      {[0, 0.25, 0.5, 0.75, 1].map((pct, i) => (
+        <View
+          key={i}
+          style={[
+            styles.gridLine,
+            { top: pct * chartHeight, opacity: pct === 0 || pct === 1 ? 0.3 : 0.1 },
+          ]}
+        />
+      ))}
+
+      {/* Data line */}
+      <View style={styles.lineContainer}>
+        {points.map((point, i) => {
+          if (i === 0) return null;
+          const prev = points[i - 1];
+          const length = Math.sqrt(Math.pow(point.x - prev.x, 2) + Math.pow(point.y - prev.y, 2));
+          const angle = Math.atan2(point.y - prev.y, point.x - prev.x) * (180 / Math.PI);
+
+          return (
+            <View
+              key={i}
+              style={[
+                styles.lineSegment,
+                {
+                  left: prev.x,
+                  top: prev.y,
+                  width: length,
+                  backgroundColor: color,
+                  transform: [{ rotate: `${angle}deg` }],
+                },
+              ]}
+            />
+          );
+        })}
+      </View>
+    </View>
+  );
+}
+
 export default function ChartView({ data, title, color, yLabel }: ChartViewProps) {
-  const { state, isActive } = useChartPressState({ x: 0, y: { y: 0 } });
+  // Use native chart press state only on native
+  const nativeState = Platform.OS !== 'web' && useChartPressState ? useChartPressState({ x: 0, y: { y: 0 } }) : null;
+  const state = nativeState?.state;
+  const isActive = nativeState?.isActive || false;
 
   if (!data || data.length === 0) {
     return (
@@ -42,8 +120,8 @@ export default function ChartView({ data, title, color, yLabel }: ChartViewProps
     <View style={styles.container}>
       <Text style={styles.title}>{title}</Text>
       
-      {/* Interactive value display */}
-      {isActive && (
+      {/* Interactive value display (native only) */}
+      {isActive && state && (
         <View style={styles.activeValue}>
           <Text style={[styles.activeValueText, { color }]}>
             {state.y.y.value.toFixed(2)}
@@ -53,34 +131,40 @@ export default function ChartView({ data, title, color, yLabel }: ChartViewProps
       )}
 
       <View style={styles.chartContainer}>
-        <CartesianChart
-          data={data}
-          xKey="x"
-          yKeys={["y"]}
-          domainPadding={{ left: 20, right: 20, top: 20, bottom: 20 }}
-          chartPressState={state}
-        >
-          {({ points, chartBounds }) => (
-            <>
-              <Line
-                points={points.y}
-                color={color}
-                strokeWidth={2.5}
-                curveType="natural"
-                animate={{ type: "timing", duration: 300 }}
-              />
-              {isActive && (
-                <Circle
-                  cx={state.x.position}
-                  cy={state.y.y.position}
-                  r={6}
+        {Platform.OS === 'web' ? (
+          <WebChart data={data} color={color} />
+        ) : CartesianChart ? (
+          <CartesianChart
+            data={data}
+            xKey="x"
+            yKeys={["y"]}
+            domainPadding={{ left: 20, right: 20, top: 20, bottom: 20 }}
+            chartPressState={state}
+          >
+            {({ points, chartBounds }: any) => (
+              <>
+                <Line
+                  points={points.y}
                   color={color}
-                  opacity={0.8}
+                  strokeWidth={2.5}
+                  curveType="natural"
+                  animate={{ type: "timing", duration: 300 }}
                 />
-              )}
-            </>
-          )}
-        </CartesianChart>
+                {isActive && state && Circle && (
+                  <Circle
+                    cx={state.x.position}
+                    cy={state.y.y.position}
+                    r={6}
+                    color={color}
+                    opacity={0.8}
+                  />
+                )}
+              </>
+            )}
+          </CartesianChart>
+        ) : (
+          <WebChart data={data} color={color} />
+        )}
       </View>
 
       {/* Stats Row */}

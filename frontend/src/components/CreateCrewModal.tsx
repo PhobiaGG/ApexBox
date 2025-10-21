@@ -338,6 +338,8 @@ const styles = StyleSheet.create({
   },
   cancelButton: {
     borderWidth: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   createButton: {},
   buttonGradient: {

@@ -117,6 +117,7 @@ export default function AddCarModal({ visible, onClose, onSave, accentColor, edi
     setModel('');
     setYear('');
     setColor('');
+    setUpgrades('');
     onClose();
   };
 

@@ -312,10 +312,52 @@ const styles = StyleSheet.create({
     borderColor: COLORS.border,
   },
   sessionGradient: {
+    flexDirection: 'column',
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.md,
+    borderRadius: BORDER_RADIUS.md,
+    gap: SPACING.sm,
+  },
+  sessionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: SPACING.md,
+    justifyContent: 'space-between',
+  },
+  sessionLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: SPACING.sm,
+  },
+  sessionStats: {
+    flexDirection: 'row',
+    gap: SPACING.xs,
+  },
+  statChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: SPACING.sm,
+    paddingVertical: 4,
+    backgroundColor: COLORS.background,
+    borderRadius: 12,
+  },
+  statChipText: {
+    fontSize: FONT_SIZE.xs,
+    fontWeight: '600',
+  },
+  sparklineContainer: {
+    marginVertical: SPACING.xs,
+    borderRadius: 8,
+    overflow: 'hidden',
+  },
+  sessionFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  sessionHint: {
+    fontSize: FONT_SIZE.xs,
+    color: COLORS.textTertiary,
   },
   sessionTime: {
     flex: 1,

@@ -277,48 +277,40 @@ export default function GroupsScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Crew Tabs */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={styles.crewTabs}
-        contentContainerStyle={styles.crewTabsContent}
-      >
-        {crews.map(crew => (
-          <TouchableOpacity
-            key={crew.id}
-            style={[
-              styles.crewTab,
-              { backgroundColor: colors.card, borderColor: colors.border },
-              selectedCrew?.id === crew.id && { borderColor: accentColor, borderWidth: 2 },
-            ]}
-            onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              setSelectedCrew(crew);
-            }}
-            activeOpacity={0.8}
-          >
-            <MaterialCommunityIcons
-              name="shield-account"
-              size={18}
-              color={selectedCrew?.id === crew.id ? accentColor : colors.textSecondary}
-            />
-            <Text
-              style={[
-                styles.crewTabText,
-                { color: selectedCrew?.id === crew.id ? colors.text : colors.textSecondary },
-              ]}
-            >
-              {crew.name}
+      {/* Crew Selector Dropdown */}
+      <View style={[styles.crewSelector, { backgroundColor: colors.card, borderColor: colors.border }]}>
+        <View style={styles.crewSelectorLeft}>
+          <MaterialCommunityIcons name="shield-account" size={20} color={accentColor} />
+          <Text style={[styles.crewSelectorLabel, { color: colors.textSecondary }]}>Crew:</Text>
+        </View>
+        
+        <TouchableOpacity
+          style={styles.crewDropdown}
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            Alert.alert(
+              'Select Crew',
+              'Choose which crew leaderboard to view',
+              crews.map(crew => ({
+                text: `${crew.name} (${crew.members.length} members)`,
+                onPress: () => setSelectedCrew(crew),
+                style: selectedCrew?.id === crew.id ? 'cancel' : 'default',
+              })).concat({ text: 'Cancel', style: 'cancel' })
+            );
+          }}
+          activeOpacity={0.8}
+        >
+          <Text style={[styles.crewDropdownText, { color: colors.text }]}>
+            {selectedCrew?.name || 'Select Crew'}
+          </Text>
+          <View style={[styles.memberBadge, { backgroundColor: accentColor }]}>
+            <Text style={[styles.memberBadgeText, { color: colors.background }]}>
+              {selectedCrew?.members.length || 0}
             </Text>
-            <View style={[styles.memberBadge, { backgroundColor: accentColor }]}>
-              <Text style={[styles.memberBadgeText, { color: colors.background }]}>
-                {crew.members.length}
-              </Text>
-            </View>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
+          </View>
+          <MaterialCommunityIcons name="chevron-down" size={20} color={colors.textSecondary} />
+        </TouchableOpacity>
+      </View>
 
       {/* Leaderboard */}
       {selectedCrew && (

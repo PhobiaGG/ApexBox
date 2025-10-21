@@ -94,6 +94,61 @@ class MockBleService {
   getStatus(): BleStatus {
     return { ...this.status };
   }
+
+  /**
+   * Subscribe to telemetry updates
+   */
+  onTelemetry(callback: TelemetryCallback): () => void {
+    this.telemetryCallbacks.add(callback);
+    console.log('[BLE] Telemetry subscriber added. Total:', this.telemetryCallbacks.size);
+    
+    // Return unsubscribe function
+    return () => {
+      this.telemetryCallbacks.delete(callback);
+      console.log('[BLE] Telemetry subscriber removed. Total:', this.telemetryCallbacks.size);
+    };
+  }
+
+  /**
+   * Start streaming telemetry data (20Hz = 50ms interval)
+   */
+  private startTelemetryStream() {
+    if (this.telemetryInterval) {
+      return; // Already streaming
+    }
+
+    console.log('[BLE] Starting telemetry stream at 20Hz');
+    this.telemetrySimulator.reset();
+
+    this.telemetryInterval = setInterval(() => {
+      if (!this.status.isConnected) {
+        this.stopTelemetryStream();
+        return;
+      }
+
+      const data = this.telemetrySimulator.generateSample();
+      
+      // Broadcast to all subscribers
+      this.telemetryCallbacks.forEach(callback => {
+        try {
+          callback(data);
+        } catch (error) {
+          console.error('[BLE] Error in telemetry callback:', error);
+        }
+      });
+    }, 50); // 20Hz update rate
+  }
+
+  /**
+   * Stop telemetry streaming
+   */
+  private stopTelemetryStream() {
+    if (this.telemetryInterval) {
+      clearInterval(this.telemetryInterval);
+      this.telemetryInterval = null;
+      console.log('[BLE] Telemetry stream stopped');
+    }
+  }
 }
 
 export default new MockBleService();

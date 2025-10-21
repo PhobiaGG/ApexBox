@@ -62,7 +62,7 @@ export default function Gauge({ value, maxValue, label, unit, color, size = 140 
   const percentage = Math.min((value / maxValue) * 100, 100);
 
   return (
-    <View style={[styles.container, { width: size + 20, height: size + 60 }]}>
+    <Animated.View style={[styles.container, { width: size + 20, height: size + 60 }, animatedContainerStyle]}>
       <View style={styles.gaugeContainer}>
         <Svg width={size} height={size}>
           <Circle
@@ -73,7 +73,7 @@ export default function Gauge({ value, maxValue, label, unit, color, size = 140 
             strokeWidth={strokeWidth}
             fill="none"
           />
-          <Circle
+          <AnimatedCircle
             cx={size / 2}
             cy={size / 2}
             r={radius}
@@ -81,10 +81,10 @@ export default function Gauge({ value, maxValue, label, unit, color, size = 140 
             strokeWidth={strokeWidth}
             fill="none"
             strokeDasharray={circumference}
-            strokeDashoffset={strokeDashoffset}
             strokeLinecap="round"
             rotation="-90"
             origin={`${size / 2}, ${size / 2}`}
+            animatedProps={animatedProps}
           />
         </Svg>
         <View style={styles.valueContainer}>
@@ -93,7 +93,7 @@ export default function Gauge({ value, maxValue, label, unit, color, size = 140 
         </View>
       </View>
       <Text style={styles.label}>{label}</Text>
-    </View>
+    </Animated.View>
   );
 }
 

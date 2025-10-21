@@ -259,8 +259,6 @@ export default function GarageScreen() {
                       </Text>
                     </View>
                   </View>
-                    </View>
-                  </View>
                   {car.isActive && (
                     <View style={[styles.activeBadge, { backgroundColor: accentColor }]}>
                       <Text style={[styles.activeBadgeText, { color: colors.background }]}>

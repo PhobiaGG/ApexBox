@@ -60,6 +60,9 @@ export default function Gauge({ value, maxValue, label, unit, color, size = 140 
   }));
 
   const percentage = Math.min((value / maxValue) * 100, 100);
+  
+  // Safe formatting for telemetry value
+  const displayValue = typeof value === 'number' ? value.toFixed(1) : '–';
 
   return (
     <Animated.View style={[styles.container, { width: size + 20, height: size + 60 }, animatedContainerStyle]}>
@@ -88,7 +91,7 @@ export default function Gauge({ value, maxValue, label, unit, color, size = 140 
           />
         </Svg>
         <View style={styles.valueContainer}>
-          <Text style={[styles.value, { color }]}>{(value || 0).toFixed(1)}</Text>
+          <Text style={[styles.value, { color }]}>{displayValue}</Text>
           <Text style={styles.unit}>{unit}</Text>
         </View>
       </View>

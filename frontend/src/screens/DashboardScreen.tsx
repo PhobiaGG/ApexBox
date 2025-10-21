@@ -33,7 +33,7 @@ export default function DashboardScreen() {
 
   // Auto-connect after scan completes
   useEffect(() => {
-    if (autoConnect && devices && devices.length > 0 && !status.isConnected) {
+    if (autoConnect && Array.isArray(devices) && devices.length > 0 && !status.isConnected) {
       connect(devices[0]);
       setAutoConnect(false);
     }

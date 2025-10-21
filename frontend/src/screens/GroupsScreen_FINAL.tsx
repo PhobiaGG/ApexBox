@@ -445,59 +445,145 @@ export default function GroupsScreen() {
 
       {/* Global Tab */}
       {activeTab === 'global' && (
-        <ScrollView
-          style={styles.scrollView}
-          contentContainerStyle={styles.scrollContent}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-              tintColor={accentColor}
-              colors={[accentColor]}
-            />
-          }
-          showsVerticalScrollIndicator={false}
-        >
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Top Performers</Text>
-          {globalLeaderboard.map((member, index) => (
-            <View
-              key={member.uid}
+        <>
+          {/* Category Tabs */}
+          <View style={[styles.categoryTabs, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <TouchableOpacity
               style={[
-                styles.memberCard,
-                {
-                  backgroundColor: colors.card,
-                  borderColor: index === 0 ? accentColor : colors.border,
-                  borderWidth: index === 0 ? 2 : 1,
-                },
+                styles.categoryTab,
+                globalCategory === 'topSpeed' && { backgroundColor: accentColor },
               ]}
+              onPress={() => {
+                setGlobalCategory('topSpeed');
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              }}
+              activeOpacity={0.8}
             >
-              <View style={styles.rankContainer}>
-                {index < 3 && (
-                  <View style={[styles.crownContainer, { backgroundColor: accentColor + '20' }]}>
-                    <Text style={styles.crownText}>{index === 0 ? '👑' : index === 1 ? '🥈' : '🥉'}</Text>
-                  </View>
-                )}
-                {index >= 3 && (
-                  <Text style={[styles.rankNumber, { color: colors.textSecondary }]}>#{index + 1}</Text>
-                )}
-              </View>
+              <MaterialCommunityIcons
+                name="speedometer"
+                size={18}
+                color={globalCategory === 'topSpeed' ? colors.text : colors.textSecondary}
+              />
+              <Text
+                style={[
+                  styles.categoryTabText,
+                  {
+                    color: globalCategory === 'topSpeed' ? colors.text : colors.textSecondary,
+                    fontWeight: globalCategory === 'topSpeed' ? 'bold' : '600',
+                  },
+                ]}
+              >
+                Top Speed
+              </Text>
+            </TouchableOpacity>
 
-              <UserAvatar name={member.displayName} size={48} uri={member.avatarURI} />
+            <TouchableOpacity
+              style={[
+                styles.categoryTab,
+                globalCategory === 'topGForce' && { backgroundColor: accentColor },
+              ]}
+              onPress={() => {
+                setGlobalCategory('topGForce');
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              }}
+              activeOpacity={0.8}
+            >
+              <MaterialCommunityIcons
+                name="arrow-up-bold"
+                size={18}
+                color={globalCategory === 'topGForce' ? colors.text : colors.textSecondary}
+              />
+              <Text
+                style={[
+                  styles.categoryTabText,
+                  {
+                    color: globalCategory === 'topGForce' ? colors.text : colors.textSecondary,
+                    fontWeight: globalCategory === 'topGForce' ? 'bold' : '600',
+                  },
+                ]}
+              >
+                Top G-Force
+              </Text>
+            </TouchableOpacity>
+          </View>
 
-              <View style={styles.memberInfo}>
-                <Text style={[styles.memberName, { color: colors.text }]}>{member.displayName}</Text>
-                <Text style={[styles.memberSessions, { color: colors.textSecondary }]}>
-                  {member.totalSessions} sessions
+          <ScrollView
+            style={styles.scrollView}
+            contentContainerStyle={styles.scrollContent}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                tintColor={accentColor}
+                colors={[accentColor]}
+              />
+            }
+            showsVerticalScrollIndicator={false}
+          >
+            {!globalLeaderboard || (globalLeaderboard[globalCategory] && globalLeaderboard[globalCategory].length === 0) ? (
+              <View style={styles.emptyContainer}>
+                <MaterialCommunityIcons name="trophy-outline" size={80} color={colors.textSecondary} />
+                <Text style={[styles.emptyTitle, { color: colors.text }]}>No Leaderboard Data Yet!</Text>
+                <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
+                  Complete more sessions to see rankings
                 </Text>
               </View>
+            ) : (
+              <>
+                <Text style={[styles.sectionTitle, { color: colors.text }]}>
+                  {globalCategory === 'topSpeed' ? 'Fastest Racers' : 'Highest G-Force'}
+                </Text>
+                {globalLeaderboard[globalCategory].map((member: any, index: number) => (
+                  <View
+                    key={member.uid}
+                    style={[
+                      styles.memberCard,
+                      {
+                        backgroundColor: colors.card,
+                        borderColor: index === 0 ? accentColor : colors.border,
+                        borderWidth: index === 0 ? 2 : 1,
+                      },
+                    ]}
+                  >
+                    <View style={styles.rankContainer}>
+                      {index < 3 && (
+                        <View style={[styles.crownContainer, { backgroundColor: accentColor + '20' }]}>
+                          <Text style={styles.crownText}>{index === 0 ? '👑' : index === 1 ? '🥈' : '🥉'}</Text>
+                        </View>
+                      )}
+                      {index >= 3 && (
+                        <Text style={[styles.rankNumber, { color: colors.textSecondary }]}>#{index + 1}</Text>
+                      )}
+                    </View>
 
-              <View style={styles.speedContainer}>
-                <Text style={[styles.speedValue, { color: accentColor }]}>{member.topSpeed}</Text>
-                <Text style={[styles.speedUnit, { color: colors.textSecondary }]}>km/h</Text>
-              </View>
-            </View>
-          ))}
-        </ScrollView>
+                    <UserAvatar name={member.displayName} size={48} uri={member.avatarURI} />
+
+                    <View style={styles.memberInfo}>
+                      <Text style={[styles.memberName, { color: colors.text }]}>{member.displayName}</Text>
+                      <Text style={[styles.memberSessions, { color: colors.textSecondary}]}>
+                        {member.totalSessions} sessions
+                      </Text>
+                    </View>
+
+                    <View style={styles.speedContainer}>
+                      {globalCategory === 'topSpeed' ? (
+                        <>
+                          <Text style={[styles.speedValue, { color: accentColor }]}>{member.topSpeed}</Text>
+                          <Text style={[styles.speedUnit, { color: colors.textSecondary }]}>km/h</Text>
+                        </>
+                      ) : (
+                        <>
+                          <Text style={[styles.speedValue, { color: accentColor }]}>{member.topGForce?.toFixed(2)}</Text>
+                          <Text style={[styles.speedUnit, { color: colors.textSecondary }]}>g</Text>
+                        </>
+                      )}
+                    </View>
+                  </View>
+                ))}
+              </>
+            )}
+          </ScrollView>
+        </>
       )}
 
       {/* Crew Picker Modal */}

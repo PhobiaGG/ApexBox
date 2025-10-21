@@ -11,13 +11,16 @@ interface UserAvatarProps {
 
 export default function UserAvatar({ uri, name, size = 80, borderColor = COLORS.cyan }: UserAvatarProps) {
   const getInitials = (fullName: string): string => {
+    // Handle undefined, null, or empty names
+    if (!fullName || typeof fullName !== 'string') return '?';
+    
     const names = fullName.trim().split(' ');
     if (names.length === 0 || !names[0]) return '?';
     if (names.length === 1) return names[0][0].toUpperCase();
     return (names[0][0] + names[names.length - 1][0]).toUpperCase();
   };
 
-  const initials = getInitials(name);
+  const initials = getInitials(name || 'User');
   const fontSize = size * 0.4;
 
   if (uri) {

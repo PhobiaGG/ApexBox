@@ -20,22 +20,50 @@ class LogService {
 
   async getSessionsByDate(): Promise<Record<string, SessionMetadata[]>> {
     try {
-      console.log('[LogService] Getting sessions...');
+      console.log('[LogService] Getting sessions from AsyncStorage...');
       
-      // Use mock sessions for now
-      const cached = await AsyncStorage.getItem('sessions_cache');
-      if (cached) {
-        console.log('[LogService] Using cached sessions');
-        return JSON.parse(cached);
+      // Get all keys from AsyncStorage
+      const allKeys = await AsyncStorage.getAllKeys();
+      const sessionKeys = allKeys.filter(key => key.startsWith('session_'));
+      
+      console.log('[LogService] Found', sessionKeys.length, 'sessions');
+      
+      if (sessionKeys.length === 0) {
+        console.log('[LogService] No sessions found');
+        return {};
       }
-
-      // Return mock sessions
-      console.log('[LogService] Using mock sessions');
-      await AsyncStorage.setItem('sessions_cache', JSON.stringify(MOCK_SESSIONS));
-      return MOCK_SESSIONS;
+      
+      // Group sessions by date
+      const sessionsByDate: Record<string, SessionMetadata[]> = {};
+      
+      for (const key of sessionKeys) {
+        // key format: "session_DATE/TIME.csv"
+        const sessionPath = key.replace('session_', '');
+        const [date, fileName] = sessionPath.split('/');
+        const time = fileName.replace('.csv', '');
+        
+        if (!sessionsByDate[date]) {
+          sessionsByDate[date] = [];
+        }
+        
+        sessionsByDate[date].push({
+          date,
+          time,
+          fileName,
+          filePath: sessionPath,
+        });
+      }
+      
+      // Sort sessions by time within each date
+      for (const date in sessionsByDate) {
+        sessionsByDate[date].sort((a, b) => a.time.localeCompare(b.time));
+      }
+      
+      console.log('[LogService] Organized sessions by date:', Object.keys(sessionsByDate));
+      return sessionsByDate;
     } catch (error) {
       console.error('[LogService] Error reading sessions:', error);
-      return MOCK_SESSIONS;
+      return {};
     }
   }
 

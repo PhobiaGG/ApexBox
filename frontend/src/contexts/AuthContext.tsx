@@ -70,11 +70,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      console.log('[Auth] Auth state changed:', firebaseUser?.uid || 'logged out');
       setUser(firebaseUser);
       
       if (firebaseUser) {
-        await loadUserProfile(firebaseUser.uid);
-        await loadGarage();
+        try {
+          await loadUserProfile(firebaseUser.uid);
+          await loadGarageForUser(firebaseUser.uid);
+          console.log('[Auth] User data loaded successfully');
+        } catch (error) {
+          console.error('[Auth] Error loading user data:', error);
+        }
       } else {
         setProfile(null);
         setGarage([]);

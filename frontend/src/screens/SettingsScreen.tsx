@@ -192,7 +192,10 @@ export default function SettingsScreen() {
                     styles.colorOption,
                     { borderColor: COLORS.cyan, borderWidth: settings.theme.accentColor === 'cyan' ? 3 : 1 }
                   ]}
-                  onPress={() => updateTheme({ accentColor: 'cyan' })}
+                  onPress={async () => {
+                    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    await updateTheme({ accentColor: 'cyan' });
+                  }}
                 >
                   <View style={[styles.colorCircle, { backgroundColor: COLORS.cyan }]} />
                   <Text style={styles.colorLabel}>Cyan</Text>
@@ -203,7 +206,10 @@ export default function SettingsScreen() {
                     styles.colorOption,
                     { borderColor: COLORS.magenta, borderWidth: settings.theme.accentColor === 'magenta' ? 3 : 1 }
                   ]}
-                  onPress={() => updateTheme({ accentColor: 'magenta' })}
+                  onPress={async () => {
+                    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    await updateTheme({ accentColor: 'magenta' });
+                  }}
                 >
                   <View style={[styles.colorCircle, { backgroundColor: COLORS.magenta }]} />
                   <Text style={styles.colorLabel}>Magenta</Text>
@@ -214,7 +220,10 @@ export default function SettingsScreen() {
                     styles.colorOption,
                     { borderColor: COLORS.lime, borderWidth: settings.theme.accentColor === 'lime' ? 3 : 1 }
                   ]}
-                  onPress={() => updateTheme({ accentColor: 'lime' })}
+                  onPress={async () => {
+                    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    await updateTheme({ accentColor: 'lime' });
+                  }}
                 >
                   <View style={[styles.colorCircle, { backgroundColor: COLORS.lime }]} />
                   <Text style={styles.colorLabel}>Lime</Text>

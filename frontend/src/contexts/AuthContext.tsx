@@ -287,18 +287,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setProfile({ ...profile, garage: updatedGarage });
       }
       
-      // Then save to Firebase
+      // Save to Firebase
       await setDoc(newCarRef, {
         ...car,
         isActive: isFirstCar,
         createdAt: Date.now(),
       });
       
-      // Reload to ensure consistency
-      if (profile) {
-        const freshGarage = await loadGarage(user.uid);
-        setProfile({ ...profile, garage: freshGarage });
-      }
+      // Don't reload on success - optimistic update is correct
+      
     } catch (error: any) {
       console.error('[Auth] Add car error:', error);
       // Rollback on error

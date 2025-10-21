@@ -214,6 +214,28 @@ export default function TrackReplayScreen() {
     );
   }
 
+  // Web/unsupported platform fallback
+  if (Platform.OS === 'web' || !MapView) {
+    return (
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <TouchableOpacity style={styles.backButton} onPress={handleBack}>
+          <MaterialCommunityIcons name="arrow-left" size={28} color={colors.text} />
+        </TouchableOpacity>
+
+        <View style={styles.lockedContainer}>
+          <View style={[styles.lockIconContainer, { backgroundColor: colors.card }]}>
+            <MaterialCommunityIcons name="map-marker-off" size={64} color={colors.textSecondary} />
+          </View>
+          <Text style={[styles.lockedTitle, { color: colors.text }]}>Device Only</Text>
+          <Text style={[styles.lockedSubtitle, { color: colors.textSecondary }]}>
+            Track Replay requires native maps and is only available on iOS/Android devices. 
+            Please test on a physical device or emulator.
+          </Text>
+        </View>
+      </View>
+    );
+  }
+
   const currentPoint = gpsData[currentIndex];
   const completedPath = gpsData.slice(0, currentIndex + 1).map(p => ({
     latitude: p.lat,

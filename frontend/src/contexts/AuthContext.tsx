@@ -29,6 +29,7 @@ export interface UserProfile {
   uid: string;
   email: string;
   displayName: string;
+  friendId: string; // Unique 8-digit numeric ID for friend sharing
   carModel: string;
   carYear: string;
   avatarURI: string | null;

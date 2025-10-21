@@ -475,6 +475,28 @@ export default function SettingsScreen() {
           </View>
         </View>
 
+        {/* ========== CONNECTIVITY SECTION ========== */}
+        <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Connectivity</Text>
+          
+          <TouchableOpacity 
+            style={[styles.settingRow, { borderBottomColor: 'transparent' }]} 
+            onPress={handleForgetDevice}
+          >
+            <View style={styles.settingLeft}>
+              <MaterialCommunityIcons name="bluetooth-off" size={20} color={colors.textSecondary} />
+              <Text style={[styles.settingLabel, { color: colors.text, marginLeft: SPACING.sm }]}>
+                Forget Remembered Device
+              </Text>
+            </View>
+            <MaterialCommunityIcons name="chevron-right" size={20} color={colors.textSecondary} />
+          </TouchableOpacity>
+
+          <Text style={[styles.connectivityHint, { color: colors.textTertiary }]}>
+            Clear saved ApexBox device for auto-connect
+          </Text>
+        </View>
+
         {/* ========== PREMIUM SECTION ========== */}
         {!profile?.premium && (
           <TouchableOpacity

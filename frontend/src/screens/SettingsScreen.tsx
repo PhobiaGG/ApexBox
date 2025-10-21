@@ -231,7 +231,10 @@ export default function SettingsScreen() {
                 <Text style={styles.settingLabel}>BLE Auto-Connect</Text>
                 <Switch
                   value={settings.connectivity.bleAutoConnect}
-                  onValueChange={value => updateConnectivity({ bleAutoConnect: value })}
+                  onValueChange={async (value) => {
+                    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                    await updateConnectivity({ bleAutoConnect: value });
+                  }}
                   trackColor={{ false: COLORS.border, true: COLORS.cyan }}
                   thumbColor={COLORS.text}
                 />

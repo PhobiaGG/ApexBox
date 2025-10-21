@@ -119,22 +119,34 @@ const styles = StyleSheet.create({
     paddingTop: SPACING.md,
     paddingBottom: SPACING.sm,
   },
-  chartPlaceholder: {
-    height: 200,
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.lg,
+  activeValue: {
     alignItems: 'center',
-    justifyContent: 'center',
+    paddingVertical: SPACING.xs,
+    backgroundColor: COLORS.background,
+    marginHorizontal: SPACING.md,
+    borderRadius: 8,
+    marginBottom: SPACING.sm,
   },
-  chartLabel: {
-    fontSize: FONT_SIZE.lg,
+  activeValueText: {
+    fontSize: FONT_SIZE.xl,
     fontWeight: 'bold',
-    marginBottom: SPACING.md,
+  },
+  activeValueLabel: {
+    fontSize: FONT_SIZE.xs,
+    color: COLORS.textSecondary,
+    marginTop: 2,
+  },
+  chartContainer: {
+    height: 220,
+    paddingHorizontal: SPACING.sm,
   },
   statsRow: {
     flexDirection: 'row',
-    gap: SPACING.lg,
-    marginTop: SPACING.md,
+    justifyContent: 'space-around',
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.md,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.border,
   },
   statBox: {
     alignItems: 'center',
@@ -145,15 +157,9 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   statValue: {
-    fontSize: FONT_SIZE.xl,
+    fontSize: FONT_SIZE.lg,
     fontWeight: 'bold',
     marginTop: 4,
-  },
-  chartNote: {
-    fontSize: FONT_SIZE.xs,
-    color: COLORS.textTertiary,
-    marginTop: SPACING.lg,
-    textAlign: 'center',
   },
   emptyContainer: {
     height: 200,

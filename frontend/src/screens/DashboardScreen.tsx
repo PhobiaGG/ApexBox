@@ -25,6 +25,7 @@ export default function DashboardScreen() {
   const { status, scan, connect, disconnect, devices, sendCommand, telemetry } = useBle();
   const { latestSession, isLoading, rescan } = useLogs();
   const { settings } = useSettings();
+  const accentColor = useAccentColor();
   const [currentSpeed, setCurrentSpeed] = useState(0);
   const [currentGForce, setCurrentGForce] = useState(0);
   const [currentTemp, setCurrentTemp] = useState(65);

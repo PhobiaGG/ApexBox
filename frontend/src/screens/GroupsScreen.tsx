@@ -5,96 +5,165 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  RefreshControl,
+  TextInput,
   Alert,
+  ActivityIndicator,
   Modal,
-  FlatList,
+  KeyboardAvoidingView,
+  Platform,
+  RefreshControl,
+  Animated,
 } from 'react-native';
-import { SPACING, FONT_SIZE, BORDER_RADIUS } from '../constants/theme';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { BlurView } from 'expo-blur';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
-import { useRouter } from 'expo-router';
+import { SPACING, FONT_SIZE, BORDER_RADIUS } from '../constants/theme';
 import UserAvatar from '../components/UserAvatar';
-import CreateCrewModal from '../components/CreateCrewModal';
-import JoinCrewModal from '../components/JoinCrewModal';
 import * as Haptics from 'expo-haptics';
 
-interface CrewMember {
+interface LeaderboardEntry {
   uid: string;
   displayName: string;
   avatarURI?: string;
-  topSpeed: number;
+  fastestSpeed: number;
+  avgGForce: number;
   totalSessions: number;
 }
 
 interface Crew {
   id: string;
   name: string;
-  description: string;
-  code: string;
-  adminId: string;
-  members: CrewMember[];
+  members: string[];
+  leaderboard: LeaderboardEntry[];
   createdAt: number;
 }
 
-// Mock data generator
-const generateMockCrews = (): Crew[] => [];
+// Simple Crown Component with CSS-based animation
+function AnimatedCrown({ color, size = 14 }: { color: string; size?: number }) {
+  const pulseAnim = new Animated.Value(1);
 
-const generateMockGlobalLeaderboard = () => ({
-  topSpeed: [
-    { uid: 'g1', displayName: 'Lightning McQueen', topSpeed: 285, totalSessions: 124 },
-    { uid: 'g2', displayName: 'Speed Racer', topSpeed: 278, totalSessions: 98 },
-    { uid: 'g3', displayName: 'Nitro Nick', topSpeed: 271, totalSessions: 115 },
-    { uid: 'g4', displayName: 'Turbo Tom', topSpeed: 265, totalSessions: 87 },
-    { uid: 'g5', displayName: 'Flash Gordon', topSpeed: 258, totalSessions: 92 },
-  ],
-  topGForce: [
-    { uid: 'gf1', displayName: 'G-Force King', topGForce: 2.8, totalSessions: 89 },
-    { uid: 'gf2', displayName: 'Corner Crusher', topGForce: 2.6, totalSessions: 101 },
-    { uid: 'gf3', displayName: 'Apex Hunter', topGForce: 2.5, totalSessions: 76 },
-    { uid: 'gf4', displayName: 'Drift Master', topGForce: 2.4, totalSessions: 94 },
-    { uid: 'gf5', displayName: 'Grip God', topGForce: 2.3, totalSessions: 68 },
-  ],
-});
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 1.2,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+  }, []);
+
+  return (
+    <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
+      <MaterialCommunityIcons name="crown" size={size} color={color} />
+    </Animated.View>
+  );
+}
+
+// Mock crew data for demonstration
+const generateMockCrews = (): Crew[] => [
+  {
+    id: 'crew1',
+    name: 'Speed Demons',
+    members: ['user1', 'user2', 'user3', 'user4'],
+    leaderboard: [
+      {
+        uid: 'user1',
+        displayName: 'RacerX',
+        fastestSpeed: 245,
+        avgGForce: 2.1,
+        totalSessions: 42,
+      },
+      {
+        uid: 'user2',
+        displayName: 'TurboTim',
+        fastestSpeed: 238,
+        avgGForce: 1.9,
+        totalSessions: 38,
+      },
+      {
+        uid: 'user3',
+        displayName: 'NitroNina',
+        fastestSpeed: 232,
+        avgGForce: 1.8,
+        totalSessions: 35,
+      },
+      {
+        uid: 'user4',
+        displayName: 'ApexAce',
+        fastestSpeed: 228,
+        avgGForce: 1.7,
+        totalSessions: 30,
+      },
+    ],
+    createdAt: Date.now() - 86400000 * 30,
+  },
+  {
+    id: 'crew2',
+    name: 'Track Warriors',
+    members: ['user5', 'user6', 'user7'],
+    leaderboard: [
+      {
+        uid: 'user5',
+        displayName: 'DriftKing',
+        fastestSpeed: 215,
+        avgGForce: 2.3,
+        totalSessions: 28,
+      },
+      {
+        uid: 'user6',
+        displayName: 'CornerCarver',
+        fastestSpeed: 210,
+        avgGForce: 2.2,
+        totalSessions: 25,
+      },
+      {
+        uid: 'user7',
+        displayName: 'SpeedSeeker',
+        fastestSpeed: 205,
+        avgGForce: 2.0,
+        totalSessions: 22,
+      },
+    ],
+    createdAt: Date.now() - 86400000 * 15,
+  },
+];
 
 export default function GroupsScreen() {
   const router = useRouter();
-  const { profile, user, createCrew, joinCrew, leaveCrew } = useAuth();
+  const { profile, user } = useAuth();
   const { colors, getCurrentAccent } = useTheme();
   const accentColor = getCurrentAccent();
 
-  const [activeTab, setActiveTab] = useState<'crews' | 'global'>('crews');
-  const [globalCategory, setGlobalCategory] = useState<'topSpeed' | 'topGForce'>('topSpeed');
-  const [userCrews, setUserCrews] = useState<Crew[]>([]);
+  const [crews, setCrews] = useState<Crew[]>([]);
   const [selectedCrew, setSelectedCrew] = useState<Crew | null>(null);
-  const [globalLeaderboard, setGlobalLeaderboard] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [showJoinModal, setShowJoinModal] = useState(false);
-  const [showCrewPicker, setShowCrewPicker] = useState(false);
+  const [showAddFriendModal, setShowAddFriendModal] = useState(false);
+  const [friendUID, setFriendUID] = useState('');
 
   useEffect(() => {
-    loadData();
+    loadCrews();
   }, []);
 
-  const loadData = async () => {
+  const loadCrews = async () => {
     try {
       setIsLoading(true);
+      // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // Load user's crews (in production, filter by user membership)
-      const mockCrews = generateMockCrews();
-      setUserCrews(mockCrews);
-      
-      if (mockCrews.length > 0) {
-        setSelectedCrew(mockCrews[0]);
+      setCrews(generateMockCrews());
+      if (generateMockCrews().length > 0) {
+        setSelectedCrew(generateMockCrews()[0]);
       }
-      
-      // Load global leaderboard
-      setGlobalLeaderboard(generateMockGlobalLeaderboard());
     } finally {
       setIsLoading(false);
     }
@@ -104,57 +173,24 @@ export default function GroupsScreen() {
     try {
       setRefreshing(true);
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      await loadData();
+      await loadCrews();
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } finally {
       setRefreshing(false);
     }
   };
 
-  const handleCreateCrew = async (name: string, description: string) => {
-    try {
-      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-      // In production: await createCrew(name, description);
-      Alert.alert('Success', `Crew "${name}" created!\n\nShare this code with friends:\nSPEED-12345`);
-      await loadData();
-    } catch (error: any) {
-      throw error;
+  const handleAddFriend = async () => {
+    if (!friendUID.trim()) {
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      Alert.alert('Error', 'Please enter a friend ID');
+      return;
     }
-  };
 
-  const handleJoinCrew = async (code: string) => {
-    try {
-      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-      // In production: await joinCrew(code);
-      Alert.alert('Success', 'You have joined the crew!');
-      await loadData();
-    } catch (error: any) {
-      throw error;
-    }
-  };
-
-  const handleLeaveCrew = async (crewId: string) => {
-    Alert.alert(
-      'Leave Crew',
-      'Are you sure you want to leave this crew?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Leave',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-              // In production: await leaveCrew(crewId);
-              Alert.alert('Left Crew', 'You have left the crew');
-              await loadData();
-            } catch (error) {
-              Alert.alert('Error', 'Failed to leave crew');
-            }
-          },
-        },
-      ]
-    );
+    await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    Alert.alert('Success', 'Friend added to crew!');
+    setShowAddFriendModal(false);
+    setFriendUID('');
   };
 
   // Premium gate
@@ -200,10 +236,10 @@ export default function GroupsScreen() {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
         <View style={styles.header}>
-          <Text style={[styles.title, { color: colors.text }]}>Leaderboards</Text>
+          <Text style={[styles.title, { color: colors.text }]}>Crew Leaderboards</Text>
         </View>
         <View style={styles.loadingContainer}>
-          <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Loading...</Text>
+          <ActivityIndicator size="large" color={accentColor} />
         </View>
       </View>
     );
@@ -211,236 +247,69 @@ export default function GroupsScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Header */}
       <View style={styles.header}>
-        <Text style={[styles.title, { color: colors.text }]}>Leaderboards</Text>
-      </View>
-
-      {/* Tabs */}
-      <View style={[styles.tabContainer, { backgroundColor: colors.card, borderColor: colors.border }]}>
+        <Text style={[styles.title, { color: colors.text }]}>Crew Leaderboards</Text>
         <TouchableOpacity
-          style={[
-            styles.tab,
-            activeTab === 'crews' && { backgroundColor: accentColor },
-          ]}
+          style={[styles.addButton, { backgroundColor: colors.card, borderColor: accentColor }]}
           onPress={() => {
-            setActiveTab('crews');
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            setShowAddFriendModal(true);
           }}
           activeOpacity={0.8}
         >
-          <MaterialCommunityIcons
-            name="shield-account"
-            size={20}
-            color={activeTab === 'crews' ? colors.text : colors.textSecondary}
-          />
-          <Text
-            style={[
-              styles.tabText,
-              {
-                color: activeTab === 'crews' ? colors.text : colors.textSecondary,
-                fontWeight: activeTab === 'crews' ? 'bold' : '600',
-              },
-            ]}
-          >
-            My Crews
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[
-            styles.tab,
-            activeTab === 'global' && { backgroundColor: accentColor },
-          ]}
-          onPress={() => {
-            setActiveTab('global');
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-          }}
-          activeOpacity={0.8}
-        >
-          <MaterialCommunityIcons
-            name="earth"
-            size={20}
-            color={activeTab === 'global' ? colors.text : colors.textSecondary}
-          />
-          <Text
-            style={[
-              styles.tabText,
-              {
-                color: activeTab === 'global' ? colors.text : colors.textSecondary,
-                fontWeight: activeTab === 'global' ? 'bold' : '600',
-              },
-            ]}
-          >
-            Global
-          </Text>
+          <MaterialCommunityIcons name="account-plus" size={24} color={accentColor} />
         </TouchableOpacity>
       </View>
 
-      {/* Crews Tab */}
-      {activeTab === 'crews' && (
-        <>
-          {/* Action Buttons */}
-          <View style={styles.actionButtons}>
-            <TouchableOpacity
-              style={[styles.actionButton, { backgroundColor: colors.card, borderColor: accentColor }]}
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                setShowCreateModal(true);
-              }}
-              activeOpacity={0.8}
-            >
-              <MaterialCommunityIcons name="plus-circle" size={24} color={accentColor} />
-              <Text style={[styles.actionButtonText, { color: colors.text }]}>Create Crew</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.actionButton, { backgroundColor: colors.card, borderColor: accentColor }]}
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                setShowJoinModal(true);
-              }}
-              activeOpacity={0.8}
-            >
-              <MaterialCommunityIcons name="account-multiple-plus" size={24} color={accentColor} />
-              <Text style={[styles.actionButtonText, { color: colors.text }]}>Join Crew</Text>
-            </TouchableOpacity>
+      {/* Crew Selector Dropdown */}
+      <View style={[styles.crewSelector, { backgroundColor: colors.card, borderColor: colors.border }]}>
+        <View style={styles.crewSelectorLeft}>
+          <MaterialCommunityIcons name="shield-account" size={20} color={accentColor} />
+          <Text style={[styles.crewSelectorLabel, { color: colors.textSecondary }]}>Crew:</Text>
+        </View>
+        
+        <TouchableOpacity
+          style={styles.crewDropdown}
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            Alert.alert(
+              'Select Crew',
+              'Choose which crew leaderboard to view',
+              [
+                ...crews.map(crew => ({
+                  text: `${crew.name} (${crew.members.length} members)`,
+                  onPress: () => {
+                    setSelectedCrew(crew);
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  },
+                })),
+                {
+                  text: 'Cancel',
+                  style: 'cancel' as const,
+                },
+              ]
+            );
+          }}
+          activeOpacity={0.8}
+        >
+          <Text style={[styles.crewDropdownText, { color: colors.text }]}>
+            {selectedCrew?.name || 'Select Crew'}
+          </Text>
+          <View style={[styles.memberBadge, { backgroundColor: accentColor }]}>
+            <Text style={[styles.memberBadgeText, { color: colors.background }]}>
+              {selectedCrew?.members.length || 0}
+            </Text>
           </View>
+          <MaterialCommunityIcons name="chevron-down" size={20} color={colors.textSecondary} />
+        </TouchableOpacity>
+      </View>
 
-          {/* Crew Selector */}
-          {userCrews.length > 0 && (
-            <TouchableOpacity
-              style={[styles.crewSelector, { backgroundColor: colors.card, borderColor: accentColor }]}
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                setShowCrewPicker(true);
-              }}
-              activeOpacity={0.8}
-            >
-              <View style={styles.crewSelectorLeft}>
-                <MaterialCommunityIcons name="shield-account" size={24} color={accentColor} />
-                <View>
-                  <Text style={[styles.crewSelectorLabel, { color: colors.textSecondary }]}>CREW</Text>
-                  <Text style={[styles.crewDropdownText, { color: colors.text }]}>
-                    {selectedCrew?.name || 'Select Crew'}
-                  </Text>
-                </View>
-              </View>
-              <View style={styles.crewSelectorRight}>
-                <View style={[styles.memberBadge, { backgroundColor: accentColor }]}>
-                  <MaterialCommunityIcons name="account-group" size={12} color={colors.text} />
-                  <Text style={[styles.memberBadgeText, { color: colors.text }]}>
-                    {selectedCrew?.members.length || 0}
-                  </Text>
-                </View>
-                <MaterialCommunityIcons name="chevron-down" size={24} color={colors.textSecondary} />
-              </View>
-            </TouchableOpacity>
-          )}
-
-          {/* Empty State */}
-          {userCrews.length === 0 && (
-            <View style={styles.emptyContainer}>
-              <MaterialCommunityIcons name="account-group-outline" size={80} color={colors.textSecondary} />
-              <Text style={[styles.emptyTitle, { color: colors.text }]}>No Crews Yet</Text>
-              <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
-                Create a crew or join one with a code
-              </Text>
-            </View>
-          )}
-
-          {/* Leaderboard */}
-          {selectedCrew && (
-            <ScrollView
-              style={styles.scrollView}
-              contentContainerStyle={styles.scrollContent}
-              refreshControl={
-                <RefreshControl
-                  refreshing={refreshing}
-                  onRefresh={onRefresh}
-                  tintColor={accentColor}
-                  colors={[accentColor]}
-                />
-              }
-              showsVerticalScrollIndicator={false}
-            >
-              {/* Crew Info Card */}
-              <View style={[styles.crewInfoCard, { backgroundColor: colors.card, borderColor: accentColor }]}>
-                <View style={styles.crewInfoHeader}>
-                  <Text style={[styles.crewInfoName, { color: colors.text }]}>{selectedCrew.name}</Text>
-                  {selectedCrew.adminId === user?.uid && (
-                    <View style={[styles.adminBadge, { backgroundColor: accentColor }]}>
-                      <MaterialCommunityIcons name="shield-crown" size={12} color={colors.text} />
-                      <Text style={[styles.adminBadgeText, { color: colors.text }]}>ADMIN</Text>
-                    </View>
-                  )}
-                </View>
-                {selectedCrew.description && (
-                  <Text style={[styles.crewInfoDesc, { color: colors.textSecondary }]}>
-                    {selectedCrew.description}
-                  </Text>
-                )}
-                <View style={[styles.crewCodeContainer, { backgroundColor: colors.background, borderColor: accentColor }]}>
-                  <Text style={[styles.crewCodeLabel, { color: colors.textSecondary }]}>Crew Code:</Text>
-                  <Text style={[styles.crewCode, { color: accentColor }]}>{selectedCrew.code}</Text>
-                </View>
-                <TouchableOpacity
-                  style={[styles.leaveButton, { borderColor: colors.magenta }]}
-                  onPress={() => handleLeaveCrew(selectedCrew.id)}
-                >
-                  <Text style={[styles.leaveButtonText, { color: colors.magenta }]}>Leave Crew</Text>
-                </TouchableOpacity>
-              </View>
-
-              {/* Members List */}
-              {selectedCrew.members.sort((a, b) => b.topSpeed - a.topSpeed).map((member, index) => (
-                <View
-                  key={member.uid}
-                  style={[
-                    styles.memberCard,
-                    {
-                      backgroundColor: colors.card,
-                      borderColor: index === 0 ? accentColor : colors.border,
-                      borderWidth: index === 0 ? 2 : 1,
-                    },
-                  ]}
-                >
-                  <View style={styles.rankContainer}>
-                    {index < 3 && (
-                      <View style={[styles.crownContainer, { backgroundColor: accentColor + '20' }]}>
-                        <Text style={styles.crownText}>{index === 0 ? '👑' : index === 1 ? '🥈' : '🥉'}</Text>
-                      </View>
-                    )}
-                    {index >= 3 && (
-                      <Text style={[styles.rankNumber, { color: colors.textSecondary }]}>#{index + 1}</Text>
-                    )}
-                  </View>
-
-                  <UserAvatar name={member.displayName} size={48} uri={member.avatarURI} />
-
-                  <View style={styles.memberInfo}>
-                    <Text style={[styles.memberName, { color: colors.text }]}>{member.displayName}</Text>
-                    <Text style={[styles.memberSessions, { color: colors.textSecondary }]}>
-                      {member.totalSessions} sessions
-                    </Text>
-                  </View>
-
-                  <View style={styles.speedContainer}>
-                    <Text style={[styles.speedValue, { color: accentColor }]}>{member.topSpeed}</Text>
-                    <Text style={[styles.speedUnit, { color: colors.textSecondary }]}>km/h</Text>
-                  </View>
-                </View>
-              ))}
-            </ScrollView>
-          )}
-        </>
-      )}
-
-      {/* Global Tab */}
-      {activeTab === 'global' && (
+      {/* Leaderboard */}
+      {selectedCrew && (
         <ScrollView
           style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
@@ -449,109 +318,175 @@ export default function GroupsScreen() {
               colors={[accentColor]}
             />
           }
-          showsVerticalScrollIndicator={false}
         >
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Top Performers</Text>
-          {globalLeaderboard.map((member, index) => (
+          {selectedCrew.leaderboard.map((entry, index) => (
             <View
-              key={member.uid}
+              key={entry.uid}
               style={[
-                styles.memberCard,
-                {
-                  backgroundColor: colors.card,
+                styles.leaderboardEntry,
+                { 
+                  backgroundColor: colors.card, 
                   borderColor: index === 0 ? accentColor : colors.border,
                   borderWidth: index === 0 ? 2 : 1,
                 },
               ]}
             >
-              <View style={styles.rankContainer}>
-                {index < 3 && (
-                  <View style={[styles.crownContainer, { backgroundColor: accentColor + '20' }]}>
-                    <Text style={styles.crownText}>{index === 0 ? '👑' : index === 1 ? '🥈' : '🥉'}</Text>
-                  </View>
-                )}
-                {index >= 3 && (
-                  <Text style={[styles.rankNumber, { color: colors.textSecondary }]}>#{index + 1}</Text>
-                )}
-              </View>
-
-              <UserAvatar name={member.displayName} size={48} uri={member.avatarURI} />
-
-              <View style={styles.memberInfo}>
-                <Text style={[styles.memberName, { color: colors.text }]}>{member.displayName}</Text>
-                <Text style={[styles.memberSessions, { color: colors.textSecondary }]}>
-                  {member.totalSessions} sessions
+              {/* Rank Badge */}
+              <View style={[
+                styles.rankBadge, 
+                { backgroundColor: index === 0 ? accentColor : colors.background }
+              ]}>
+                <Text
+                  style={[
+                    styles.rankText,
+                    { color: index === 0 ? colors.background : colors.textSecondary },
+                  ]}
+                >
+                  #{index + 1}
                 </Text>
               </View>
 
-              <View style={styles.speedContainer}>
-                <Text style={[styles.speedValue, { color: accentColor }]}>{member.topSpeed}</Text>
-                <Text style={[styles.speedUnit, { color: colors.textSecondary }]}>km/h</Text>
+              {/* Avatar + Name Column */}
+              <View style={styles.avatarColumn}>
+                <UserAvatar
+                  uri={entry.avatarURI || null}
+                  name={entry.displayName || 'Driver'}
+                  size={40}
+                  borderColor={index === 0 ? accentColor : colors.border}
+                />
+                <Text 
+                  style={[styles.entryName, { color: colors.text }]} 
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                >
+                  {entry.displayName}
+                </Text>
+                {index === 0 && (
+                  <View style={styles.crownBadge}>
+                    <AnimatedCrown color={accentColor} size={12} />
+                    <Text style={[styles.crownText, { color: accentColor }]}>Leader</Text>
+                  </View>
+                )}
+              </View>
+
+              {/* Stats */}
+              <View style={styles.statsRow}>
+                <View style={styles.statItem}>
+                  <MaterialCommunityIcons name="speedometer" size={16} color={accentColor} />
+                  <Text style={[styles.statValue, { color: colors.text }]}>
+                    {entry.fastestSpeed}
+                  </Text>
+                  <Text style={[styles.statUnit, { color: colors.textSecondary }]}>km/h</Text>
+                </View>
+
+                <View style={styles.statItem}>
+                  <MaterialCommunityIcons name="arrow-up-bold" size={16} color={colors.magenta} />
+                  <Text style={[styles.statValue, { color: colors.text }]}>
+                    {entry.avgGForce.toFixed(1)}
+                  </Text>
+                  <Text style={[styles.statUnit, { color: colors.textSecondary }]}>g</Text>
+                </View>
+
+                <View style={styles.statItem}>
+                  <MaterialCommunityIcons name="chart-line" size={16} color={colors.lime} />
+                  <Text style={[styles.statValue, { color: colors.text }]}>
+                    {entry.totalSessions}
+                  </Text>
+                </View>
               </View>
             </View>
           ))}
         </ScrollView>
       )}
 
-      {/* Crew Picker Modal */}
+      {/* Add Friend Modal */}
       <Modal
-        visible={showCrewPicker}
-        transparent={true}
+        visible={showAddFriendModal}
+        transparent
         animationType="fade"
-        onRequestClose={() => setShowCrewPicker(false)}
+        onRequestClose={() => setShowAddFriendModal(false)}
       >
-        <TouchableOpacity
-          style={styles.modalOverlay}
-          activeOpacity={1}
-          onPress={() => setShowCrewPicker(false)}
-        >
-          <View style={[styles.pickerContainer, { backgroundColor: colors.card, borderColor: accentColor }]}>
-            <Text style={[styles.pickerTitle, { color: colors.text }]}>Select Crew</Text>
-            {userCrews.map((crew) => (
-              <TouchableOpacity
-                key={crew.id}
-                style={[
-                  styles.pickerItem,
-                  selectedCrew?.id === crew.id && { backgroundColor: accentColor + '20', borderColor: accentColor },
-                ]}
-                onPress={() => {
-                  setSelectedCrew(crew);
-                  setShowCrewPicker(false);
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                }}
-              >
-                <View>
-                  <Text style={[styles.pickerItemTitle, { color: colors.text }]}>{crew.name}</Text>
-                  <Text style={[styles.pickerItemSub, { color: colors.textSecondary }]}>
-                    {crew.members.length} members
+        <BlurView intensity={80} style={styles.blurContainer}>
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={styles.keyboardView}
+          >
+            <View style={[styles.modalContainer, { backgroundColor: colors.card, borderColor: colors.border }]}>
+              <View style={styles.modalHeader}>
+                <MaterialCommunityIcons name="account-plus" size={40} color={accentColor} />
+                <Text style={[styles.modalTitle, { color: colors.text }]}>Add Friend to Crew</Text>
+              </View>
+
+              <View style={styles.modalContent}>
+                <Text style={[styles.modalLabel, { color: colors.textSecondary }]}>YOUR FRIEND ID</Text>
+                <View style={[styles.friendIdDisplay, { backgroundColor: accentColor + '20', borderColor: accentColor }]}>
+                  <MaterialCommunityIcons name="identifier" size={20} color={accentColor} />
+                  <Text style={[styles.friendIdText, { color: accentColor }]}>
+                    {profile?.friendId || 'Loading...'}
                   </Text>
+                  <TouchableOpacity
+                    onPress={() => {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                      Alert.alert('Friend ID', `Share your ID with friends:\n\n${profile?.friendId}`);
+                    }}
+                  >
+                    <MaterialCommunityIcons name="content-copy" size={18} color={accentColor} />
+                  </TouchableOpacity>
                 </View>
-                {selectedCrew?.id === crew.id && (
-                  <MaterialCommunityIcons name="check-circle" size={24} color={accentColor} />
-                )}
-              </TouchableOpacity>
-            ))}
-          </View>
-        </TouchableOpacity>
+
+                <Text style={[styles.modalLabel, { color: colors.textSecondary, marginTop: SPACING.lg }]}>
+                  FRIEND'S ID
+                </Text>
+                <View style={[styles.modalInput, { backgroundColor: colors.background, borderColor: colors.border }]}>
+                  <MaterialCommunityIcons name="account-search" size={20} color={colors.textSecondary} />
+                  <TextInput
+                    style={[styles.input, { color: colors.text }]}
+                    placeholder="Enter 8-digit ID (e.g. 12345678)"
+                    placeholderTextColor={colors.textSecondary}
+                    value={friendUID}
+                    onChangeText={setFriendUID}
+                    keyboardType="numeric"
+                    maxLength={8}
+                    autoFocus
+                  />
+                </View>
+                <Text style={[styles.modalHint, { color: colors.textTertiary }]}>
+                  Ask your friend for their unique Friend ID
+                </Text>
+              </View>
+
+              <View style={styles.modalButtons}>
+                <TouchableOpacity
+                  style={[styles.modalButton, { borderColor: colors.border }]}
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    setShowAddFriendModal(false);
+                    setFriendUID('');
+                  }}
+                  activeOpacity={0.8}
+                >
+                  <Text style={[styles.modalButtonText, { color: colors.textSecondary }]}>Cancel</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.modalButtonPrimary}
+                  onPress={handleAddFriend}
+                  activeOpacity={0.8}
+                >
+                  <LinearGradient
+                    colors={[accentColor, colors.background]}
+                    style={styles.modalButtonGradient}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                  >
+                    <Text style={[styles.modalButtonText, { color: colors.text }]}>Add</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </KeyboardAvoidingView>
+        </BlurView>
       </Modal>
-
-      {/* Create Crew Modal */}
-      <CreateCrewModal
-        visible={showCreateModal}
-        onClose={() => setShowCreateModal(false)}
-        onCreate={handleCreateCrew}
-        accentColor={accentColor}
-        colors={colors}
-      />
-
-      {/* Join Crew Modal */}
-      <JoinCrewModal
-        visible={showJoinModal}
-        onClose={() => setShowJoinModal(false)}
-        onJoin={handleJoinCrew}
-        accentColor={accentColor}
-        colors={colors}
-      />
     </View>
   );
 }
@@ -564,57 +499,28 @@ const styles = StyleSheet.create({
     paddingTop: 60,
     paddingHorizontal: SPACING.lg,
     paddingBottom: SPACING.md,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   title: {
     fontSize: 32,
     fontWeight: 'bold',
   },
-  tabContainer: {
-    flexDirection: 'row',
-    marginHorizontal: SPACING.lg,
-    borderRadius: BORDER_RADIUS.lg,
-    padding: 4,
-    borderWidth: 1,
-    marginBottom: SPACING.lg,
-  },
-  tab: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: SPACING.sm,
-    borderRadius: BORDER_RADIUS.md,
-    gap: SPACING.xs,
-  },
-  tabText: {
-    fontSize: FONT_SIZE.md,
-  },
-  actionButtons: {
-    flexDirection: 'row',
-    marginHorizontal: SPACING.lg,
-    gap: SPACING.md,
-    marginBottom: SPACING.lg,
-  },
-  actionButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: SPACING.md,
-    borderRadius: BORDER_RADIUS.lg,
+  addButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     borderWidth: 2,
-    gap: SPACING.sm,
-  },
-  actionButtonText: {
-    fontSize: FONT_SIZE.md,
-    fontWeight: 'bold',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   crewSelector: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     marginHorizontal: SPACING.lg,
-    marginBottom: SPACING.lg,
+    marginBottom: SPACING.md,
     padding: SPACING.lg,
     borderRadius: BORDER_RADIUS.lg,
     borderWidth: 2,
@@ -627,51 +533,38 @@ const styles = StyleSheet.create({
   crewSelectorLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: SPACING.md,
-    flex: 1,
+    gap: SPACING.sm,
   },
   crewSelectorLabel: {
-    fontSize: FONT_SIZE.xs,
+    fontSize: FONT_SIZE.md,
     fontWeight: '700',
-    letterSpacing: 1,
     textTransform: 'uppercase',
+    letterSpacing: 1,
   },
-  crewSelectorRight: {
+  crewDropdown: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: SPACING.sm,
+    flex: 1,
+    marginLeft: SPACING.md,
+    paddingVertical: SPACING.xs,
+    paddingHorizontal: SPACING.sm,
+    borderRadius: BORDER_RADIUS.md,
   },
   crewDropdownText: {
     fontSize: FONT_SIZE.lg,
     fontWeight: 'bold',
+    flex: 1,
   },
   memberBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 8,
-    gap: 4,
+    marginLeft: 4,
   },
   memberBadgeText: {
     fontSize: FONT_SIZE.xs,
     fontWeight: 'bold',
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: 60,
-  },
-  emptyTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginTop: SPACING.lg,
-  },
-  emptySubtitle: {
-    fontSize: FONT_SIZE.md,
-    marginTop: SPACING.sm,
-    textAlign: 'center',
   },
   scrollView: {
     flex: 1,
@@ -680,163 +573,96 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.lg,
     paddingBottom: 100,
   },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: SPACING.md,
-  },
-  crewInfoCard: {
-    padding: SPACING.lg,
-    borderRadius: BORDER_RADIUS.lg,
-    borderWidth: 2,
-    marginBottom: SPACING.lg,
-  },
-  crewInfoHeader: {
+  statsHeader: {
     flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: SPACING.sm,
-  },
-  crewInfoName: {
-    fontSize: 24,
-    fontWeight: 'bold',
-  },
-  adminBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-    gap: 4,
-  },
-  adminBadgeText: {
-    fontSize: FONT_SIZE.xs,
-    fontWeight: 'bold',
-  },
-  crewInfoDesc: {
-    fontSize: FONT_SIZE.md,
-    marginBottom: SPACING.md,
-  },
-  crewCodeContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: SPACING.md,
+    justifyContent: 'space-around',
+    paddingVertical: SPACING.md,
     borderRadius: BORDER_RADIUS.md,
     borderWidth: 1,
     marginBottom: SPACING.md,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
   },
-  crewCodeLabel: {
-    fontSize: FONT_SIZE.sm,
+  statColumn: {
+    alignItems: 'center',
+    gap: SPACING.xs,
+  },
+  statHeaderText: {
+    fontSize: FONT_SIZE.xs,
     fontWeight: '600',
   },
-  crewCode: {
-    fontSize: FONT_SIZE.lg,
-    fontWeight: 'bold',
-    letterSpacing: 2,
-  },
-  leaveButton: {
-    padding: SPACING.md,
-    borderRadius: BORDER_RADIUS.md,
-    borderWidth: 2,
-    alignItems: 'center',
-  },
-  leaveButtonText: {
-    fontSize: FONT_SIZE.md,
-    fontWeight: 'bold',
-  },
-  memberCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: SPACING.md,
-    borderRadius: BORDER_RADIUS.lg,
-    marginBottom: SPACING.md,
-    gap: SPACING.md,
-  },
-  rankContainer: {
-    width: 40,
-    alignItems: 'center',
-  },
-  crownContainer: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  crownText: {
-    fontSize: 20,
-  },
-  rankNumber: {
-    fontSize: FONT_SIZE.lg,
-    fontWeight: 'bold',
-  },
-  memberInfo: {
-    flex: 1,
-  },
-  memberName: {
-    fontSize: FONT_SIZE.md,
-    fontWeight: 'bold',
-  },
-  memberSessions: {
-    fontSize: FONT_SIZE.sm,
-    marginTop: 2,
-  },
-  speedContainer: {
-    alignItems: 'flex-end',
-  },
-  speedValue: {
-    fontSize: 24,
-    fontWeight: 'bold',
-  },
-  speedUnit: {
-    fontSize: FONT_SIZE.xs,
-    marginTop: 2,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: SPACING.lg,
-  },
-  pickerContainer: {
-    width: '100%',
-    maxWidth: 400,
-    borderRadius: BORDER_RADIUS.lg,
-    padding: SPACING.lg,
-    borderWidth: 2,
-  },
-  pickerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: SPACING.md,
-    textAlign: 'center',
-  },
-  pickerItem: {
+  leaderboardEntry: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: SPACING.md,
-    borderRadius: BORDER_RADIUS.md,
+    borderRadius: BORDER_RADIUS.lg,
     borderWidth: 1,
     marginBottom: SPACING.sm,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 3,
+    gap: SPACING.sm,
   },
-  pickerItemTitle: {
-    fontSize: FONT_SIZE.md,
+  rankBadge: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  rankText: {
+    fontSize: 11,
     fontWeight: 'bold',
   },
-  pickerItemSub: {
-    fontSize: FONT_SIZE.sm,
+  avatarColumn: {
+    alignItems: 'center',
+    minWidth: 70,
+    maxWidth: 70,
+  },
+  entryName: {
+    fontSize: 11,
+    fontWeight: '600',
+    marginTop: 4,
+    textAlign: 'center',
+  },
+  crownBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
     marginTop: 2,
+  },
+  crownText: {
+    fontSize: 9,
+    fontWeight: '600',
+  },
+  statsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.md,
+    flex: 1,
+    justifyContent: 'space-around',
+  },
+  statItem: {
+    alignItems: 'center',
+    gap: 2,
+  },
+  statValue: {
+    fontSize: FONT_SIZE.sm,
+    fontWeight: 'bold',
+  },
+  statUnit: {
+    fontSize: 10,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  loadingText: {
-    fontSize: FONT_SIZE.md,
   },
   lockedContainer: {
     flex: 1,
@@ -851,6 +677,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: SPACING.lg,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 4,
   },
   lockedTitle: {
     fontSize: 28,
@@ -877,5 +708,102 @@ const styles = StyleSheet.create({
   upgradeText: {
     fontSize: FONT_SIZE.lg,
     fontWeight: 'bold',
+  },
+  blurContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  keyboardView: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '100%',
+  },
+  modalContainer: {
+    width: '85%',
+    maxWidth: 400,
+    borderRadius: BORDER_RADIUS.lg,
+    borderWidth: 1,
+    padding: SPACING.xl,
+  },
+  modalHeader: {
+    alignItems: 'center',
+    marginBottom: SPACING.lg,
+  },
+  modalTitle: {
+    fontSize: FONT_SIZE.xl,
+    fontWeight: 'bold',
+    marginTop: SPACING.sm,
+  },
+  modalContent: {
+    marginBottom: SPACING.lg,
+  },
+  modalLabel: {
+    fontSize: FONT_SIZE.xs,
+    marginBottom: SPACING.sm,
+    textTransform: 'uppercase',
+    fontWeight: '600',
+    letterSpacing: 1,
+  },
+  friendIdDisplay: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: BORDER_RADIUS.md,
+    borderWidth: 2,
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.md,
+    gap: SPACING.sm,
+    justifyContent: 'space-between',
+  },
+  friendIdText: {
+    flex: 1,
+    fontSize: FONT_SIZE.lg,
+    fontWeight: 'bold',
+    letterSpacing: 2,
+    textAlign: 'center',
+  },
+  modalInput: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: BORDER_RADIUS.md,
+    borderWidth: 1,
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.sm,
+  },
+  input: {
+    flex: 1,
+    fontSize: FONT_SIZE.md,
+    marginLeft: SPACING.sm,
+    paddingVertical: SPACING.xs,
+  },
+  modalHint: {
+    fontSize: FONT_SIZE.xs,
+    marginTop: SPACING.xs,
+    fontStyle: 'italic',
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    gap: SPACING.md,
+  },
+  modalButton: {
+    flex: 1,
+    paddingVertical: SPACING.md,
+    borderRadius: BORDER_RADIUS.md,
+    borderWidth: 1,
+    alignItems: 'center',
+  },
+  modalButtonPrimary: {
+    flex: 1,
+    borderRadius: BORDER_RADIUS.md,
+    overflow: 'hidden',
+  },
+  modalButtonGradient: {
+    paddingVertical: SPACING.md,
+    alignItems: 'center',
+  },
+  modalButtonText: {
+    fontSize: FONT_SIZE.md,
+    fontWeight: '600',
   },
 });

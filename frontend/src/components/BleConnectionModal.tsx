@@ -33,16 +33,28 @@ export default function BleConnectionModal({ visible, onClose, accentColor }: Bl
 
   // Auto-scan when modal opens
   useEffect(() => {
-    if (visible && devices.length === 0) {
+    if (visible && devices.length === 0 && !scanning) {
       handleScan();
     }
   }, [visible]);
+
+  // Update scanning state based on BLE status
+  useEffect(() => {
+    if (status.isScanning) {
+      setScanning(true);
+    }
+  }, [status.isScanning]);
 
   const handleScan = async () => {
     try {
       setScanning(true);
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      
+      // Scan with visible feedback
       await scan();
+      
+      // Keep scanning indicator for at least 1 second for visual feedback
+      await new Promise(resolve => setTimeout(resolve, 1000));
     } catch (error) {
       console.error('Scan error:', error);
     } finally {

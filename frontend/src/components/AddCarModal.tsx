@@ -88,6 +88,7 @@ export default function AddCarModal({ visible, onClose, onSave, accentColor, edi
         model: model.trim(),
         year: year.trim(),
         color: color.trim(),
+        upgrades: upgrades.trim(),
       });
 
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -98,6 +99,7 @@ export default function AddCarModal({ visible, onClose, onSave, accentColor, edi
       setModel('');
       setYear('');
       setColor('');
+      setUpgrades('');
       
       onClose();
     } catch (error) {

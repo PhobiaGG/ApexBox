@@ -272,6 +272,55 @@ export default function SessionDetailScreen() {
             </View>
           </View>
         </ScrollView>
+
+        {/* Share Modal */}
+        <Modal
+          visible={showShareModal}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => setShowShareModal(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <View ref={shareCardRef} collapsable={false}>
+                <SessionShareCard
+                  peakSpeed={parseFloat(formatSpeed(stats?.peakSpeed || 0, settings.units.isMetric).split(' ')[0])}
+                  avgSpeed={parseFloat(formatSpeed(stats?.avgSpeed || 0, settings.units.isMetric).split(' ')[0])}
+                  peakGForce={stats?.peakG || 0}
+                  duration={formatDuration(stats?.duration || 0)}
+                  carModel={profile?.garage?.find(car => car.isActive)?.nickname || 'My Car'}
+                  date={date as string}
+                  accentColor={accentColor}
+                />
+              </View>
+
+              <View style={styles.modalButtons}>
+                <TouchableOpacity
+                  style={[styles.modalButton, styles.cancelButton, { backgroundColor: colors.card, borderColor: colors.border }]}
+                  onPress={() => setShowShareModal(false)}
+                  disabled={isGeneratingShare}
+                >
+                  <Text style={[styles.modalButtonText, { color: colors.text }]}>Cancel</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.modalButton, styles.shareButton, { backgroundColor: accentColor }]}
+                  onPress={handleShareSession}
+                  disabled={isGeneratingShare}
+                >
+                  {isGeneratingShare ? (
+                    <ActivityIndicator size="small" color={colors.text} />
+                  ) : (
+                    <>
+                      <MaterialCommunityIcons name="share-variant" size={20} color={colors.text} />
+                      <Text style={[styles.modalButtonText, { color: colors.text }]}>Share</Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
       </LinearGradient>
     </View>
   );

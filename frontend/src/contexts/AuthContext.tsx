@@ -374,6 +374,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!user) throw new Error('No user logged in');
     
     try {
+      // Optimistic update - update UI immediately
+      if (profile) {
+        const updatedGarage = profile.garage?.map(car => ({
+          ...car,
+          isActive: car.id === carId,
+        })) || [];
+        setProfile({ ...profile, garage: updatedGarage });
+      }
+      
+      // Then update Firebase
       const garageRef = collection(db, 'users', user.uid, 'garage');
       const garageSnap = await getDocs(garageRef);
       
@@ -386,12 +396,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       await Promise.all(batch);
       
+      // Reload to ensure consistency
       if (profile) {
-        const updatedGarage = await loadGarage(user.uid);
-        setProfile({ ...profile, garage: updatedGarage });
+        const freshGarage = await loadGarage(user.uid);
+        setProfile({ ...profile, garage: freshGarage });
       }
     } catch (error: any) {
       console.error('[Auth] Set active car error:', error);
+      // Rollback on error
+      if (profile) {
+        const freshGarage = await loadGarage(user.uid);
+        setProfile({ ...profile, garage: freshGarage });
+      }
       throw new Error(error.message);
     }
   };

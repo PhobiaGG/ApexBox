@@ -1,3 +1,5 @@
+import { TelemetrySimulator, TelemetryData } from '../utils/telemetry';
+
 export interface BleDevice {
   id: string;
   name: string;
@@ -10,6 +12,8 @@ export interface BleStatus {
   connectedDevice: BleDevice | null;
 }
 
+export type TelemetryCallback = (data: TelemetryData) => void;
+
 class MockBleService {
   private status: BleStatus = {
     isScanning: false,
@@ -21,6 +25,10 @@ class MockBleService {
     { id: '001', name: 'ApexBox-001', signal: 'excellent' },
     { id: '002', name: 'ApexBox-002', signal: 'fair' },
   ];
+
+  private telemetrySimulator: TelemetrySimulator = new TelemetrySimulator();
+  private telemetryInterval: NodeJS.Timeout | null = null;
+  private telemetryCallbacks: Set<TelemetryCallback> = new Set();
 
   async scan(): Promise<BleDevice[]> {
     console.log('[BLE] Scanning for devices...');

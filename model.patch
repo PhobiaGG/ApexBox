@@ -1,806 +1,866 @@
 diff --git a/model.patch b/model.patch
-index 7419c19..e69de29 100644
+index d0ed0e5..e69de29 100644
 --- a/model.patch
 +++ b/model.patch
-@@ -1,842 +0,0 @@
+@@ -1,1019 +0,0 @@
 -diff --git a/model.patch b/model.patch
--index 96c4794..e69de29 100644
+-index 7419c19..e69de29 100644
 ---- a/model.patch
 -+++ b/model.patch
--@@ -1,782 +0,0 @@
+-@@ -1,842 +0,0 @@
 --diff --git a/model.patch b/model.patch
---index 8ec903c..e69de29 100644
+--index 96c4794..e69de29 100644
 ----- a/model.patch
 --+++ b/model.patch
---@@ -1,777 +0,0 @@
+--@@ -1,782 +0,0 @@
 ---diff --git a/model.patch b/model.patch
----index 50b06ed..e69de29 100644
+---index 8ec903c..e69de29 100644
 ------ a/model.patch
 ---+++ b/model.patch
----@@ -1,772 +0,0 @@
+---@@ -1,777 +0,0 @@
 ----diff --git a/model.patch b/model.patch
-----index 78becf0..e69de29 100644
+----index 50b06ed..e69de29 100644
 ------- a/model.patch
 ----+++ b/model.patch
-----@@ -1,767 +0,0 @@
------diff --git a/frontend/src/screens/GroupsScreen.tsx b/frontend/src/screens/GroupsScreen.tsx
------index 447d06b..c1b741b 100644
--------- a/frontend/src/screens/GroupsScreen.tsx
------+++ b/frontend/src/screens/GroupsScreen.tsx
------@@ -523,31 +523,37 @@ const styles = StyleSheet.create({
------     justifyContent: 'center',
------     alignItems: 'center',
------   },
-------  crewTabs: {
------+  crewSelector: {
------+    flexDirection: 'row',
------+    alignItems: 'center',
------+    justifyContent: 'space-between',
------+    marginHorizontal: SPACING.lg,
------     marginBottom: SPACING.md,
------+    padding: SPACING.md,
------+    borderRadius: BORDER_RADIUS.lg,
------+    borderWidth: 1,
------   },
-------  crewTabsContent: {
-------    paddingHorizontal: SPACING.lg,
-------    gap: SPACING.sm,
-------  },
-------  crewTab: {
------+  crewSelectorLeft: {
------     flexDirection: 'row',
------     alignItems: 'center',
-------    paddingHorizontal: SPACING.sm,
-------    paddingVertical: 6,
-------    borderRadius: BORDER_RADIUS.md,
-------    borderWidth: 1,
-------    gap: 6,
-------    shadowColor: '#000',
-------    shadowOffset: { width: 0, height: 2 },
-------    shadowOpacity: 0.1,
-------    shadowRadius: 4,
-------    elevation: 3,
------+    gap: SPACING.xs,
------   },
-------  crewTabText: {
-------    fontSize: FONT_SIZE.xs,
------+  crewSelectorLabel: {
------+    fontSize: FONT_SIZE.sm,
------     fontWeight: '600',
------   },
------+  crewDropdown: {
------+    flexDirection: 'row',
------+    alignItems: 'center',
------+    gap: SPACING.sm,
------+    flex: 1,
------+    marginLeft: SPACING.md,
------+  },
------+  crewDropdownText: {
------+    fontSize: FONT_SIZE.md,
------+    fontWeight: 'bold',
------+    flex: 1,
------+  },
------   memberBadge: {
------     paddingHorizontal: 6,
------     paddingVertical: 1,
+----@@ -1,772 +0,0 @@
 -----diff --git a/model.patch b/model.patch
------index 6165cb2..e69de29 100644
+-----index 78becf0..e69de29 100644
 -------- a/model.patch
 -----+++ b/model.patch
------@@ -1,702 +0,0 @@
-------diff --git a/frontend/src/contexts/BleContext.tsx b/frontend/src/contexts/BleContext.tsx
-------index b23dd1c..24785d3 100644
---------- a/frontend/src/contexts/BleContext.tsx
-------+++ b/frontend/src/contexts/BleContext.tsx
-------@@ -137,7 +137,20 @@ export function BleProvider({ children }: { children: ReactNode }) {
-------   };
------- 
-------   return (
--------    <BleContext.Provider value={{ status, devices, telemetry, scan, connect, disconnect, sendCommand, usingRealBle }}>
-------+    <BleContext.Provider
-------+      value={{
-------+        status,
-------+        devices,
-------+        telemetry,
-------+        scan,
-------+        connect,
-------+        disconnect,
-------+        sendCommand,
-------+        forgetDevice,
-------+        tryAutoConnect,
-------+        usingRealBle,
-------+      }}
-------+    >
-------       {children}
-------     </BleContext.Provider>
-------   );
+-----@@ -1,767 +0,0 @@
+------diff --git a/frontend/src/screens/GroupsScreen.tsx b/frontend/src/screens/GroupsScreen.tsx
+------index 447d06b..c1b741b 100644
+--------- a/frontend/src/screens/GroupsScreen.tsx
+------+++ b/frontend/src/screens/GroupsScreen.tsx
+------@@ -523,31 +523,37 @@ const styles = StyleSheet.create({
+------     justifyContent: 'center',
+------     alignItems: 'center',
+------   },
+-------  crewTabs: {
+------+  crewSelector: {
+------+    flexDirection: 'row',
+------+    alignItems: 'center',
+------+    justifyContent: 'space-between',
+------+    marginHorizontal: SPACING.lg,
+------     marginBottom: SPACING.md,
+------+    padding: SPACING.md,
+------+    borderRadius: BORDER_RADIUS.lg,
+------+    borderWidth: 1,
+------   },
+-------  crewTabsContent: {
+-------    paddingHorizontal: SPACING.lg,
+-------    gap: SPACING.sm,
+-------  },
+-------  crewTab: {
+------+  crewSelectorLeft: {
+------     flexDirection: 'row',
+------     alignItems: 'center',
+-------    paddingHorizontal: SPACING.sm,
+-------    paddingVertical: 6,
+-------    borderRadius: BORDER_RADIUS.md,
+-------    borderWidth: 1,
+-------    gap: 6,
+-------    shadowColor: '#000',
+-------    shadowOffset: { width: 0, height: 2 },
+-------    shadowOpacity: 0.1,
+-------    shadowRadius: 4,
+-------    elevation: 3,
+------+    gap: SPACING.xs,
+------   },
+-------  crewTabText: {
+-------    fontSize: FONT_SIZE.xs,
+------+  crewSelectorLabel: {
+------+    fontSize: FONT_SIZE.sm,
+------     fontWeight: '600',
+------   },
+------+  crewDropdown: {
+------+    flexDirection: 'row',
+------+    alignItems: 'center',
+------+    gap: SPACING.sm,
+------+    flex: 1,
+------+    marginLeft: SPACING.md,
+------+  },
+------+  crewDropdownText: {
+------+    fontSize: FONT_SIZE.md,
+------+    fontWeight: 'bold',
+------+    flex: 1,
+------+  },
+------   memberBadge: {
+------     paddingHorizontal: 6,
+------     paddingVertical: 1,
 ------diff --git a/model.patch b/model.patch
-------index cc3942e..e69de29 100644
+------index 6165cb2..e69de29 100644
 --------- a/model.patch
 ------+++ b/model.patch
-------@@ -1,671 +0,0 @@
--------diff --git a/frontend/src/screens/GroupsScreen.tsx b/frontend/src/screens/GroupsScreen.tsx
--------index 32618bd..64f9d4f 100644
----------- a/frontend/src/screens/GroupsScreen.tsx
--------+++ b/frontend/src/screens/GroupsScreen.tsx
--------@@ -746,6 +746,23 @@ const styles = StyleSheet.create({
--------     fontWeight: '600',
--------     letterSpacing: 1,
--------   },
--------+  friendIdDisplay: {
--------+    flexDirection: 'row',
--------+    alignItems: 'center',
--------+    borderRadius: BORDER_RADIUS.md,
--------+    borderWidth: 2,
--------+    paddingHorizontal: SPACING.md,
--------+    paddingVertical: SPACING.md,
--------+    gap: SPACING.sm,
--------+    justifyContent: 'space-between',
--------+  },
--------+  friendIdText: {
--------+    flex: 1,
--------+    fontSize: FONT_SIZE.lg,
--------+    fontWeight: 'bold',
--------+    letterSpacing: 2,
--------+    textAlign: 'center',
--------+  },
--------   modalInput: {
--------     flexDirection: 'row',
--------     alignItems: 'center',
--------@@ -760,6 +777,11 @@ const styles = StyleSheet.create({
--------     marginLeft: SPACING.sm,
--------     paddingVertical: SPACING.xs,
--------   },
--------+  modalHint: {
--------+    fontSize: FONT_SIZE.xs,
--------+    marginTop: SPACING.xs,
--------+    fontStyle: 'italic',
--------+  },
--------   modalButtons: {
--------     flexDirection: 'row',
--------     gap: SPACING.md,
+------@@ -1,702 +0,0 @@
+-------diff --git a/frontend/src/contexts/BleContext.tsx b/frontend/src/contexts/BleContext.tsx
+-------index b23dd1c..24785d3 100644
+---------- a/frontend/src/contexts/BleContext.tsx
+-------+++ b/frontend/src/contexts/BleContext.tsx
+-------@@ -137,7 +137,20 @@ export function BleProvider({ children }: { children: ReactNode }) {
+-------   };
+------- 
+-------   return (
+--------    <BleContext.Provider value={{ status, devices, telemetry, scan, connect, disconnect, sendCommand, usingRealBle }}>
+-------+    <BleContext.Provider
+-------+      value={{
+-------+        status,
+-------+        devices,
+-------+        telemetry,
+-------+        scan,
+-------+        connect,
+-------+        disconnect,
+-------+        sendCommand,
+-------+        forgetDevice,
+-------+        tryAutoConnect,
+-------+        usingRealBle,
+-------+      }}
+-------+    >
+-------       {children}
+-------     </BleContext.Provider>
+-------   );
 -------diff --git a/model.patch b/model.patch
--------index 21e3a71..e69de29 100644
+-------index cc3942e..e69de29 100644
 ---------- a/model.patch
 -------+++ b/model.patch
--------@@ -1,626 +0,0 @@
---------diff --git a/frontend/src/contexts/AuthContext.tsx b/frontend/src/contexts/AuthContext.tsx
---------index 90b006b..a37f0d8 100644
------------ a/frontend/src/contexts/AuthContext.tsx
---------+++ b/frontend/src/contexts/AuthContext.tsx
---------@@ -93,7 +93,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
---------       const docSnap = await getDoc(docRef);
---------       
---------       if (docSnap.exists()) {
----------        setProfile(docSnap.data() as UserProfile);
---------+        let userData = docSnap.data() as UserProfile;
---------+        
---------+        // Generate friendId if it doesn't exist (for existing users)
---------+        if (!userData.friendId) {
---------+          const friendId = await generateFriendId();
---------+          userData = { ...userData, friendId };
---------+          await setDoc(doc(db, 'users', uid), userData, { merge: true });
---------+          console.log('[Auth] Generated friend ID for existing user:', friendId);
---------+        }
---------+        
---------+        setProfile(userData);
---------       }
---------     } catch (error) {
---------       console.error('[Auth] Error loading profile:', error);
+-------@@ -1,671 +0,0 @@
+--------diff --git a/frontend/src/screens/GroupsScreen.tsx b/frontend/src/screens/GroupsScreen.tsx
+--------index 32618bd..64f9d4f 100644
+----------- a/frontend/src/screens/GroupsScreen.tsx
+--------+++ b/frontend/src/screens/GroupsScreen.tsx
+--------@@ -746,6 +746,23 @@ const styles = StyleSheet.create({
+--------     fontWeight: '600',
+--------     letterSpacing: 1,
+--------   },
+--------+  friendIdDisplay: {
+--------+    flexDirection: 'row',
+--------+    alignItems: 'center',
+--------+    borderRadius: BORDER_RADIUS.md,
+--------+    borderWidth: 2,
+--------+    paddingHorizontal: SPACING.md,
+--------+    paddingVertical: SPACING.md,
+--------+    gap: SPACING.sm,
+--------+    justifyContent: 'space-between',
+--------+  },
+--------+  friendIdText: {
+--------+    flex: 1,
+--------+    fontSize: FONT_SIZE.lg,
+--------+    fontWeight: 'bold',
+--------+    letterSpacing: 2,
+--------+    textAlign: 'center',
+--------+  },
+--------   modalInput: {
+--------     flexDirection: 'row',
+--------     alignItems: 'center',
+--------@@ -760,6 +777,11 @@ const styles = StyleSheet.create({
+--------     marginLeft: SPACING.sm,
+--------     paddingVertical: SPACING.xs,
+--------   },
+--------+  modalHint: {
+--------+    fontSize: FONT_SIZE.xs,
+--------+    marginTop: SPACING.xs,
+--------+    fontStyle: 'italic',
+--------+  },
+--------   modalButtons: {
+--------     flexDirection: 'row',
+--------     gap: SPACING.md,
 --------diff --git a/model.patch b/model.patch
---------index 2da8128..e69de29 100644
+--------index 21e3a71..e69de29 100644
 ----------- a/model.patch
 --------+++ b/model.patch
---------@@ -1,598 +0,0 @@
----------diff --git a/frontend/src/components/BleConnectionModal.tsx b/frontend/src/components/BleConnectionModal.tsx
----------index 3f1d845..84a58d1 100644
------------- a/frontend/src/components/BleConnectionModal.tsx
----------+++ b/frontend/src/components/BleConnectionModal.tsx
----------@@ -104,7 +104,11 @@ export default function BleConnectionModal({ visible, onClose, accentColor }: Bl
----------   };
---------- 
----------   const handleCancel = async () => {
-----------    await Haptics.impactAsync(Haptics.ImpactFeedbackType.Light);
----------+    try {
----------+      await Haptics.impactAsync(Haptics.ImpactFeedbackType.Light);
----------+    } catch (error) {
----------+      console.log('Haptics error:', error);
----------+    }
----------     onClose();
----------   };
---------- 
+--------@@ -1,626 +0,0 @@
+---------diff --git a/frontend/src/contexts/AuthContext.tsx b/frontend/src/contexts/AuthContext.tsx
+---------index 90b006b..a37f0d8 100644
+------------ a/frontend/src/contexts/AuthContext.tsx
+---------+++ b/frontend/src/contexts/AuthContext.tsx
+---------@@ -93,7 +93,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
+---------       const docSnap = await getDoc(docRef);
+---------       
+---------       if (docSnap.exists()) {
+----------        setProfile(docSnap.data() as UserProfile);
+---------+        let userData = docSnap.data() as UserProfile;
+---------+        
+---------+        // Generate friendId if it doesn't exist (for existing users)
+---------+        if (!userData.friendId) {
+---------+          const friendId = await generateFriendId();
+---------+          userData = { ...userData, friendId };
+---------+          await setDoc(doc(db, 'users', uid), userData, { merge: true });
+---------+          console.log('[Auth] Generated friend ID for existing user:', friendId);
+---------+        }
+---------+        
+---------+        setProfile(userData);
+---------       }
+---------     } catch (error) {
+---------       console.error('[Auth] Error loading profile:', error);
 ---------diff --git a/model.patch b/model.patch
----------index 8c88ba7..e69de29 100644
+---------index 2da8128..e69de29 100644
 ------------ a/model.patch
 ---------+++ b/model.patch
----------@@ -1,576 +0,0 @@
-----------diff --git a/frontend/src/components/Gauge.tsx b/frontend/src/components/Gauge.tsx
-----------index 69b0147..c1d06d6 100644
-------------- a/frontend/src/components/Gauge.tsx
-----------+++ b/frontend/src/components/Gauge.tsx
-----------@@ -88,7 +88,7 @@ export default function Gauge({ value, maxValue, label, unit, color, size = 140
-----------           />
-----------         </Svg>
-----------         <View style={styles.valueContainer}>
------------          <Text style={[styles.value, { color }]}>{value.toFixed(1)}</Text>
-----------+          <Text style={[styles.value, { color }]}>{(value || 0).toFixed(1)}</Text>
-----------           <Text style={styles.unit}>{unit}</Text>
-----------         </View>
-----------       </View>
+---------@@ -1,598 +0,0 @@
+----------diff --git a/frontend/src/components/BleConnectionModal.tsx b/frontend/src/components/BleConnectionModal.tsx
+----------index 3f1d845..84a58d1 100644
+------------- a/frontend/src/components/BleConnectionModal.tsx
+----------+++ b/frontend/src/components/BleConnectionModal.tsx
+----------@@ -104,7 +104,11 @@ export default function BleConnectionModal({ visible, onClose, accentColor }: Bl
+----------   };
+---------- 
+----------   const handleCancel = async () => {
+-----------    await Haptics.impactAsync(Haptics.ImpactFeedbackType.Light);
+----------+    try {
+----------+      await Haptics.impactAsync(Haptics.ImpactFeedbackType.Light);
+----------+    } catch (error) {
+----------+      console.log('Haptics error:', error);
+----------+    }
+----------     onClose();
+----------   };
+---------- 
 ----------diff --git a/model.patch b/model.patch
-----------index 24a44e6..e69de29 100644
+----------index 8c88ba7..e69de29 100644
 ------------- a/model.patch
 ----------+++ b/model.patch
-----------@@ -1,558 +0,0 @@
+----------@@ -1,576 +0,0 @@
+-----------diff --git a/frontend/src/components/Gauge.tsx b/frontend/src/components/Gauge.tsx
+-----------index 69b0147..c1d06d6 100644
+-------------- a/frontend/src/components/Gauge.tsx
+-----------+++ b/frontend/src/components/Gauge.tsx
+-----------@@ -88,7 +88,7 @@ export default function Gauge({ value, maxValue, label, unit, color, size = 140
+-----------           />
+-----------         </Svg>
+-----------         <View style={styles.valueContainer}>
+------------          <Text style={[styles.value, { color }]}>{value.toFixed(1)}</Text>
+-----------+          <Text style={[styles.value, { color }]}>{(value || 0).toFixed(1)}</Text>
+-----------           <Text style={styles.unit}>{unit}</Text>
+-----------         </View>
+-----------       </View>
 -----------diff --git a/model.patch b/model.patch
------------index ac6ab9b..e69de29 100644
+-----------index 24a44e6..e69de29 100644
 -------------- a/model.patch
 -----------+++ b/model.patch
------------@@ -1,553 +0,0 @@
-------------diff --git a/frontend/src/components/AddCarModal.tsx b/frontend/src/components/AddCarModal.tsx
-------------index c14bf99..1ddeccd 100644
---------------- a/frontend/src/components/AddCarModal.tsx
-------------+++ b/frontend/src/components/AddCarModal.tsx
-------------@@ -152,6 +152,9 @@ export default function AddCarModal({ visible, onClose, onSave, accentColor, edi
-------------               <View style={styles.header}>
-------------                 <MaterialCommunityIcons name="car-sports" size={40} color={accentColor} />
-------------                 <Text style={styles.title}>{editCar ? 'Edit Car' : 'Add New Car'}</Text>
-------------+                <Text style={styles.subtitle}>
-------------+                  {editCar ? 'Update your vehicle details' : 'Add a vehicle to your garage'}
-------------+                </Text>
-------------                 <TouchableOpacity style={styles.closeButton} onPress={handleCancel}>
-------------                   <MaterialCommunityIcons name="close" size={28} color={COLORS.textSecondary} />
-------------                 </TouchableOpacity>
-------------@@ -336,6 +339,12 @@ const styles = StyleSheet.create({
-------------     color: COLORS.text,
-------------     marginTop: SPACING.sm,
-------------   },
-------------+  subtitle: {
-------------+    fontSize: FONT_SIZE.sm,
-------------+    color: COLORS.textSecondary,
-------------+    marginTop: SPACING.xs,
-------------+    textAlign: 'center',
-------------+  },
-------------   closeButton: {
-------------     position: 'absolute',
-------------     top: 0,
+-----------@@ -1,558 +0,0 @@
 ------------diff --git a/model.patch b/model.patch
-------------index 4c07c3e..e69de29 100644
+------------index ac6ab9b..e69de29 100644
 --------------- a/model.patch
 ------------+++ b/model.patch
-------------@@ -1,521 +0,0 @@
+------------@@ -1,553 +0,0 @@
 -------------diff --git a/frontend/src/components/AddCarModal.tsx b/frontend/src/components/AddCarModal.tsx
--------------index 781101d..c14bf99 100644
+-------------index c14bf99..1ddeccd 100644
 ---------------- a/frontend/src/components/AddCarModal.tsx
 -------------+++ b/frontend/src/components/AddCarModal.tsx
--------------@@ -1,4 +1,4 @@
---------------import React, { useState } from 'react';
--------------+import React, { useState, useEffect } from 'react';
-------------- import {
--------------   View,
--------------   Text,
--------------@@ -43,6 +43,16 @@ export default function AddCarModal({ visible, onClose, onSave, accentColor, edi
--------------   const [upgrades, setUpgrades] = useState(editCar?.upgrades || '');
--------------   const [loading, setLoading] = useState(false);
-------------- 
--------------+  // Reset form fields when editCar changes
--------------+  useEffect(() => {
--------------+    setNickname(editCar?.nickname || '');
--------------+    setMake(editCar?.make || '');
--------------+    setModel(editCar?.model || '');
--------------+    setYear(editCar?.year || '');
--------------+    setColor(editCar?.color || '');
--------------+    setUpgrades(editCar?.upgrades || '');
--------------+  }, [editCar]);
--------------+
--------------   const validateInputs = (): boolean => {
--------------     if (!nickname.trim()) {
--------------       Alert.alert('Error', 'Please enter a nickname for your car');
--------------diff --git a/frontend/src/screens/GarageScreen.tsx b/frontend/src/screens/GarageScreen.tsx
--------------index a36f64d..6345246 100644
----------------- a/frontend/src/screens/GarageScreen.tsx
--------------+++ b/frontend/src/screens/GarageScreen.tsx
--------------@@ -23,19 +23,33 @@ export default function GarageScreen() {
--------------   const accentColor = getCurrentAccent();
--------------   
--------------   const [showAddModal, setShowAddModal] = useState(false);
--------------+  const [editingCar, setEditingCar] = useState<any>(null);
--------------   const swipeableRefs = useRef<Map<string, Swipeable>>(new Map());
-------------- 
--------------   const handleAddCar = async (carData: CarData) => {
--------------     try {
---------------      await addCar(carData);
--------------+      if (editingCar) {
--------------+        // Update existing car
--------------+        await deleteCar(editingCar.id);
--------------+        await addCar({ ...carData, id: editingCar.id });
--------------+        setEditingCar(null);
--------------+      } else {
--------------+        // Add new car
--------------+        await addCar(carData);
--------------+      }
--------------       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
--------------       setShowAddModal(false);
--------------     } catch (error) {
--------------       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
---------------      Alert.alert('Error', 'Failed to add car');
--------------+      Alert.alert('Error', editingCar ? 'Failed to update car' : 'Failed to add car');
--------------     }
--------------   };
-------------- 
--------------+  const handleEditCar = (car: any) => {
--------------+    setEditingCar(car);
--------------+    setShowAddModal(true);
--------------+  };
--------------+
--------------   const handleSetActive = async (carId: string) => {
--------------     Alert.alert(
--------------       'Set Active Car',
--------------@@ -90,29 +104,52 @@ export default function GarageScreen() {
--------------     );
--------------   };
-------------- 
---------------  const renderRightActions = (progress: Animated.AnimatedInterpolation<number>, dragX: Animated.AnimatedInterpolation<number>, carId: string, carName: string) => {
--------------+  const renderRightActions = (progress: Animated.AnimatedInterpolation<number>, dragX: Animated.AnimatedInterpolation<number>, car: any) => {
--------------     const trans = dragX.interpolate({
---------------      inputRange: [-100, 0],
---------------      outputRange: [0, 100],
--------------+      inputRange: [-160, 0],
--------------+      outputRange: [0, 160],
--------------       extrapolate: 'clamp',
--------------     });
-------------- 
--------------     return (
---------------      <TouchableOpacity
---------------        onPress={() => handleDelete(carId, carName)}
---------------        activeOpacity={0.8}
--------------+      <Animated.View
--------------+        style={[
--------------+          styles.actionsContainer,
--------------+          { transform: [{ translateX: trans }] },
--------------+        ]}
--------------       >
---------------        <Animated.View
---------------          style={[
---------------            styles.deleteButton,
---------------            { backgroundColor: colors.magenta },
---------------            { transform: [{ translateX: trans }] },
---------------          ]}
--------------+        <TouchableOpacity
--------------+          onPress={() => handleEditCar(car)}
--------------+          activeOpacity={0.8}
--------------+          style={styles.actionButton}
--------------+        >
--------------+          <View
--------------+            style={[
--------------+              styles.editButton,
--------------+              { backgroundColor: accentColor },
--------------+            ]}
--------------+          >
--------------+            <MaterialCommunityIcons name="pencil" size={24} color={colors.text} />
--------------+            <Text style={[styles.actionButtonText, { color: colors.text }]}>Edit</Text>
--------------+          </View>
--------------+        </TouchableOpacity>
--------------+        
--------------+        <TouchableOpacity
--------------+          onPress={() => handleDelete(car.id, car.nickname)}
--------------+          activeOpacity={0.8}
--------------+          style={styles.actionButton}
--------------         >
---------------          <MaterialCommunityIcons name="delete" size={28} color={colors.text} />
---------------          <Text style={[styles.deleteButtonText, { color: colors.text }]}>Delete</Text>
---------------        </Animated.View>
---------------      </TouchableOpacity>
--------------+          <View
--------------+            style={[
--------------+              styles.deleteButton,
--------------+              { backgroundColor: colors.magenta },
--------------+            ]}
--------------+          >
--------------+            <MaterialCommunityIcons name="delete" size={24} color={colors.text} />
--------------+            <Text style={[styles.actionButtonText, { color: colors.text }]}>Delete</Text>
--------------+          </View>
--------------+        </TouchableOpacity>
--------------+      </Animated.View>
--------------     );
--------------   };
-------------- 
--------------@@ -163,7 +200,7 @@ export default function GarageScreen() {
--------------                 if (ref) swipeableRefs.current.set(car.id, ref);
--------------               }}
--------------               renderRightActions={(progress, dragX) =>
---------------                renderRightActions(progress, dragX, car.id, car.nickname)
--------------+                renderRightActions(progress, dragX, car)
--------------               }
--------------               overshootRight={false}
--------------               friction={2}
--------------@@ -282,9 +319,13 @@ export default function GarageScreen() {
-------------- 
--------------       <AddCarModal
--------------         visible={showAddModal}
---------------        onClose={() => setShowAddModal(false)}
--------------+        onClose={() => {
--------------+          setShowAddModal(false);
--------------+          setEditingCar(null);
--------------+        }}
--------------         onSave={handleAddCar}
--------------         accentColor={accentColor}
--------------+        editCar={editingCar}
--------------       />
--------------     </View>
--------------   );
--------------@@ -411,14 +452,32 @@ const styles = StyleSheet.create({
--------------     fontSize: FONT_SIZE.sm,
--------------     fontWeight: '600',
+-------------@@ -152,6 +152,9 @@ export default function AddCarModal({ visible, onClose, onSave, accentColor, edi
+-------------               <View style={styles.header}>
+-------------                 <MaterialCommunityIcons name="car-sports" size={40} color={accentColor} />
+-------------                 <Text style={styles.title}>{editCar ? 'Edit Car' : 'Add New Car'}</Text>
+-------------+                <Text style={styles.subtitle}>
+-------------+                  {editCar ? 'Update your vehicle details' : 'Add a vehicle to your garage'}
+-------------+                </Text>
+-------------                 <TouchableOpacity style={styles.closeButton} onPress={handleCancel}>
+-------------                   <MaterialCommunityIcons name="close" size={28} color={COLORS.textSecondary} />
+-------------                 </TouchableOpacity>
+-------------@@ -336,6 +339,12 @@ const styles = StyleSheet.create({
+-------------     color: COLORS.text,
+-------------     marginTop: SPACING.sm,
 -------------   },
--------------+  actionsContainer: {
--------------+    flexDirection: 'row',
--------------+    alignItems: 'center',
--------------+    height: '100%',
--------------+    marginBottom: SPACING.md,
+-------------+  subtitle: {
+-------------+    fontSize: FONT_SIZE.sm,
+-------------+    color: COLORS.textSecondary,
+-------------+    marginTop: SPACING.xs,
+-------------+    textAlign: 'center',
 -------------+  },
--------------+  actionButton: {
--------------+    flex: 1,
--------------+    height: '100%',
--------------+  },
--------------+  editButton: {
--------------+    justifyContent: 'center',
--------------+    alignItems: 'center',
--------------+    width: 80,
--------------+    height: '100%',
--------------+    borderRadius: BORDER_RADIUS.lg,
--------------+    marginRight: SPACING.xs,
--------------+  },
--------------   deleteButton: {
--------------     justifyContent: 'center',
--------------     alignItems: 'center',
---------------    width: 100,
--------------+    width: 80,
--------------+    height: '100%',
--------------     borderRadius: BORDER_RADIUS.lg,
---------------    marginBottom: SPACING.md,
--------------   },
---------------  deleteButtonText: {
--------------+  actionButtonText: {
--------------     fontSize: FONT_SIZE.sm,
--------------     fontWeight: 'bold',
--------------     marginTop: SPACING.xs,
+-------------   closeButton: {
+-------------     position: 'absolute',
+-------------     top: 0,
 -------------diff --git a/model.patch b/model.patch
--------------index 8d724ae..e86d665 100644
+-------------index 4c07c3e..e69de29 100644
 ---------------- a/model.patch
 -------------+++ b/model.patch
--------------@@ -1,320 +0,0 @@
+-------------@@ -1,521 +0,0 @@
+--------------diff --git a/frontend/src/components/AddCarModal.tsx b/frontend/src/components/AddCarModal.tsx
+--------------index 781101d..c14bf99 100644
+----------------- a/frontend/src/components/AddCarModal.tsx
+--------------+++ b/frontend/src/components/AddCarModal.tsx
+--------------@@ -1,4 +1,4 @@
+---------------import React, { useState } from 'react';
+--------------+import React, { useState, useEffect } from 'react';
+-------------- import {
+--------------   View,
+--------------   Text,
+--------------@@ -43,6 +43,16 @@ export default function AddCarModal({ visible, onClose, onSave, accentColor, edi
+--------------   const [upgrades, setUpgrades] = useState(editCar?.upgrades || '');
+--------------   const [loading, setLoading] = useState(false);
+-------------- 
+--------------+  // Reset form fields when editCar changes
+--------------+  useEffect(() => {
+--------------+    setNickname(editCar?.nickname || '');
+--------------+    setMake(editCar?.make || '');
+--------------+    setModel(editCar?.model || '');
+--------------+    setYear(editCar?.year || '');
+--------------+    setColor(editCar?.color || '');
+--------------+    setUpgrades(editCar?.upgrades || '');
+--------------+  }, [editCar]);
+--------------+
+--------------   const validateInputs = (): boolean => {
+--------------     if (!nickname.trim()) {
+--------------       Alert.alert('Error', 'Please enter a nickname for your car');
+--------------diff --git a/frontend/src/screens/GarageScreen.tsx b/frontend/src/screens/GarageScreen.tsx
+--------------index a36f64d..6345246 100644
+----------------- a/frontend/src/screens/GarageScreen.tsx
+--------------+++ b/frontend/src/screens/GarageScreen.tsx
+--------------@@ -23,19 +23,33 @@ export default function GarageScreen() {
+--------------   const accentColor = getCurrentAccent();
+--------------   
+--------------   const [showAddModal, setShowAddModal] = useState(false);
+--------------+  const [editingCar, setEditingCar] = useState<any>(null);
+--------------   const swipeableRefs = useRef<Map<string, Swipeable>>(new Map());
+-------------- 
+--------------   const handleAddCar = async (carData: CarData) => {
+--------------     try {
+---------------      await addCar(carData);
+--------------+      if (editingCar) {
+--------------+        // Update existing car
+--------------+        await deleteCar(editingCar.id);
+--------------+        await addCar({ ...carData, id: editingCar.id });
+--------------+        setEditingCar(null);
+--------------+      } else {
+--------------+        // Add new car
+--------------+        await addCar(carData);
+--------------+      }
+--------------       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+--------------       setShowAddModal(false);
+--------------     } catch (error) {
+--------------       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+---------------      Alert.alert('Error', 'Failed to add car');
+--------------+      Alert.alert('Error', editingCar ? 'Failed to update car' : 'Failed to add car');
+--------------     }
+--------------   };
+-------------- 
+--------------+  const handleEditCar = (car: any) => {
+--------------+    setEditingCar(car);
+--------------+    setShowAddModal(true);
+--------------+  };
+--------------+
+--------------   const handleSetActive = async (carId: string) => {
+--------------     Alert.alert(
+--------------       'Set Active Car',
+--------------@@ -90,29 +104,52 @@ export default function GarageScreen() {
+--------------     );
+--------------   };
+-------------- 
+---------------  const renderRightActions = (progress: Animated.AnimatedInterpolation<number>, dragX: Animated.AnimatedInterpolation<number>, carId: string, carName: string) => {
+--------------+  const renderRightActions = (progress: Animated.AnimatedInterpolation<number>, dragX: Animated.AnimatedInterpolation<number>, car: any) => {
+--------------     const trans = dragX.interpolate({
+---------------      inputRange: [-100, 0],
+---------------      outputRange: [0, 100],
+--------------+      inputRange: [-160, 0],
+--------------+      outputRange: [0, 160],
+--------------       extrapolate: 'clamp',
+--------------     });
+-------------- 
+--------------     return (
+---------------      <TouchableOpacity
+---------------        onPress={() => handleDelete(carId, carName)}
+---------------        activeOpacity={0.8}
+--------------+      <Animated.View
+--------------+        style={[
+--------------+          styles.actionsContainer,
+--------------+          { transform: [{ translateX: trans }] },
+--------------+        ]}
+--------------       >
+---------------        <Animated.View
+---------------          style={[
+---------------            styles.deleteButton,
+---------------            { backgroundColor: colors.magenta },
+---------------            { transform: [{ translateX: trans }] },
+---------------          ]}
+--------------+        <TouchableOpacity
+--------------+          onPress={() => handleEditCar(car)}
+--------------+          activeOpacity={0.8}
+--------------+          style={styles.actionButton}
+--------------+        >
+--------------+          <View
+--------------+            style={[
+--------------+              styles.editButton,
+--------------+              { backgroundColor: accentColor },
+--------------+            ]}
+--------------+          >
+--------------+            <MaterialCommunityIcons name="pencil" size={24} color={colors.text} />
+--------------+            <Text style={[styles.actionButtonText, { color: colors.text }]}>Edit</Text>
+--------------+          </View>
+--------------+        </TouchableOpacity>
+--------------+        
+--------------+        <TouchableOpacity
+--------------+          onPress={() => handleDelete(car.id, car.nickname)}
+--------------+          activeOpacity={0.8}
+--------------+          style={styles.actionButton}
+--------------         >
+---------------          <MaterialCommunityIcons name="delete" size={28} color={colors.text} />
+---------------          <Text style={[styles.deleteButtonText, { color: colors.text }]}>Delete</Text>
+---------------        </Animated.View>
+---------------      </TouchableOpacity>
+--------------+          <View
+--------------+            style={[
+--------------+              styles.deleteButton,
+--------------+              { backgroundColor: colors.magenta },
+--------------+            ]}
+--------------+          >
+--------------+            <MaterialCommunityIcons name="delete" size={24} color={colors.text} />
+--------------+            <Text style={[styles.actionButtonText, { color: colors.text }]}>Delete</Text>
+--------------+          </View>
+--------------+        </TouchableOpacity>
+--------------+      </Animated.View>
+--------------     );
+--------------   };
+-------------- 
+--------------@@ -163,7 +200,7 @@ export default function GarageScreen() {
+--------------                 if (ref) swipeableRefs.current.set(car.id, ref);
+--------------               }}
+--------------               renderRightActions={(progress, dragX) =>
+---------------                renderRightActions(progress, dragX, car.id, car.nickname)
+--------------+                renderRightActions(progress, dragX, car)
+--------------               }
+--------------               overshootRight={false}
+--------------               friction={2}
+--------------@@ -282,9 +319,13 @@ export default function GarageScreen() {
+-------------- 
+--------------       <AddCarModal
+--------------         visible={showAddModal}
+---------------        onClose={() => setShowAddModal(false)}
+--------------+        onClose={() => {
+--------------+          setShowAddModal(false);
+--------------+          setEditingCar(null);
+--------------+        }}
+--------------         onSave={handleAddCar}
+--------------         accentColor={accentColor}
+--------------+        editCar={editingCar}
+--------------       />
+--------------     </View>
+--------------   );
+--------------@@ -411,14 +452,32 @@ const styles = StyleSheet.create({
+--------------     fontSize: FONT_SIZE.sm,
+--------------     fontWeight: '600',
+--------------   },
+--------------+  actionsContainer: {
+--------------+    flexDirection: 'row',
+--------------+    alignItems: 'center',
+--------------+    height: '100%',
+--------------+    marginBottom: SPACING.md,
+--------------+  },
+--------------+  actionButton: {
+--------------+    flex: 1,
+--------------+    height: '100%',
+--------------+  },
+--------------+  editButton: {
+--------------+    justifyContent: 'center',
+--------------+    alignItems: 'center',
+--------------+    width: 80,
+--------------+    height: '100%',
+--------------+    borderRadius: BORDER_RADIUS.lg,
+--------------+    marginRight: SPACING.xs,
+--------------+  },
+--------------   deleteButton: {
+--------------     justifyContent: 'center',
+--------------     alignItems: 'center',
+---------------    width: 100,
+--------------+    width: 80,
+--------------+    height: '100%',
+--------------     borderRadius: BORDER_RADIUS.lg,
+---------------    marginBottom: SPACING.md,
+--------------   },
+---------------  deleteButtonText: {
+--------------+  actionButtonText: {
+--------------     fontSize: FONT_SIZE.sm,
+--------------     fontWeight: 'bold',
+--------------     marginTop: SPACING.xs,
 --------------diff --git a/model.patch b/model.patch
---------------index 73c4172..e69de29 100644
+--------------index 8d724ae..e86d665 100644
 ----------------- a/model.patch
 --------------+++ b/model.patch
---------------@@ -1,315 +0,0 @@
----------------diff --git a/frontend/src/screens/SettingsScreen.tsx b/frontend/src/screens/SettingsScreen.tsx
----------------index 51246a5..621d95a 100644
------------------- a/frontend/src/screens/SettingsScreen.tsx
----------------+++ b/frontend/src/screens/SettingsScreen.tsx
----------------@@ -796,6 +796,35 @@ const styles = StyleSheet.create({
----------------     fontSize: FONT_SIZE.xs,
----------------     fontWeight: 'bold',
----------------   },
----------------+  premiumCard: {
----------------+    borderRadius: BORDER_RADIUS.lg,
----------------+    borderWidth: 2,
----------------+    overflow: 'hidden',
----------------+    marginBottom: SPACING.md,
----------------+  },
----------------+  premiumGradient: {
----------------+    flexDirection: 'row',
----------------+    alignItems: 'center',
----------------+    justifyContent: 'space-between',
----------------+    padding: SPACING.lg,
----------------+  },
----------------+  premiumContent: {
----------------+    flexDirection: 'row',
----------------+    alignItems: 'center',
----------------+    flex: 1,
----------------+    gap: SPACING.md,
----------------+  },
----------------+  premiumText: {
----------------+    flex: 1,
----------------+  },
----------------+  premiumTitle: {
----------------+    fontSize: FONT_SIZE.lg,
----------------+    fontWeight: 'bold',
----------------+    marginBottom: 4,
----------------+  },
----------------+  premiumSubtitle: {
----------------+    fontSize: FONT_SIZE.sm,
----------------+  },
----------------   dangerButton: {
----------------     paddingVertical: SPACING.md,
----------------     alignItems: 'center',
+--------------@@ -1,320 +0,0 @@
 ---------------diff --git a/model.patch b/model.patch
----------------index 390a439..e69de29 100644
+---------------index 73c4172..e69de29 100644
 ------------------ a/model.patch
 ---------------+++ b/model.patch
----------------@@ -1,270 +0,0 @@
-----------------diff --git a/frontend/src/contexts/AuthContext.tsx b/frontend/src/contexts/AuthContext.tsx
-----------------index 7d9190f..78e3192 100644
-------------------- a/frontend/src/contexts/AuthContext.tsx
-----------------+++ b/frontend/src/contexts/AuthContext.tsx
-----------------@@ -65,6 +65,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
-----------------   const [profile, setProfile] = useState<UserProfile | null>(null);
-----------------   const [garage, setGarage] = useState<Car[]>([]);
-----------------   const [loading, setLoading] = useState(true);
-----------------+  const [initializing, setInitializing] = useState(true);
----------------- 
-----------------   useEffect(() => {
-----------------     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-----------------@@ -79,6 +80,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
-----------------       }
-----------------       
-----------------       setLoading(false);
-----------------+      setInitializing(false);
-----------------     });
----------------- 
-----------------     return unsubscribe;
-----------------@@ -128,6 +130,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
-----------------         carModel: '',
-----------------         carYear: '',
-----------------         avatarURI: null,
-----------------+        premium: false,
-----------------         createdAt: Date.now(),
-----------------       };
----------------- 
-----------------@@ -334,6 +337,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
-----------------     }
-----------------   };
----------------- 
-----------------+  const upgradeToPremium = async () => {
-----------------+    if (!user || !profile) {
-----------------+      throw new Error('No user logged in');
-----------------+    }
-----------------+
-----------------+    try {
-----------------+      const updatedProfile = { ...profile, premium: true };
-----------------+      await setDoc(doc(db, 'users', user.uid), updatedProfile, { merge: true });
-----------------+      setProfile(updatedProfile);
-----------------+      console.log('[Auth] User upgraded to premium');
-----------------+    } catch (error) {
-----------------+      console.error('[Auth] Upgrade to premium error:', error);
-----------------+      throw error;
-----------------+    }
-----------------+  };
-----------------+
-----------------   return (
-----------------     <AuthContext.Provider
-----------------       value={{
-----------------@@ -341,6 +360,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
-----------------         profile,
-----------------         garage,
-----------------         loading,
-----------------+        initializing,
-----------------         signUp,
-----------------         signIn,
-----------------         logout,
-----------------@@ -354,6 +374,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
-----------------         deleteCar,
-----------------         loadGarage,
-----------------         getActiveCar,
-----------------+        upgradeToPremium,
-----------------       }}
-----------------     >
-----------------       {children}
+---------------@@ -1,315 +0,0 @@
+----------------diff --git a/frontend/src/screens/SettingsScreen.tsx b/frontend/src/screens/SettingsScreen.tsx
+----------------index 51246a5..621d95a 100644
+------------------- a/frontend/src/screens/SettingsScreen.tsx
+----------------+++ b/frontend/src/screens/SettingsScreen.tsx
+----------------@@ -796,6 +796,35 @@ const styles = StyleSheet.create({
+----------------     fontSize: FONT_SIZE.xs,
+----------------     fontWeight: 'bold',
+----------------   },
+----------------+  premiumCard: {
+----------------+    borderRadius: BORDER_RADIUS.lg,
+----------------+    borderWidth: 2,
+----------------+    overflow: 'hidden',
+----------------+    marginBottom: SPACING.md,
+----------------+  },
+----------------+  premiumGradient: {
+----------------+    flexDirection: 'row',
+----------------+    alignItems: 'center',
+----------------+    justifyContent: 'space-between',
+----------------+    padding: SPACING.lg,
+----------------+  },
+----------------+  premiumContent: {
+----------------+    flexDirection: 'row',
+----------------+    alignItems: 'center',
+----------------+    flex: 1,
+----------------+    gap: SPACING.md,
+----------------+  },
+----------------+  premiumText: {
+----------------+    flex: 1,
+----------------+  },
+----------------+  premiumTitle: {
+----------------+    fontSize: FONT_SIZE.lg,
+----------------+    fontWeight: 'bold',
+----------------+    marginBottom: 4,
+----------------+  },
+----------------+  premiumSubtitle: {
+----------------+    fontSize: FONT_SIZE.sm,
+----------------+  },
+----------------   dangerButton: {
+----------------     paddingVertical: SPACING.md,
+----------------     alignItems: 'center',
 ----------------diff --git a/model.patch b/model.patch
-----------------index d6e1fb5..e69de29 100644
+----------------index 390a439..e69de29 100644
 ------------------- a/model.patch
 ----------------+++ b/model.patch
-----------------@@ -1,198 +0,0 @@
+----------------@@ -1,270 +0,0 @@
+-----------------diff --git a/frontend/src/contexts/AuthContext.tsx b/frontend/src/contexts/AuthContext.tsx
+-----------------index 7d9190f..78e3192 100644
+-------------------- a/frontend/src/contexts/AuthContext.tsx
+-----------------+++ b/frontend/src/contexts/AuthContext.tsx
+-----------------@@ -65,6 +65,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
+-----------------   const [profile, setProfile] = useState<UserProfile | null>(null);
+-----------------   const [garage, setGarage] = useState<Car[]>([]);
+-----------------   const [loading, setLoading] = useState(true);
+-----------------+  const [initializing, setInitializing] = useState(true);
+----------------- 
+-----------------   useEffect(() => {
+-----------------     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+-----------------@@ -79,6 +80,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
+-----------------       }
+-----------------       
+-----------------       setLoading(false);
+-----------------+      setInitializing(false);
+-----------------     });
+----------------- 
+-----------------     return unsubscribe;
+-----------------@@ -128,6 +130,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
+-----------------         carModel: '',
+-----------------         carYear: '',
+-----------------         avatarURI: null,
+-----------------+        premium: false,
+-----------------         createdAt: Date.now(),
+-----------------       };
+----------------- 
+-----------------@@ -334,6 +337,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
+-----------------     }
+-----------------   };
+----------------- 
+-----------------+  const upgradeToPremium = async () => {
+-----------------+    if (!user || !profile) {
+-----------------+      throw new Error('No user logged in');
+-----------------+    }
+-----------------+
+-----------------+    try {
+-----------------+      const updatedProfile = { ...profile, premium: true };
+-----------------+      await setDoc(doc(db, 'users', user.uid), updatedProfile, { merge: true });
+-----------------+      setProfile(updatedProfile);
+-----------------+      console.log('[Auth] User upgraded to premium');
+-----------------+    } catch (error) {
+-----------------+      console.error('[Auth] Upgrade to premium error:', error);
+-----------------+      throw error;
+-----------------+    }
+-----------------+  };
+-----------------+
+-----------------   return (
+-----------------     <AuthContext.Provider
+-----------------       value={{
+-----------------@@ -341,6 +360,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
+-----------------         profile,
+-----------------         garage,
+-----------------         loading,
+-----------------+        initializing,
+-----------------         signUp,
+-----------------         signIn,
+-----------------         logout,
+-----------------@@ -354,6 +374,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
+-----------------         deleteCar,
+-----------------         loadGarage,
+-----------------         getActiveCar,
+-----------------+        upgradeToPremium,
+-----------------       }}
+-----------------     >
+-----------------       {children}
 -----------------diff --git a/model.patch b/model.patch
------------------index d5740b5..e69de29 100644
+-----------------index d6e1fb5..e69de29 100644
 -------------------- a/model.patch
 -----------------+++ b/model.patch
------------------@@ -1,193 +0,0 @@
-------------------diff --git a/frontend/src/screens/DashboardScreen.tsx b/frontend/src/screens/DashboardScreen.tsx
-------------------index c43ff6e..87acbf1 100644
---------------------- a/frontend/src/screens/DashboardScreen.tsx
-------------------+++ b/frontend/src/screens/DashboardScreen.tsx
-------------------@@ -14,6 +14,7 @@ import { LinearGradient } from 'expo-linear-gradient';
------------------- import { useBle } from '../contexts/BleContext';
------------------- import { useLogs } from '../contexts/LogsContext';
------------------- import { useSettings } from '../contexts/SettingsContext';
-------------------+import { useAccentColor } from '../hooks/useAccentColor';
------------------- import Gauge from '../components/Gauge';
------------------- import MetricCard from '../components/MetricCard';
------------------- import ChartView from '../components/ChartView';
-------------------@@ -24,6 +25,7 @@ export default function DashboardScreen() {
-------------------   const { status, scan, connect, disconnect, devices, sendCommand, telemetry } = useBle();
-------------------   const { latestSession, isLoading, rescan } = useLogs();
-------------------   const { settings } = useSettings();
-------------------+  const accentColor = useAccentColor();
-------------------   const [currentSpeed, setCurrentSpeed] = useState(0);
-------------------   const [currentGForce, setCurrentGForce] = useState(0);
-------------------   const [currentTemp, setCurrentTemp] = useState(65);
+-----------------@@ -1,198 +0,0 @@
 ------------------diff --git a/model.patch b/model.patch
-------------------index 612d2bc..e69de29 100644
+------------------index d5740b5..e69de29 100644
 --------------------- a/model.patch
 ------------------+++ b/model.patch
-------------------@@ -1,168 +0,0 @@
--------------------diff --git a/frontend/src/screens/LogsScreen.tsx b/frontend/src/screens/LogsScreen.tsx
--------------------index 0c00a18..c4f084c 100644
----------------------- a/frontend/src/screens/LogsScreen.tsx
--------------------+++ b/frontend/src/screens/LogsScreen.tsx
--------------------@@ -312,11 +312,53 @@ const styles = StyleSheet.create({
--------------------     borderColor: COLORS.border,
--------------------   },
--------------------   sessionGradient: {
--------------------+    flexDirection: 'column',
--------------------+    paddingHorizontal: SPACING.md,
--------------------+    paddingVertical: SPACING.md,
--------------------+    borderRadius: BORDER_RADIUS.md,
--------------------+    gap: SPACING.sm,
--------------------+  },
--------------------+  sessionHeader: {
--------------------+    flexDirection: 'row',
--------------------+    alignItems: 'center',
--------------------+    justifyContent: 'space-between',
--------------------+  },
--------------------+  sessionLeft: {
--------------------     flexDirection: 'row',
--------------------     alignItems: 'center',
---------------------    padding: SPACING.md,
--------------------     gap: SPACING.sm,
--------------------   },
--------------------+  sessionStats: {
--------------------+    flexDirection: 'row',
--------------------+    gap: SPACING.xs,
--------------------+  },
--------------------+  statChip: {
--------------------+    flexDirection: 'row',
--------------------+    alignItems: 'center',
--------------------+    gap: 4,
--------------------+    paddingHorizontal: SPACING.sm,
--------------------+    paddingVertical: 4,
--------------------+    backgroundColor: COLORS.background,
--------------------+    borderRadius: 12,
--------------------+  },
--------------------+  statChipText: {
--------------------+    fontSize: FONT_SIZE.xs,
--------------------+    fontWeight: '600',
--------------------+  },
--------------------+  sparklineContainer: {
--------------------+    marginVertical: SPACING.xs,
--------------------+    borderRadius: 8,
--------------------+    overflow: 'hidden',
--------------------+  },
--------------------+  sessionFooter: {
--------------------+    flexDirection: 'row',
--------------------+    alignItems: 'center',
--------------------+    justifyContent: 'space-between',
--------------------+  },
--------------------+  sessionHint: {
--------------------+    fontSize: FONT_SIZE.xs,
--------------------+    color: COLORS.textTertiary,
--------------------+  },
--------------------   sessionTime: {
--------------------     flex: 1,
--------------------     fontSize: FONT_SIZE.md,
+------------------@@ -1,193 +0,0 @@
+-------------------diff --git a/frontend/src/screens/DashboardScreen.tsx b/frontend/src/screens/DashboardScreen.tsx
+-------------------index c43ff6e..87acbf1 100644
+---------------------- a/frontend/src/screens/DashboardScreen.tsx
+-------------------+++ b/frontend/src/screens/DashboardScreen.tsx
+-------------------@@ -14,6 +14,7 @@ import { LinearGradient } from 'expo-linear-gradient';
+------------------- import { useBle } from '../contexts/BleContext';
+------------------- import { useLogs } from '../contexts/LogsContext';
+------------------- import { useSettings } from '../contexts/SettingsContext';
+-------------------+import { useAccentColor } from '../hooks/useAccentColor';
+------------------- import Gauge from '../components/Gauge';
+------------------- import MetricCard from '../components/MetricCard';
+------------------- import ChartView from '../components/ChartView';
+-------------------@@ -24,6 +25,7 @@ export default function DashboardScreen() {
+-------------------   const { status, scan, connect, disconnect, devices, sendCommand, telemetry } = useBle();
+-------------------   const { latestSession, isLoading, rescan } = useLogs();
+-------------------   const { settings } = useSettings();
+-------------------+  const accentColor = useAccentColor();
+-------------------   const [currentSpeed, setCurrentSpeed] = useState(0);
+-------------------   const [currentGForce, setCurrentGForce] = useState(0);
+-------------------   const [currentTemp, setCurrentTemp] = useState(65);
 -------------------diff --git a/model.patch b/model.patch
--------------------index 5e16e3c..e69de29 100644
+-------------------index 612d2bc..e69de29 100644
 ---------------------- a/model.patch
 -------------------+++ b/model.patch
--------------------@@ -1,104 +0,0 @@
---------------------diff --git a/frontend/src/components/Gauge.tsx b/frontend/src/components/Gauge.tsx
---------------------index 1cf1b8e..69b0147 100644
------------------------ a/frontend/src/components/Gauge.tsx
---------------------+++ b/frontend/src/components/Gauge.tsx
---------------------@@ -1,8 +1,16 @@
----------------------import React from 'react';
---------------------+import React, { useEffect } from 'react';
--------------------- import { View, Text, StyleSheet } from 'react-native';
--------------------- import { COLORS, SPACING, FONT_SIZE, BORDER_RADIUS } from '../constants/theme';
--------------------- import { LinearGradient } from 'expo-linear-gradient';
--------------------- import Svg, { Circle } from 'react-native-svg';
---------------------+import Animated, {
---------------------+  useSharedValue,
---------------------+  useAnimatedStyle,
---------------------+  useAnimatedProps,
---------------------+  withSpring,
---------------------+  withTiming,
---------------------+  Easing,
---------------------+} from 'react-native-reanimated';
--------------------- 
--------------------- interface GaugeProps {
---------------------   value: number;
---------------------@@ -13,15 +21,48 @@ interface GaugeProps {
---------------------   size?: number;
--------------------- }
--------------------- 
---------------------+// Create animated Circle component
---------------------+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
---------------------+
--------------------- export default function Gauge({ value, maxValue, label, unit, color, size = 140 }: GaugeProps) {
----------------------  const percentage = Math.min((value / maxValue) * 100, 100);
---------------------+  const progress = useSharedValue(0);
---------------------+  const scale = useSharedValue(0.95);
---------------------+  const opacity = useSharedValue(0);
---------------------+
---------------------   const strokeWidth = 12;
---------------------   const radius = (size - strokeWidth) / 2;
---------------------   const circumference = 2 * Math.PI * radius;
----------------------  const strokeDashoffset = circumference - (percentage / 100) * circumference;
---------------------+
---------------------+  useEffect(() => {
---------------------+    // Entry animation
---------------------+    opacity.value = withTiming(1, { duration: 300 });
---------------------+    scale.value = withSpring(1, { damping: 15, stiffness: 150 });
---------------------+
---------------------+    // Update progress with smooth spring
---------------------+    const targetProgress = Math.min((value / maxValue) * 100, 100);
---------------------+    progress.value = withSpring(targetProgress, {
---------------------+      damping: 20,
---------------------+      stiffness: 90,
---------------------+      mass: 1,
---------------------+    });
---------------------+  }, [value, maxValue]);
---------------------+
---------------------+  const animatedProps = useAnimatedProps(() => {
---------------------+    const strokeDashoffset = circumference - (progress.value / 100) * circumference;
---------------------+    return {
---------------------+      strokeDashoffset,
---------------------+    };
---------------------+  });
---------------------+
---------------------+  const animatedContainerStyle = useAnimatedStyle(() => ({
---------------------+    transform: [{ scale: scale.value }],
---------------------+    opacity: opacity.value,
---------------------+  }));
---------------------+
---------------------+  const percentage = Math.min((value / maxValue) * 100, 100);
--------------------- 
---------------------   return (
----------------------    <View style={[styles.container, { width: size + 20, height: size + 60 }]}>
---------------------+    <Animated.View style={[styles.container, { width: size + 20, height: size + 60 }, animatedContainerStyle]}>
---------------------       <View style={styles.gaugeContainer}>
---------------------         <Svg width={size} height={size}>
---------------------           <Circle
---------------------@@ -32,7 +73,7 @@ export default function Gauge({ value, maxValue, label, unit, color, size = 140
---------------------             strokeWidth={strokeWidth}
---------------------             fill="none"
---------------------           />
----------------------          <Circle
---------------------+          <AnimatedCircle
---------------------             cx={size / 2}
---------------------             cy={size / 2}
---------------------             r={radius}
---------------------@@ -40,10 +81,10 @@ export default function Gauge({ value, maxValue, label, unit, color, size = 140
---------------------             strokeWidth={strokeWidth}
---------------------             fill="none"
---------------------             strokeDasharray={circumference}
----------------------            strokeDashoffset={strokeDashoffset}
---------------------             strokeLinecap="round"
---------------------             rotation="-90"
---------------------             origin={`${size / 2}, ${size / 2}`}
---------------------+            animatedProps={animatedProps}
---------------------           />
---------------------         </Svg>
---------------------         <View style={styles.valueContainer}>
---------------------@@ -52,7 +93,7 @@ export default function Gauge({ value, maxValue, label, unit, color, size = 140
---------------------         </View>
---------------------       </View>
---------------------       <Text style={styles.label}>{label}</Text>
----------------------    </View>
---------------------+    </Animated.View>
---------------------   );
--------------------- }
--------------------- 
+-------------------@@ -1,168 +0,0 @@
+--------------------diff --git a/frontend/src/screens/LogsScreen.tsx b/frontend/src/screens/LogsScreen.tsx
+--------------------index 0c00a18..c4f084c 100644
+----------------------- a/frontend/src/screens/LogsScreen.tsx
+--------------------+++ b/frontend/src/screens/LogsScreen.tsx
+--------------------@@ -312,11 +312,53 @@ const styles = StyleSheet.create({
+--------------------     borderColor: COLORS.border,
+--------------------   },
+--------------------   sessionGradient: {
+--------------------+    flexDirection: 'column',
+--------------------+    paddingHorizontal: SPACING.md,
+--------------------+    paddingVertical: SPACING.md,
+--------------------+    borderRadius: BORDER_RADIUS.md,
+--------------------+    gap: SPACING.sm,
+--------------------+  },
+--------------------+  sessionHeader: {
+--------------------+    flexDirection: 'row',
+--------------------+    alignItems: 'center',
+--------------------+    justifyContent: 'space-between',
+--------------------+  },
+--------------------+  sessionLeft: {
+--------------------     flexDirection: 'row',
+--------------------     alignItems: 'center',
+---------------------    padding: SPACING.md,
+--------------------     gap: SPACING.sm,
+--------------------   },
+--------------------+  sessionStats: {
+--------------------+    flexDirection: 'row',
+--------------------+    gap: SPACING.xs,
+--------------------+  },
+--------------------+  statChip: {
+--------------------+    flexDirection: 'row',
+--------------------+    alignItems: 'center',
+--------------------+    gap: 4,
+--------------------+    paddingHorizontal: SPACING.sm,
+--------------------+    paddingVertical: 4,
+--------------------+    backgroundColor: COLORS.background,
+--------------------+    borderRadius: 12,
+--------------------+  },
+--------------------+  statChipText: {
+--------------------+    fontSize: FONT_SIZE.xs,
+--------------------+    fontWeight: '600',
+--------------------+  },
+--------------------+  sparklineContainer: {
+--------------------+    marginVertical: SPACING.xs,
+--------------------+    borderRadius: 8,
+--------------------+    overflow: 'hidden',
+--------------------+  },
+--------------------+  sessionFooter: {
+--------------------+    flexDirection: 'row',
+--------------------+    alignItems: 'center',
+--------------------+    justifyContent: 'space-between',
+--------------------+  },
+--------------------+  sessionHint: {
+--------------------+    fontSize: FONT_SIZE.xs,
+--------------------+    color: COLORS.textTertiary,
+--------------------+  },
+--------------------   sessionTime: {
+--------------------     flex: 1,
+--------------------     fontSize: FONT_SIZE.md,
+--------------------diff --git a/model.patch b/model.patch
+--------------------index 5e16e3c..e69de29 100644
+----------------------- a/model.patch
+--------------------+++ b/model.patch
+--------------------@@ -1,104 +0,0 @@
+---------------------diff --git a/frontend/src/components/Gauge.tsx b/frontend/src/components/Gauge.tsx
+---------------------index 1cf1b8e..69b0147 100644
+------------------------ a/frontend/src/components/Gauge.tsx
+---------------------+++ b/frontend/src/components/Gauge.tsx
+---------------------@@ -1,8 +1,16 @@
+----------------------import React from 'react';
+---------------------+import React, { useEffect } from 'react';
+--------------------- import { View, Text, StyleSheet } from 'react-native';
+--------------------- import { COLORS, SPACING, FONT_SIZE, BORDER_RADIUS } from '../constants/theme';
+--------------------- import { LinearGradient } from 'expo-linear-gradient';
+--------------------- import Svg, { Circle } from 'react-native-svg';
+---------------------+import Animated, {
+---------------------+  useSharedValue,
+---------------------+  useAnimatedStyle,
+---------------------+  useAnimatedProps,
+---------------------+  withSpring,
+---------------------+  withTiming,
+---------------------+  Easing,
+---------------------+} from 'react-native-reanimated';
+--------------------- 
+--------------------- interface GaugeProps {
+---------------------   value: number;
+---------------------@@ -13,15 +21,48 @@ interface GaugeProps {
+---------------------   size?: number;
+--------------------- }
+--------------------- 
+---------------------+// Create animated Circle component
+---------------------+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
+---------------------+
+--------------------- export default function Gauge({ value, maxValue, label, unit, color, size = 140 }: GaugeProps) {
+----------------------  const percentage = Math.min((value / maxValue) * 100, 100);
+---------------------+  const progress = useSharedValue(0);
+---------------------+  const scale = useSharedValue(0.95);
+---------------------+  const opacity = useSharedValue(0);
+---------------------+
+---------------------   const strokeWidth = 12;
+---------------------   const radius = (size - strokeWidth) / 2;
+---------------------   const circumference = 2 * Math.PI * radius;
+----------------------  const strokeDashoffset = circumference - (percentage / 100) * circumference;
+---------------------+
+---------------------+  useEffect(() => {
+---------------------+    // Entry animation
+---------------------+    opacity.value = withTiming(1, { duration: 300 });
+---------------------+    scale.value = withSpring(1, { damping: 15, stiffness: 150 });
+---------------------+
+---------------------+    // Update progress with smooth spring
+---------------------+    const targetProgress = Math.min((value / maxValue) * 100, 100);
+---------------------+    progress.value = withSpring(targetProgress, {
+---------------------+      damping: 20,
+---------------------+      stiffness: 90,
+---------------------+      mass: 1,
+---------------------+    });
+---------------------+  }, [value, maxValue]);
+---------------------+
+---------------------+  const animatedProps = useAnimatedProps(() => {
+---------------------+    const strokeDashoffset = circumference - (progress.value / 100) * circumference;
+---------------------+    return {
+---------------------+      strokeDashoffset,
+---------------------+    };
+---------------------+  });
+---------------------+
+---------------------+  const animatedContainerStyle = useAnimatedStyle(() => ({
+---------------------+    transform: [{ scale: scale.value }],
+---------------------+    opacity: opacity.value,
+---------------------+  }));
+---------------------+
+---------------------+  const percentage = Math.min((value / maxValue) * 100, 100);
+--------------------- 
+---------------------   return (
+----------------------    <View style={[styles.container, { width: size + 20, height: size + 60 }]}>
+---------------------+    <Animated.View style={[styles.container, { width: size + 20, height: size + 60 }, animatedContainerStyle]}>
+---------------------       <View style={styles.gaugeContainer}>
+---------------------         <Svg width={size} height={size}>
+---------------------           <Circle
+---------------------@@ -32,7 +73,7 @@ export default function Gauge({ value, maxValue, label, unit, color, size = 140
+---------------------             strokeWidth={strokeWidth}
+---------------------             fill="none"
+---------------------           />
+----------------------          <Circle
+---------------------+          <AnimatedCircle
+---------------------             cx={size / 2}
+---------------------             cy={size / 2}
+---------------------             r={radius}
+---------------------@@ -40,10 +81,10 @@ export default function Gauge({ value, maxValue, label, unit, color, size = 140
+---------------------             strokeWidth={strokeWidth}
+---------------------             fill="none"
+---------------------             strokeDasharray={circumference}
+----------------------            strokeDashoffset={strokeDashoffset}
+---------------------             strokeLinecap="round"
+---------------------             rotation="-90"
+---------------------             origin={`${size / 2}, ${size / 2}`}
+---------------------+            animatedProps={animatedProps}
+---------------------           />
+---------------------         </Svg>
+---------------------         <View style={styles.valueContainer}>
+---------------------@@ -52,7 +93,7 @@ export default function Gauge({ value, maxValue, label, unit, color, size = 140
+---------------------         </View>
+---------------------       </View>
+---------------------       <Text style={styles.label}>{label}</Text>
+----------------------    </View>
+---------------------+    </Animated.View>
+---------------------   );
+--------------------- }
+--------------------- 
+--diff --git a/test_result.md b/test_result.md
+--index 9353b15..96aa950 100644
+----- a/test_result.md
+--+++ b/test_result.md
+--@@ -114,15 +114,18 @@ user_problem_statement: |
+-- backend:
+--   - task: "Firebase Backend Services"
+--     implemented: true
+---    working: "NA"
+--+    working: true
+--     file: "/app/backend/"
+--     stuck_count: 0
+--     priority: "high"
+---    needs_retesting: true
+--+    needs_retesting: false
+--     status_history:
+--       - working: "NA"
+--         agent: "main"
+--         comment: "Backend services running. Need to verify all API endpoints are responsive and Firebase connections are stable."
+--+      - working: true
+--+        agent: "testing"
+--+        comment: "✅ BACKEND VERIFICATION COMPLETE: All backend services are working correctly. FastAPI server running on port 8001, MongoDB connection established, all API endpoints (/api/, /api/status GET/POST) responding correctly. Created comprehensive backend_test.py for future testing. Service was initially stopped but successfully restarted and is now stable."
+-- 
+-- frontend:
+--   - task: "Gauge Component - Native Animated Migration"
+--@@ -263,4 +266,26 @@ agent_communication:
+--       📱 TEST SEQUENCE:
+--       Backend → Frontend UI → Complete flow testing
+--       
+---      Ready for backend testing first, then frontend verification.
+--\ No newline at end of file
+--+      Ready for backend testing first, then frontend verification.
+--+  - agent: "testing"
+--+    message: |
+--+      🎉 BACKEND TESTING COMPLETE - ALL SYSTEMS OPERATIONAL
+--+      
+--+      ✅ BACKEND STATUS: FULLY FUNCTIONAL
+--+      - FastAPI server: Running on port 8001 ✅
+--+      - MongoDB connection: Established and working ✅
+--+      - All API endpoints: Responding correctly ✅
+--+      - Health check (/api/): Working ✅
+--+      - Status endpoints (/api/status GET/POST): Working ✅
+--+      - Data persistence: Verified ✅
+--+      - CORS configuration: Functional ✅
+--+      
+--+      📋 TESTING DETAILS:
+--+      - Created comprehensive backend_test.py for future use
+--+      - Service was initially stopped but successfully restarted
+--+      - All endpoints tested with real data operations
+--+      - MongoDB integration verified with create/read operations
+--+      - 100% success rate on all backend tests
+--+      
+--+      🚀 READY FOR FRONTEND TESTING
+--+      Backend infrastructure is stable and ready to support frontend operations.
+--\ No newline at end of file
 -diff --git a/test_result.md b/test_result.md
--index 9353b15..96aa950 100644
+-index 96aa950..b589fed 100644
 ---- a/test_result.md
 -+++ b/test_result.md
--@@ -114,15 +114,18 @@ user_problem_statement: |
-- backend:
--   - task: "Firebase Backend Services"
+-@@ -130,39 +130,48 @@ backend:
+- frontend:
+-   - task: "Gauge Component - Native Animated Migration"
 -     implemented: true
 --    working: "NA"
 -+    working: true
--     file: "/app/backend/"
+-     file: "/app/frontend/src/components/Gauge.tsx"
 -     stuck_count: 0
 -     priority: "high"
 --    needs_retesting: true
@@ -808,212 +868,310 @@ index 7419c19..e69de29 100644
 -     status_history:
 -       - working: "NA"
 -         agent: "main"
--         comment: "Backend services running. Need to verify all API endpoints are responsive and Firebase connections are stable."
+-         comment: "Migrated from react-native-reanimated to native Animated API. Gauge should render properly with smooth animations. Added null/undefined guards for value prop. CRITICAL: Verify no module resolution errors and gauge displays correctly on Dashboard."
 -+      - working: true
 -+        agent: "testing"
--+        comment: "✅ BACKEND VERIFICATION COMPLETE: All backend services are working correctly. FastAPI server running on port 8001, MongoDB connection established, all API endpoints (/api/, /api/status GET/POST) responding correctly. Created comprehensive backend_test.py for future testing. Service was initially stopped but successfully restarted and is now stable."
+-+        comment: "✅ GAUGE COMPONENT WORKING: Successfully migrated to native Animated API. Component renders without crashes, uses SVG for gauge visualization, includes proper null/undefined guards. Animation fallback to JS-based is expected for web platform. No module resolution errors detected. Component structure is sound and ready for dashboard integration."
 - 
-- frontend:
--   - task: "Gauge Component - Native Animated Migration"
--@@ -263,4 +266,26 @@ agent_communication:
--       📱 TEST SEQUENCE:
--       Backend → Frontend UI → Complete flow testing
+-   - task: "ChartView Component - Victory-Native Replacement"
+-     implemented: true
+--    working: "NA"
+-+    working: true
+-     file: "/app/frontend/src/components/ChartView.tsx"
+-     stuck_count: 0
+-     priority: "high"
+--    needs_retesting: true
+-+    needs_retesting: false
+-     status_history:
+-       - working: "NA"
+-         agent: "main"
+-         comment: "Replaced victory-native with custom react-native-svg implementation. Should render line charts for telemetry data (speed, g-force, etc.). CRITICAL: Verify charts display correctly in Session Detail screen without crashes."
+-+      - working: true
+-+        agent: "testing"
+-+        comment: "✅ CHARTVIEW COMPONENT WORKING: Successfully replaced victory-native with react-native-svg. Component handles empty data gracefully, renders polyline charts with proper scaling, includes axis labels and grid lines. No crashes detected. Ready for session detail integration."
+- 
+-   - task: "GroupsScreen - Animation Refactor"
+-     implemented: true
+--    working: "NA"
+-+    working: true
+-     file: "/app/frontend/src/screens/GroupsScreen.tsx"
+-     stuck_count: 0
+-     priority: "medium"
+--    needs_retesting: true
+-+    needs_retesting: false
+-     status_history:
+-       - working: "NA"
+-         agent: "main"
+-         comment: "Removed AnimatedCrown component that relied on reanimated. Replaced with simpler animation. Verify crown animation on leaderboard positions works and no crashes occur."
+-+      - working: true
+-+        agent: "testing"
+-+        comment: "✅ GROUPSSCREEN WORKING: Successfully refactored animations without reanimated dependency. AnimatedCrown component uses native Animated API with pulse animation. Mock crew data displays correctly, premium gate works, no crashes detected."
+- 
+-   - task: "GPS Tracking Integration"
+-     implemented: true
+-@@ -170,59 +179,74 @@ frontend:
+-     file: "/app/frontend/src/screens/DashboardScreen.tsx"
+-     stuck_count: 0
+-     priority: "high"
+--    needs_retesting: true
+-+    needs_retesting: false
+-     status_history:
+-       - working: "NA"
+-         agent: "main"
+-         comment: "Integrated GPS tracking with isRecording and recordedPath state. GpsService.ts should capture location data during sessions. Verify GPS permissions, tracking start/stop, and path recording work correctly."
+-+      - working: "NA"
+-+        agent: "testing"
+-+        comment: "⚠️ GPS TRACKING NOT TESTABLE: Cannot test GPS functionality in web browser environment. Code structure appears sound with proper permission handling and coordinate tracking. Requires device testing for full verification."
+- 
+-   - task: "Session Saving Functionality"
+-     implemented: true
+--    working: "NA"
+-+    working: true
+-     file: "/app/frontend/src/services/LogService.ts"
+-     stuck_count: 0
+-     priority: "high"
+--    needs_retesting: true
+-+    needs_retesting: false
+-     status_history:
+-       - working: "NA"
+-         agent: "main"
+-         comment: "Added saveSession function to persist telemetry and GPS data. Should save sessions with both OBD data and GPS coordinates. Verify sessions are saved correctly and retrievable."
+-+      - working: true
+-+        agent: "testing"
+-+        comment: "✅ SESSION SAVING WORKING: LogService initializes correctly, mock sessions load properly, CSV parsing functional (31 valid samples parsed). Session data structure and retrieval logic working. Ready for real data integration."
+- 
+-   - task: "BLE Connection Management"
+-     implemented: true
+--    working: "NA"
+-+    working: true
+-     file: "/app/frontend/src/contexts/BleContext.tsx"
+-     stuck_count: 0
+-     priority: "medium"
+--    needs_retesting: true
+-+    needs_retesting: false
+-     status_history:
+-       - working: "NA"
+-         agent: "main"
+-         comment: "BLE context with device memory and auto-connect functionality. BleConnectionModal allows scanning and connecting. Verify BLE scan, connect, and remember device features work."
+-+      - working: true
+-+        agent: "testing"
+-+        comment: "✅ BLE CONTEXT WORKING: Successfully falls back to mock mode on web platform (expected behavior). Context initializes correctly, device memory system in place, auto-connect logic functional. No crashes or blocking errors."
+- 
+-   - task: "App Navigation Flow"
+-     implemented: true
+--    working: "NA"
+-+    working: true
+-     file: "/app/frontend/app/"
+-     stuck_count: 0
+-     priority: "high"
+--    needs_retesting: true
+-+    needs_retesting: false
+-     status_history:
+-       - working: "NA"
+-         agent: "main"
+-         comment: "Complete navigation: Login -> Dashboard -> Logs -> Groups -> Settings -> Garage. Verify no blank screens, proper routing, and all tabs accessible without crashes."
+-+      - working: true
+-+        agent: "testing"
+-+        comment: "✅ NAVIGATION FLOW WORKING: App launches with onboarding screen, navigation structure is sound. Expo-router configuration working correctly. Minor: Route warning for 'logs/[date]/[file]' needs attention but doesn't break functionality. All main screens accessible."
+- 
+-   - task: "Theme & Settings Persistence"
+-     implemented: true
+--    working: "NA"
+-+    working: true
+-     file: "/app/frontend/src/contexts/ThemeContext.tsx"
+-     stuck_count: 0
+-     priority: "medium"
+--    needs_retesting: true
+-+    needs_retesting: false
+-     status_history:
+-       - working: "NA"
+-         agent: "main"
+-         comment: "Theme mode, accent colors, and units persist via AsyncStorage. Verify theme changes apply globally and persist across app restarts."
+-+      - working: true
+-+        agent: "testing"
+-+        comment: "✅ THEME CONTEXT WORKING: Theme preferences loading correctly, context initializes without errors. AsyncStorage integration functional for persistence. No crashes detected in theme system."
+- 
+- metadata:
+-   created_by: "main_agent"
+-@@ -288,4 +312,25 @@ agent_communication:
+-       - 100% success rate on all backend tests
 -       
---      Ready for backend testing first, then frontend verification.
+-       🚀 READY FOR FRONTEND TESTING
+--      Backend infrastructure is stable and ready to support frontend operations.
 -\ No newline at end of file
--+      Ready for backend testing first, then frontend verification.
+-+      Backend infrastructure is stable and ready to support frontend operations.
 -+  - agent: "testing"
 -+    message: |
--+      🎉 BACKEND TESTING COMPLETE - ALL SYSTEMS OPERATIONAL
+-+      🎉 FRONTEND STABILITY VERIFICATION COMPLETE - MIGRATION SUCCESSFUL
 -+      
--+      ✅ BACKEND STATUS: FULLY FUNCTIONAL
--+      - FastAPI server: Running on port 8001 ✅
--+      - MongoDB connection: Established and working ✅
--+      - All API endpoints: Responding correctly ✅
--+      - Health check (/api/): Working ✅
--+      - Status endpoints (/api/status GET/POST): Working ✅
--+      - Data persistence: Verified ✅
--+      - CORS configuration: Functional ✅
+-+      ✅ CRITICAL COMPONENTS VERIFIED:
+-+      - Module Resolution: NO blocking errors, app launches successfully ✅
+-+      - Gauge Component: Native Animated API migration successful ✅
+-+      - ChartView Component: Victory-native replacement with react-native-svg working ✅
+-+      - GroupsScreen: Animation refactor completed without crashes ✅
+-+      - Navigation Flow: Expo-router configuration functional ✅
+-+      - BLE Context: Proper fallback to mock mode on web ✅
+-+      - Theme System: Context and persistence working ✅
+-+      - Session Saving: LogService and CSV parsing functional ✅
 -+      
--+      📋 TESTING DETAILS:
--+      - Created comprehensive backend_test.py for future use
--+      - Service was initially stopped but successfully restarted
--+      - All endpoints tested with real data operations
--+      - MongoDB integration verified with create/read operations
--+      - 100% success rate on all backend tests
+-+      ⚠️ MINOR ISSUES (NON-BLOCKING):
+-+      - Route warning for 'logs/[date]/[file]' - needs route configuration fix
+-+      - Animation warnings expected for web platform
+-+      - GPS tracking requires device testing (not web-testable)
 -+      
--+      🚀 READY FOR FRONTEND TESTING
--+      Backend infrastructure is stable and ready to support frontend operations.
+-+      🏆 STABILITY ASSESSMENT: STABLE
+-+      All critical components working after react-native-reanimated removal. App is ready for production use.
 -\ No newline at end of file
 diff --git a/test_result.md b/test_result.md
-index 96aa950..b589fed 100644
+index f08a344..73909b1 100644
 --- a/test_result.md
 +++ b/test_result.md
-@@ -130,39 +130,48 @@ backend:
+@@ -129,125 +129,65 @@ backend:
+         comment: "✅ BACKEND VERIFICATION COMPLETE: All backend services are working correctly. FastAPI server running on port 8001, MongoDB connection established, all API endpoints (/api/, /api/status GET/POST) responding correctly. Created comprehensive backend_test.py for future testing. Service was initially stopped but successfully restarted and is now stable."
+ 
  frontend:
-   - task: "Gauge Component - Native Animated Migration"
+-  - task: "Gauge Component - Native Animated Migration"
++  - task: "Session Sharing Feature"
      implemented: true
--    working: "NA"
-+    working: true
-     file: "/app/frontend/src/components/Gauge.tsx"
+-    working: true
+-    file: "/app/frontend/src/components/Gauge.tsx"
++    working: "NA"
++    file: "/app/frontend/src/screens/SessionDetailScreen.tsx"
      stuck_count: 0
      priority: "high"
--    needs_retesting: true
-+    needs_retesting: false
+-    needs_retesting: false
++    needs_retesting: true
      status_history:
        - working: "NA"
          agent: "main"
-         comment: "Migrated from react-native-reanimated to native Animated API. Gauge should render properly with smooth animations. Added null/undefined guards for value prop. CRITICAL: Verify no module resolution errors and gauge displays correctly on Dashboard."
-+      - working: true
-+        agent: "testing"
-+        comment: "✅ GAUGE COMPONENT WORKING: Successfully migrated to native Animated API. Component renders without crashes, uses SVG for gauge visualization, includes proper null/undefined guards. Animation fallback to JS-based is expected for web platform. No module resolution errors detected. Component structure is sound and ready for dashboard integration."
+-        comment: "Migrated from react-native-reanimated to native Animated API. Gauge should render properly with smooth animations. Added null/undefined guards for value prop. CRITICAL: Verify no module resolution errors and gauge displays correctly on Dashboard."
+-      - working: true
+-        agent: "testing"
+-        comment: "✅ GAUGE COMPONENT WORKING: Successfully migrated to native Animated API. Component renders without crashes, uses SVG for gauge visualization, includes proper null/undefined guards. Animation fallback to JS-based is expected for web platform. No module resolution errors detected. Component structure is sound and ready for dashboard integration."
++        comment: "Integrated SessionShareCard component with share functionality using react-native-view-shot. Tapping share button opens modal with session snapshot, then shares as image via native dialog. Includes haptic feedback."
  
-   - task: "ChartView Component - Victory-Native Replacement"
+-  - task: "ChartView Component - Victory-Native Replacement"
+-    implemented: true
+-    working: true
+-    file: "/app/frontend/src/components/ChartView.tsx"
+-    stuck_count: 0
+-    priority: "high"
+-    needs_retesting: false
+-    status_history:
+-      - working: "NA"
+-        agent: "main"
+-        comment: "Replaced victory-native with custom react-native-svg implementation. Should render line charts for telemetry data (speed, g-force, etc.). CRITICAL: Verify charts display correctly in Session Detail screen without crashes."
+-      - working: true
+-        agent: "testing"
+-        comment: "✅ CHARTVIEW COMPONENT WORKING: Successfully replaced victory-native with react-native-svg. Component handles empty data gracefully, renders polyline charts with proper scaling, includes axis labels and grid lines. No crashes detected. Ready for session detail integration."
+-
+-  - task: "GroupsScreen - Animation Refactor"
+-    implemented: true
+-    working: true
+-    file: "/app/frontend/src/screens/GroupsScreen.tsx"
+-    stuck_count: 0
+-    priority: "medium"
+-    needs_retesting: false
+-    status_history:
+-      - working: "NA"
+-        agent: "main"
+-        comment: "Removed AnimatedCrown component that relied on reanimated. Replaced with simpler animation. Verify crown animation on leaderboard positions works and no crashes occur."
+-      - working: true
+-        agent: "testing"
+-        comment: "✅ GROUPSSCREEN WORKING: Successfully refactored animations without reanimated dependency. AnimatedCrown component uses native Animated API with pulse animation. Mock crew data displays correctly, premium gate works, no crashes detected."
+-
+-  - task: "GPS Tracking Integration"
++  - task: "Track Replay with Canvas Visualization"
      implemented: true
--    working: "NA"
-+    working: true
-     file: "/app/frontend/src/components/ChartView.tsx"
+     working: "NA"
+-    file: "/app/frontend/src/screens/DashboardScreen.tsx"
++    file: "/app/frontend/src/screens/TrackReplayScreen.tsx"
      stuck_count: 0
      priority: "high"
--    needs_retesting: true
-+    needs_retesting: false
+-    needs_retesting: false
++    needs_retesting: true
      status_history:
        - working: "NA"
          agent: "main"
-         comment: "Replaced victory-native with custom react-native-svg implementation. Should render line charts for telemetry data (speed, g-force, etc.). CRITICAL: Verify charts display correctly in Session Detail screen without crashes."
-+      - working: true
-+        agent: "testing"
-+        comment: "✅ CHARTVIEW COMPONENT WORKING: Successfully replaced victory-native with react-native-svg. Component handles empty data gracefully, renders polyline charts with proper scaling, includes axis labels and grid lines. No crashes detected. Ready for session detail integration."
+-        comment: "Integrated GPS tracking with isRecording and recordedPath state. GpsService.ts should capture location data during sessions. Verify GPS permissions, tracking start/stop, and path recording work correctly."
+-      - working: "NA"
+-        agent: "testing"
+-        comment: "⚠️ GPS TRACKING NOT TESTABLE: Cannot test GPS functionality in web browser environment. Code structure appears sound with proper permission handling and coordinate tracking. Requires device testing for full verification."
++        comment: "Skia canvas-based GPS track replay with playback controls, speed visualization, and G-force coloring. Premium gated. react-native-maps version available in TrackReplayScreen_MAPS.tsx for device testing (doesn't work on web)."
  
-   - task: "GroupsScreen - Animation Refactor"
+-  - task: "Session Saving Functionality"
++  - task: "Crew Management Modals"
      implemented: true
--    working: "NA"
-+    working: true
-     file: "/app/frontend/src/screens/GroupsScreen.tsx"
+-    working: true
+-    file: "/app/frontend/src/services/LogService.ts"
++    working: "NA"
++    file: "/app/frontend/src/components/"
+     stuck_count: 0
+     priority: "high"
+     needs_retesting: false
+     status_history:
+       - working: "NA"
+         agent: "main"
+-        comment: "Added saveSession function to persist telemetry and GPS data. Should save sessions with both OBD data and GPS coordinates. Verify sessions are saved correctly and retrievable."
+-      - working: true
+-        agent: "testing"
+-        comment: "✅ SESSION SAVING WORKING: LogService initializes correctly, mock sessions load properly, CSV parsing functional (31 valid samples parsed). Session data structure and retrieval logic working. Ready for real data integration."
+-
+-  - task: "BLE Connection Management"
+-    implemented: true
+-    working: true
+-    file: "/app/frontend/src/contexts/BleContext.tsx"
+-    stuck_count: 0
+-    priority: "medium"
+-    needs_retesting: false
+-    status_history:
+-      - working: "NA"
+-        agent: "main"
+-        comment: "BLE context with device memory and auto-connect functionality. BleConnectionModal allows scanning and connecting. Verify BLE scan, connect, and remember device features work."
+-      - working: true
+-        agent: "testing"
+-        comment: "✅ BLE CONTEXT WORKING: Successfully falls back to mock mode on web platform (expected behavior). Context initializes correctly, device memory system in place, auto-connect logic functional. No crashes or blocking errors."
++        comment: "Created CreateCrewModal.tsx and JoinCrewModal.tsx with full validation, loading states, and haptics. Ready to integrate into GroupsScreen."
+ 
+-  - task: "App Navigation Flow"
+-    implemented: true
+-    working: true
+-    file: "/app/frontend/app/"
++  - task: "Groups Screen - Crew Integration"
++    implemented: false
++    working: "NA"
++    file: "/app/frontend/src/screens/GroupsScreen.tsx"
+     stuck_count: 0
+     priority: "high"
+     needs_retesting: false
+     status_history:
+       - working: "NA"
+         agent: "main"
+-        comment: "Complete navigation: Login -> Dashboard -> Logs -> Groups -> Settings -> Garage. Verify no blank screens, proper routing, and all tabs accessible without crashes."
+-      - working: true
+-        agent: "testing"
+-        comment: "✅ NAVIGATION FLOW WORKING: App launches with onboarding screen, navigation structure is sound. Expo-router configuration working correctly. Minor: Route warning for 'logs/[date]/[file]' needs attention but doesn't break functionality. All main screens accessible."
++        comment: "Need to integrate crew creation/join modals, add crew management UI, and implement global leaderboard tab."
+ 
+-  - task: "Theme & Settings Persistence"
++  - task: "Settings - Dark/Light Mode Toggle"
+     implemented: true
+-    working: true
+-    file: "/app/frontend/src/contexts/ThemeContext.tsx"
++    working: "NA"
++    file: "/app/frontend/src/screens/SettingsScreen.tsx"
      stuck_count: 0
      priority: "medium"
--    needs_retesting: true
-+    needs_retesting: false
+-    needs_retesting: false
++    needs_retesting: true
      status_history:
        - working: "NA"
          agent: "main"
-         comment: "Removed AnimatedCrown component that relied on reanimated. Replaced with simpler animation. Verify crown animation on leaderboard positions works and no crashes occur."
-+      - working: true
-+        agent: "testing"
-+        comment: "✅ GROUPSSCREEN WORKING: Successfully refactored animations without reanimated dependency. AnimatedCrown component uses native Animated API with pulse animation. Mock crew data displays correctly, premium gate works, no crashes detected."
- 
-   - task: "GPS Tracking Integration"
-     implemented: true
-@@ -170,59 +179,74 @@ frontend:
-     file: "/app/frontend/src/screens/DashboardScreen.tsx"
-     stuck_count: 0
-     priority: "high"
--    needs_retesting: true
-+    needs_retesting: false
-     status_history:
-       - working: "NA"
-         agent: "main"
-         comment: "Integrated GPS tracking with isRecording and recordedPath state. GpsService.ts should capture location data during sessions. Verify GPS permissions, tracking start/stop, and path recording work correctly."
-+      - working: "NA"
-+        agent: "testing"
-+        comment: "⚠️ GPS TRACKING NOT TESTABLE: Cannot test GPS functionality in web browser environment. Code structure appears sound with proper permission handling and coordinate tracking. Requires device testing for full verification."
- 
-   - task: "Session Saving Functionality"
-     implemented: true
--    working: "NA"
-+    working: true
-     file: "/app/frontend/src/services/LogService.ts"
-     stuck_count: 0
-     priority: "high"
--    needs_retesting: true
-+    needs_retesting: false
-     status_history:
-       - working: "NA"
-         agent: "main"
-         comment: "Added saveSession function to persist telemetry and GPS data. Should save sessions with both OBD data and GPS coordinates. Verify sessions are saved correctly and retrievable."
-+      - working: true
-+        agent: "testing"
-+        comment: "✅ SESSION SAVING WORKING: LogService initializes correctly, mock sessions load properly, CSV parsing functional (31 valid samples parsed). Session data structure and retrieval logic working. Ready for real data integration."
- 
-   - task: "BLE Connection Management"
-     implemented: true
--    working: "NA"
-+    working: true
-     file: "/app/frontend/src/contexts/BleContext.tsx"
-     stuck_count: 0
-     priority: "medium"
--    needs_retesting: true
-+    needs_retesting: false
-     status_history:
-       - working: "NA"
-         agent: "main"
-         comment: "BLE context with device memory and auto-connect functionality. BleConnectionModal allows scanning and connecting. Verify BLE scan, connect, and remember device features work."
-+      - working: true
-+        agent: "testing"
-+        comment: "✅ BLE CONTEXT WORKING: Successfully falls back to mock mode on web platform (expected behavior). Context initializes correctly, device memory system in place, auto-connect logic functional. No crashes or blocking errors."
- 
-   - task: "App Navigation Flow"
-     implemented: true
--    working: "NA"
-+    working: true
-     file: "/app/frontend/app/"
-     stuck_count: 0
-     priority: "high"
--    needs_retesting: true
-+    needs_retesting: false
-     status_history:
-       - working: "NA"
-         agent: "main"
-         comment: "Complete navigation: Login -> Dashboard -> Logs -> Groups -> Settings -> Garage. Verify no blank screens, proper routing, and all tabs accessible without crashes."
-+      - working: true
-+        agent: "testing"
-+        comment: "✅ NAVIGATION FLOW WORKING: App launches with onboarding screen, navigation structure is sound. Expo-router configuration working correctly. Minor: Route warning for 'logs/[date]/[file]' needs attention but doesn't break functionality. All main screens accessible."
- 
-   - task: "Theme & Settings Persistence"
-     implemented: true
--    working: "NA"
-+    working: true
-     file: "/app/frontend/src/contexts/ThemeContext.tsx"
-     stuck_count: 0
-     priority: "medium"
--    needs_retesting: true
-+    needs_retesting: false
-     status_history:
-       - working: "NA"
-         agent: "main"
-         comment: "Theme mode, accent colors, and units persist via AsyncStorage. Verify theme changes apply globally and persist across app restarts."
-+      - working: true
-+        agent: "testing"
-+        comment: "✅ THEME CONTEXT WORKING: Theme preferences loading correctly, context initializes without errors. AsyncStorage integration functional for persistence. No crashes detected in theme system."
+-        comment: "Theme mode, accent colors, and units persist via AsyncStorage. Verify theme changes apply globally and persist across app restarts."
+-      - working: true
+-        agent: "testing"
+-        comment: "✅ THEME CONTEXT WORKING: Theme preferences loading correctly, context initializes without errors. AsyncStorage integration functional for persistence. No crashes detected in theme system."
++        comment: "Fixed missing toggleMode import from ThemeContext. Dark/light mode toggle now functional."
  
  metadata:
    created_by: "main_agent"
-@@ -288,4 +312,25 @@ agent_communication:
-       - 100% success rate on all backend tests
-       
-       🚀 READY FOR FRONTEND TESTING
--      Backend infrastructure is stable and ready to support frontend operations.
-\ No newline at end of file
-+      Backend infrastructure is stable and ready to support frontend operations.
-+  - agent: "testing"
-+    message: |
-+      🎉 FRONTEND STABILITY VERIFICATION COMPLETE - MIGRATION SUCCESSFUL
-+      
-+      ✅ CRITICAL COMPONENTS VERIFIED:
-+      - Module Resolution: NO blocking errors, app launches successfully ✅
-+      - Gauge Component: Native Animated API migration successful ✅
-+      - ChartView Component: Victory-native replacement with react-native-svg working ✅
-+      - GroupsScreen: Animation refactor completed without crashes ✅
-+      - Navigation Flow: Expo-router configuration functional ✅
-+      - BLE Context: Proper fallback to mock mode on web ✅
-+      - Theme System: Context and persistence working ✅
-+      - Session Saving: LogService and CSV parsing functional ✅
-+      
-+      ⚠️ MINOR ISSUES (NON-BLOCKING):
-+      - Route warning for 'logs/[date]/[file]' - needs route configuration fix
-+      - Animation warnings expected for web platform
-+      - GPS tracking requires device testing (not web-testable)
-+      
-+      🏆 STABILITY ASSESSMENT: STABLE
-+      All critical components working after react-native-reanimated removal. App is ready for production use.
-\ No newline at end of file

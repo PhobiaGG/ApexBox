@@ -417,6 +417,60 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return profile.garage.find(car => car.isActive) || null;
   };
 
+  /**
+   * Clean up duplicate cars from Firebase
+   * This is a utility function to fix data inconsistencies
+   */
+  const cleanupDuplicateCars = async (): Promise<void> => {
+    if (!user) return;
+    
+    try {
+      console.log('[Auth] ======= CLEANING UP DUPLICATE CARS =======');
+      
+      const garage = await loadGarage(user.uid);
+      const ids = garage.map(c => c.id);
+      const uniqueIds = [...new Set(ids)];
+      
+      if (ids.length === uniqueIds.length) {
+        console.log('[Auth] No duplicates found');
+        return;
+      }
+      
+      console.log('[Auth] Found duplicates, cleaning up...');
+      
+      // Delete all cars
+      for (const car of garage) {
+        await deleteDoc(doc(db, 'users', user.uid, 'garage', car.id));
+      }
+      
+      // Re-add unique cars only
+      const uniqueCars = garage.filter((car, index, self) => 
+        index === self.findIndex(c => c.id === car.id)
+      );
+      
+      for (const car of uniqueCars) {
+        await setDoc(doc(db, 'users', user.uid, 'garage', car.id), {
+          make: car.make,
+          model: car.model,
+          year: car.year,
+          nickname: car.nickname,
+          isActive: car.isActive,
+          createdAt: car.createdAt || Date.now(),
+        });
+      }
+      
+      console.log('[Auth] ✅ Duplicates cleaned up');
+      
+      // Reload garage
+      const freshGarage = await loadGarage(user.uid);
+      if (profile) {
+        setProfile({ ...profile, garage: freshGarage });
+      }
+    } catch (error) {
+      console.error('[Auth] Error cleaning up duplicates:', error);
+    }
+  };
+
   // CREW FUNCTIONS
   const createCrew = async (name: string, description: string): Promise<string> => {
     if (!user) throw new Error('No user logged in');

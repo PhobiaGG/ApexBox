@@ -45,12 +45,14 @@ interface AuthContextType {
   logout: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   updateProfile: (updates: Partial<UserProfile>) => Promise<void>;
+  updateUsername: (newUsername: string) => Promise<void>;
   deleteAccount: () => Promise<void>;
   uploadAvatar: (uri: string) => Promise<string>;
   addCar: (car: Omit<Car, 'id' | 'isActive'>) => Promise<void>;
   setActiveCar: (carId: string) => Promise<void>;
   deleteCar: (carId: string) => Promise<void>;
   loadGarage: () => Promise<void>;
+  getActiveCar: () => Car | null;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);

@@ -600,6 +600,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         getUserCrews,
         addMemberToCrew,
         removeMemberFromCrew,
+        upgradeToPremium,
       }}
     >
       {children}

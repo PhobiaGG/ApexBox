@@ -140,31 +140,89 @@ export default function LogsScreen() {
 
                 {isExpanded && (
                   <View style={styles.sessionsList}>
-                    {sessions.map(session => (
-                      <TouchableOpacity
-                        key={session.fileName}
-                        style={styles.sessionItem}
-                        onPress={() => handleSessionPress(date, session.fileName)}
-                        activeOpacity={0.7}
-                      >
-                        <LinearGradient
-                          colors={[COLORS.card, COLORS.background]}
-                          style={styles.sessionGradient}
+                    {sessions.map(session => {
+                      // Generate sparkline data (simplified for now - use actual session data when available)
+                      const sparklineData = session.stats
+                        ? [
+                            session.stats.avgSpeed * 0.7,
+                            session.stats.peakSpeed * 0.85,
+                            session.stats.peakSpeed,
+                            session.stats.peakSpeed * 0.9,
+                            session.stats.avgSpeed * 0.8,
+                          ]
+                        : [];
+
+                      return (
+                        <TouchableOpacity
+                          key={session.fileName}
+                          style={styles.sessionItem}
+                          onPress={() => handleSessionPress(date, session.fileName)}
+                          activeOpacity={0.7}
                         >
-                          <MaterialCommunityIcons
-                            name="file-chart"
-                            size={24}
-                            color={COLORS.magenta}
-                          />
-                          <Text style={styles.sessionTime}>{session.time}</Text>
-                          <MaterialCommunityIcons
-                            name="chevron-right"
-                            size={20}
-                            color={COLORS.textSecondary}
-                          />
-                        </LinearGradient>
-                      </TouchableOpacity>
-                    ))}
+                          <LinearGradient
+                            colors={[COLORS.card, COLORS.background]}
+                            style={styles.sessionGradient}
+                          >
+                            <View style={styles.sessionHeader}>
+                              <View style={styles.sessionLeft}>
+                                <MaterialCommunityIcons
+                                  name="timer-outline"
+                                  size={18}
+                                  color={COLORS.textSecondary}
+                                />
+                                <Text style={styles.sessionTime}>{session.time}</Text>
+                              </View>
+
+                              {session.stats && (
+                                <View style={styles.sessionStats}>
+                                  <View style={styles.statChip}>
+                                    <MaterialCommunityIcons
+                                      name="speedometer"
+                                      size={14}
+                                      color={COLORS.cyan}
+                                    />
+                                    <Text style={[styles.statChipText, { color: COLORS.cyan }]}>
+                                      {session.stats.peakSpeed.toFixed(0)}
+                                    </Text>
+                                  </View>
+                                  <View style={styles.statChip}>
+                                    <MaterialCommunityIcons
+                                      name="clock-outline"
+                                      size={14}
+                                      color={COLORS.magenta}
+                                    />
+                                    <Text style={[styles.statChipText, { color: COLORS.magenta }]}>
+                                      {Math.floor(session.stats.duration)}s
+                                    </Text>
+                                  </View>
+                                </View>
+                              )}
+                            </View>
+
+                            {sparklineData.length > 0 && (
+                              <View style={styles.sparklineContainer}>
+                                <Sparkline
+                                  data={sparklineData}
+                                  width={280}
+                                  height={40}
+                                  color={COLORS.lime}
+                                  lineWidth={2}
+                                />
+                              </View>
+                            )}
+
+                            <View style={styles.sessionFooter}>
+                              <Text style={styles.sessionHint}>Tap to view details</Text>
+                              <MaterialCommunityIcons
+                                name="chevron-right"
+                                size={18}
+                                color={COLORS.textTertiary}
+                              />
+                            </View>
+                          </LinearGradient>
+                        </TouchableOpacity>
+                      );
+                    })}
                   </View>
                 )}
               </View>

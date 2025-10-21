@@ -796,6 +796,35 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZE.xs,
     fontWeight: 'bold',
   },
+  premiumCard: {
+    borderRadius: BORDER_RADIUS.lg,
+    borderWidth: 2,
+    overflow: 'hidden',
+    marginBottom: SPACING.md,
+  },
+  premiumGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: SPACING.lg,
+  },
+  premiumContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    gap: SPACING.md,
+  },
+  premiumText: {
+    flex: 1,
+  },
+  premiumTitle: {
+    fontSize: FONT_SIZE.lg,
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  premiumSubtitle: {
+    fontSize: FONT_SIZE.sm,
+  },
   dangerButton: {
     paddingVertical: SPACING.md,
     alignItems: 'center',

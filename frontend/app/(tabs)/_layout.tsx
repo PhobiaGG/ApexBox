@@ -1,18 +1,21 @@
 import React from 'react';
 import { Tabs } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { COLORS } from '../../src/constants/theme';
+import { useTheme } from '../../src/contexts/ThemeContext';
 
 export default function TabsLayout() {
+  const { colors, getCurrentAccent } = useTheme();
+  const accentColor = getCurrentAccent();
+
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: COLORS.cyan,
-        tabBarInactiveTintColor: COLORS.textSecondary,
+        tabBarActiveTintColor: accentColor,
+        tabBarInactiveTintColor: colors.textSecondary,
         tabBarStyle: {
-          backgroundColor: COLORS.card,
-          borderTopColor: COLORS.border,
+          backgroundColor: colors.card,
+          borderTopColor: colors.border,
           borderTopWidth: 1,
           height: 70,
           paddingBottom: 10,
@@ -39,6 +42,15 @@ export default function TabsLayout() {
           title: 'Logs',
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="file-chart" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="garage"
+        options={{
+          title: 'Garage',
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="car-sports" size={size} color={color} />
           ),
         }}
       />

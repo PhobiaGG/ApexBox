@@ -95,6 +95,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loadUserProfile = async (uid: string) => {
     try {
+      console.log('[Auth] Loading profile for user:', uid);
       const docRef = doc(db, 'users', uid);
       const docSnap = await getDoc(docRef);
       
@@ -110,9 +111,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
         
         setProfile(userData);
+        console.log('[Auth] Profile loaded successfully');
+      } else {
+        console.warn('[Auth] No profile document found for user:', uid);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('[Auth] Error loading profile:', error);
+      if (error.code === 'permission-denied') {
+        console.error('[Auth] Permission denied - check Firestore rules');
+      } else if (error.code === 'unavailable') {
+        console.error('[Auth] Network error - Firebase unavailable');
+      }
+      throw error;
     }
   };
 

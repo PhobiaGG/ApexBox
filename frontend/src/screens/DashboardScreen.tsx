@@ -116,7 +116,32 @@ export default function DashboardScreen() {
       
       console.log(`[Dashboard] Session ended. Duration: ${duration}s, Captured ${coordinates.length} GPS points`);
       
-      // TODO: Save coordinates with session data to Firebase
+      // Save session with telemetry data (using mock data for demo)
+      try {
+        const logService = new LogService();
+        
+        // Create mock telemetry samples based on duration
+        const mockSamples = [];
+        for (let i = 0; i < duration; i++) {
+          mockSamples.push({
+            timestamp_ms: i * 1000,
+            speed: currentSpeed + Math.random() * 10 - 5,
+            g_force: currentGForce + Math.random() * 0.5 - 0.25,
+            temperature: currentTemp,
+            humidity: 45,
+            lux: 800,
+            altitude: currentAltitude,
+          });
+        }
+        
+        const sessionKey = await logService.saveSession(mockSamples, coordinates, duration);
+        console.log('[Dashboard] Session saved:', sessionKey);
+        
+        // Rescan to update logs list
+        await rescan();
+      } catch (saveError) {
+        console.error('[Dashboard] Error saving session:', saveError);
+      }
       
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       
@@ -124,10 +149,10 @@ export default function DashboardScreen() {
         '✅ Session Complete',
         `Duration: ${Math.floor(duration / 60)}m ${duration % 60}s\nGPS Points: ${coordinates.length}\n\n${
           coordinates.length > 0 
-            ? 'Location data saved with session.' 
-            : 'No GPS data captured.'
+            ? 'Session saved with location data!' 
+            : 'Session saved (no GPS data).'
         }`,
-        [{ text: 'OK' }]
+        [{ text: 'View Logs', onPress: () => {/* Navigate to logs */} }, { text: 'OK' }]
       );
     } catch (error) {
       console.error('[Dashboard] Stop analysis error:', error);

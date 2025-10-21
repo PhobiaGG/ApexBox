@@ -21,12 +21,45 @@ interface GaugeProps {
   size?: number;
 }
 
+// Create animated Circle component
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
+
 export default function Gauge({ value, maxValue, label, unit, color, size = 140 }: GaugeProps) {
-  const percentage = Math.min((value / maxValue) * 100, 100);
+  const progress = useSharedValue(0);
+  const scale = useSharedValue(0.95);
+  const opacity = useSharedValue(0);
+
   const strokeWidth = 12;
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
-  const strokeDashoffset = circumference - (percentage / 100) * circumference;
+
+  useEffect(() => {
+    // Entry animation
+    opacity.value = withTiming(1, { duration: 300 });
+    scale.value = withSpring(1, { damping: 15, stiffness: 150 });
+
+    // Update progress with smooth spring
+    const targetProgress = Math.min((value / maxValue) * 100, 100);
+    progress.value = withSpring(targetProgress, {
+      damping: 20,
+      stiffness: 90,
+      mass: 1,
+    });
+  }, [value, maxValue]);
+
+  const animatedProps = useAnimatedProps(() => {
+    const strokeDashoffset = circumference - (progress.value / 100) * circumference;
+    return {
+      strokeDashoffset,
+    };
+  });
+
+  const animatedContainerStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+    opacity: opacity.value,
+  }));
+
+  const percentage = Math.min((value / maxValue) * 100, 100);
 
   return (
     <View style={[styles.container, { width: size + 20, height: size + 60 }]}>

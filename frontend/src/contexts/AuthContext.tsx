@@ -345,20 +345,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!user) throw new Error('No user logged in');
     
     try {
+      console.log('[Auth] Starting deletion for car:', carId);
+      
       // Optimistic update - remove from UI immediately
       if (profile) {
         const updatedGarage = profile.garage?.filter(car => car.id !== carId) || [];
         setProfile({ ...profile, garage: updatedGarage });
       }
       
-      // Then delete from Firebase
+      // Delete from Firebase
       await deleteDoc(doc(db, 'users', user.uid, 'garage', carId));
+      console.log('[Auth] Successfully deleted car from Firebase');
       
-      // Reload to ensure consistency (in case of conflicts)
-      if (profile) {
-        const freshGarage = await loadGarage(user.uid);
-        setProfile({ ...profile, garage: freshGarage });
-      }
+      // Don't reload on success - optimistic update is correct
+      // Only reload on error to rollback
+      
     } catch (error: any) {
       console.error('[Auth] Delete car error:', error);
       // Rollback on error - reload from Firebase

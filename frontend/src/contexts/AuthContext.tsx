@@ -8,7 +8,7 @@ import {
   User as FirebaseUser,
   deleteUser,
 } from 'firebase/auth';
-import { doc, setDoc, getDoc, deleteDoc } from 'firestore';
+import { doc, setDoc, getDoc, deleteDoc } from 'firebase/firestore';
 import { auth, db } from '../config/firebase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 

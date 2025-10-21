@@ -48,10 +48,11 @@ export class TelemetrySimulator {
 
     return {
       speed: this.addNoise(this.currentSpeed, 1.5),
-      g_force: this.addNoise(gForce, 0.08),
+      gForce: this.addNoise(gForce, 0.08),
       temperature: this.addNoise(this.engineTemp, 1.0),
       altitude: this.addNoise(this.baseAltitude, 2.0),
-      timestamp_ms: now,
+      humidity: 45 + Math.random() * 10, // 45-55%
+      timestamp: now,
     };
   }
 

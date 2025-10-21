@@ -65,6 +65,9 @@ class MockBleService {
     
     return new Promise((resolve) => {
       setTimeout(() => {
+        // Stop telemetry streaming
+        this.stopTelemetryStream();
+        
         this.status.isConnected = false;
         this.status.connectedDevice = null;
         console.log('[BLE] Disconnected');

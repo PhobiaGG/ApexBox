@@ -110,12 +110,12 @@ export default function DashboardScreen() {
     : [];
 
   return (
-    <View style={styles.container}>
-      <LinearGradient colors={[COLORS.background, '#0F0F0F']} style={styles.gradient}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <LinearGradient colors={[colors.background, colors.background]} style={styles.gradient}>
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.title}>ApexBox</Text>
-          <Text style={styles.subtitle}>COMPANION</Text>
+          <Text style={[styles.title, { color: colors.text }]}>ApexBox</Text>
+          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>COMPANION</Text>
         </View>
 
         <ScrollView
@@ -124,7 +124,7 @@ export default function DashboardScreen() {
           showsVerticalScrollIndicator={false}
         >
           {/* Connection Status */}
-          <View style={styles.statusBar}>
+          <View style={[styles.statusBar, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <TouchableOpacity
               style={styles.statusItem}
               onPress={handleBlePress}
@@ -133,12 +133,12 @@ export default function DashboardScreen() {
               <MaterialCommunityIcons
                 name="bluetooth"
                 size={20}
-                color={status.isConnected ? accentColor : COLORS.textSecondary}
+                color={status.isConnected ? accentColor : colors.textSecondary}
               />
               <Text
                 style={[
                   styles.statusText,
-                  { color: status.isConnected ? accentColor : COLORS.textSecondary },
+                  { color: status.isConnected ? accentColor : colors.textSecondary },
                 ]}
               >
                 {status.isConnected ? status.connectedDevice?.name : 'Not Connected'}
@@ -149,12 +149,12 @@ export default function DashboardScreen() {
               <MaterialCommunityIcons
                 name={status.isConnected && telemetry ? "radio-tower" : "sd"}
                 size={20}
-                color={status.isConnected && telemetry ? accentColor : latestSession ? COLORS.lime : COLORS.textSecondary}
+                color={status.isConnected && telemetry ? accentColor : latestSession ? colors.lime : colors.textSecondary}
               />
               <Text
                 style={[
                   styles.statusText,
-                  { color: status.isConnected && telemetry ? accentColor : latestSession ? COLORS.lime : COLORS.textSecondary },
+                  { color: status.isConnected && telemetry ? accentColor : latestSession ? colors.lime : colors.textSecondary },
                 ]}
               >
                 {status.isConnected && telemetry ? 'Live Stream' : latestSession ? 'Logs Found' : 'No Data'}

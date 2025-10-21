@@ -18,9 +18,11 @@ import AddCarModal, { CarData } from '../components/AddCarModal';
 import * as Haptics from 'expo-haptics';
 
 export default function GarageScreen() {
-  const { garage, addCar, setActiveCar, deleteCar, profile, user } = useAuth();
+  const { profile, addCar, setActiveCar, deleteCar, user } = useAuth();
   const { colors, getCurrentAccent } = useTheme();
   const accentColor = getCurrentAccent();
+
+  const garage = profile?.garage || [];
   
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingCar, setEditingCar] = useState<any>(null);

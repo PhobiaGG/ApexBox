@@ -226,11 +226,32 @@ export default function SettingsScreen() {
                 <Text style={[styles.infoValue, { color: colors.text }]}>{profile.displayName}</Text>
               </View>
 
-              <View style={[styles.infoRow, { borderBottomColor: colors.border }]}>
+              <View style={[styles.infoRow, { borderBottomColor: 'transparent' }]}>
                 <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Email</Text>
                 <Text style={[styles.infoValue, { color: colors.text }]}>{profile.email}</Text>
               </View>
             </View>
+
+            <TouchableOpacity
+              style={styles.changeUsernameButton}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                setShowChangeUsername(true);
+              }}
+              activeOpacity={0.8}
+            >
+              <LinearGradient
+                colors={[accentColorValue, colors.background]}
+                style={styles.changeUsernameGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+              >
+                <MaterialCommunityIcons name="account-edit" size={20} color={colors.text} />
+                <Text style={[styles.changeUsernameText, { color: colors.text }]}>
+                  Change Username
+                </Text>
+              </LinearGradient>
+            </TouchableOpacity>
           </View>
         )}
 

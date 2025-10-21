@@ -152,7 +152,10 @@ export default function TrackReplayScreen() {
           </Text>
           <TouchableOpacity
             style={styles.upgradeButton}
-            onPress={() => router.push('/premium')}
+            onPress={async () => {
+              await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+              router.push('/premium');
+            }}
             activeOpacity={0.8}
           >
             <LinearGradient

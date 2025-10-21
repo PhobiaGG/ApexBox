@@ -298,6 +298,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const getActiveCar = (): Car | null => {
+    return garage.find(car => car.isActive) || null;
+  };
+
   const deleteAccount = async () => {
     if (!user) {
       throw new Error('No user logged in');

@@ -336,6 +336,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const upgradeToPremium = async () => {
+    if (!user || !profile) {
+      throw new Error('No user logged in');
+    }
+
+    try {
+      const updatedProfile = { ...profile, premium: true };
+      await setDoc(doc(db, 'users', user.uid), updatedProfile, { merge: true });
+      setProfile(updatedProfile);
+      console.log('[Auth] User upgraded to premium');
+    } catch (error) {
+      console.error('[Auth] Upgrade to premium error:', error);
+      throw error;
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{

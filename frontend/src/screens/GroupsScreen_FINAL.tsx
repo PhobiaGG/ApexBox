@@ -85,12 +85,12 @@ export default function GroupsScreen() {
       setIsLoading(true);
       await new Promise(resolve => setTimeout(resolve, 500));
       
-      // Load user's crews (in production, filter by user membership)
-      const mockCrews = generateMockCrews();
-      setUserCrews(mockCrews);
+      // Load user's crews from Firebase
+      const crews = await getUserCrews();
+      setUserCrews(crews);
       
-      if (mockCrews.length > 0) {
-        setSelectedCrew(mockCrews[0]);
+      if (crews.length > 0) {
+        setSelectedCrew(crews[0]);
       }
       
       // Load global leaderboard

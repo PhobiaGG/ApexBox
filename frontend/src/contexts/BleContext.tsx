@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import RealBleService from '../services/RealBleService';
 import MockBleService, { BleDevice, BleStatus } from '../services/MockBleService';
 import { TelemetryData } from '../utils/telemetry';
+import { BleDeviceMemory } from '../services/BleDeviceMemory';
 import * as Haptics from 'expo-haptics';
 
 interface BleContextType {
@@ -12,6 +13,8 @@ interface BleContextType {
   connect: (device: BleDevice) => Promise<void>;
   disconnect: () => Promise<void>;
   sendCommand: (command: string) => Promise<void>;
+  forgetDevice: () => Promise<void>;
+  tryAutoConnect: () => Promise<boolean>;
   usingRealBle: boolean;
 }
 
@@ -22,6 +25,7 @@ export function BleProvider({ children }: { children: ReactNode }) {
   const [devices, setDevices] = useState<BleDevice[]>([]);
   const [telemetry, setTelemetry] = useState<TelemetryData | null>(null);
   const [usingRealBle, setUsingRealBle] = useState(true);
+  const [autoConnectAttempted, setAutoConnectAttempted] = useState(false);
 
   // Subscribe to telemetry updates
   useEffect(() => {
@@ -31,6 +35,46 @@ export function BleProvider({ children }: { children: ReactNode }) {
 
     return unsubscribe;
   }, []);
+
+  // Auto-connect on mount if we have a remembered device
+  useEffect(() => {
+    if (!autoConnectAttempted) {
+      setAutoConnectAttempted(true);
+      tryAutoConnect();
+    }
+  }, []);
+
+  const tryAutoConnect = async (): Promise<boolean> => {
+    try {
+      console.log('[BleContext] Attempting auto-connect...');
+      const remembered = await BleDeviceMemory.getRememberedDevice();
+      
+      if (!remembered) {
+        console.log('[BleContext] No remembered device');
+        return false;
+      }
+
+      // Scan for the remembered device
+      const foundDevices = await RealBleService.scan();
+      const targetDevice = foundDevices.find(d => d.id === remembered.id);
+
+      if (targetDevice) {
+        console.log('[BleContext] Found remembered device, connecting...');
+        await RealBleService.connect(targetDevice);
+        setStatus(RealBleService.getStatus());
+        setDevices(foundDevices);
+        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        return true;
+      } else {
+        console.log('[BleContext] Remembered device not found');
+        setDevices(foundDevices);
+        return false;
+      }
+    } catch (error) {
+      console.error('[BleContext] Auto-connect error:', error);
+      return false;
+    }
+  };
 
   const scan = async () => {
     try {
@@ -48,6 +92,10 @@ export function BleProvider({ children }: { children: ReactNode }) {
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       await RealBleService.connect(device);
       setStatus(RealBleService.getStatus());
+      
+      // Remember this device for future auto-connect
+      await BleDeviceMemory.rememberDevice(device.id, device.name);
+      
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch (error) {
       console.error('[BleContext] Connect error:', error);
@@ -62,6 +110,17 @@ export function BleProvider({ children }: { children: ReactNode }) {
       setStatus(RealBleService.getStatus());
     } catch (error) {
       console.error('[BleContext] Disconnect error:', error);
+    }
+  };
+
+  const forgetDevice = async () => {
+    try {
+      await BleDeviceMemory.forgetDevice();
+      console.log('[BleContext] Device forgotten');
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } catch (error) {
+      console.error('[BleContext] Forget device error:', error);
+      throw error;
     }
   };
 

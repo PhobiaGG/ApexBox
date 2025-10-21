@@ -177,7 +177,7 @@ export default function DashboardScreen() {
               maxValue={5}
               label="G-Force"
               unit="g"
-              color={COLORS.magenta}
+              color={colors.magenta}
               size={140}
             />
           </View>
@@ -188,13 +188,13 @@ export default function DashboardScreen() {
               icon="thermometer"
               label="Temperature"
               value={formatTemp(currentTemp, settings.units.tempCelsius)}
-              color={COLORS.lime}
+              color={colors.lime}
             />
             <MetricCard
               icon="altimeter"
               label="Altitude"
               value={formatAltitude(currentAltitude, settings.units.altitudeMetric)}
-              color={COLORS.cyan}
+              color={colors.cyan}
             />
           </View>
 
@@ -207,17 +207,17 @@ export default function DashboardScreen() {
               activeOpacity={0.8}
             >
               <LinearGradient
-                colors={status.isConnected ? [accentColor, COLORS.background] : [COLORS.border, COLORS.border]}
+                colors={status.isConnected ? [accentColor, colors.background] : [colors.border, colors.border]}
                 style={styles.buttonGradient}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
               >
                 {isAnalyzing ? (
-                  <ActivityIndicator color={COLORS.text} />
+                  <ActivityIndicator color={colors.text} />
                 ) : (
                   <>
-                    <MaterialCommunityIcons name="play-circle" size={24} color={COLORS.text} />
-                    <Text style={styles.actionButtonText}>Start Analysis</Text>
+                    <MaterialCommunityIcons name="play-circle" size={24} color={colors.text} />
+                    <Text style={[styles.actionButtonText, { color: colors.text }]}>Start Analysis</Text>
                   </>
                 )}
               </LinearGradient>
@@ -230,7 +230,7 @@ export default function DashboardScreen() {
               activeOpacity={0.8}
             >
               <LinearGradient
-                colors={status.isConnected ? [COLORS.magenta, COLORS.background] : [COLORS.border, COLORS.border]}
+                colors={status.isConnected ? [colors.magenta, colors.background] : [colors.border, colors.border]}
                 style={styles.buttonGradient}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}

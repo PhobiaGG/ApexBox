@@ -94,9 +94,12 @@ export default function GarageScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
+              console.log('[Garage] Deleting car:', carId);
               await deleteCar(carId);
+              console.log('[Garage] Car deleted successfully');
               await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
             } catch (error) {
+              console.error('[Garage] Delete error:', error);
               await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
               Alert.alert('Error', 'Failed to delete car');
             }

@@ -200,7 +200,7 @@ export default function GarageScreen() {
                 if (ref) swipeableRefs.current.set(car.id, ref);
               }}
               renderRightActions={(progress, dragX) =>
-                renderRightActions(progress, dragX, car.id, car.nickname)
+                renderRightActions(progress, dragX, car)
               }
               overshootRight={false}
               friction={2}

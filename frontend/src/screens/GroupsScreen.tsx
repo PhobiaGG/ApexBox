@@ -227,8 +227,8 @@ export default function GroupsScreen() {
           </Text>
           <TouchableOpacity
             style={styles.upgradeButton}
-            onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+            onPress={async () => {
+              await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
               router.push('/premium');
             }}
             activeOpacity={0.8}

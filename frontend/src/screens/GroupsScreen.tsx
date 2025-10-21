@@ -66,9 +66,10 @@ export default function GroupsScreen() {
   const accentColor = getCurrentAccent();
 
   const [activeTab, setActiveTab] = useState<'crews' | 'global'>('crews');
+  const [globalCategory, setGlobalCategory] = useState<'topSpeed' | 'topGForce'>('topSpeed');
   const [userCrews, setUserCrews] = useState<Crew[]>([]);
   const [selectedCrew, setSelectedCrew] = useState<Crew | null>(null);
-  const [globalLeaderboard, setGlobalLeaderboard] = useState<CrewMember[]>([]);
+  const [globalLeaderboard, setGlobalLeaderboard] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);

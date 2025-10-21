@@ -134,7 +134,7 @@ export default function DashboardScreen() {
           });
         }
         
-        const sessionKey = await logService.saveSession(mockSamples, recordedPath, duration);
+        const sessionKey = await logService.saveSession(mockSamples, [], duration);
         console.log('[Dashboard] Session saved:', sessionKey);
         
         // Rescan to update logs list

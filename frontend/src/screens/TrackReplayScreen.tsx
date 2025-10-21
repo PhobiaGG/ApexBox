@@ -536,6 +536,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  svg: {
+    marginVertical: 40,
+  },
   placeholderContainer: {
     alignItems: 'center',
     padding: SPACING.xl,

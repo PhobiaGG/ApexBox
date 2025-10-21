@@ -40,6 +40,7 @@ export default function AddCarModal({ visible, onClose, onSave, accentColor, edi
   const [model, setModel] = useState(editCar?.model || '');
   const [year, setYear] = useState(editCar?.year || '');
   const [color, setColor] = useState(editCar?.color || '');
+  const [upgrades, setUpgrades] = useState(editCar?.upgrades || '');
   const [loading, setLoading] = useState(false);
 
   const validateInputs = (): boolean => {

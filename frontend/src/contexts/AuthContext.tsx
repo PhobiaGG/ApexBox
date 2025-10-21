@@ -322,14 +322,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setProfile({ ...profile, garage: updatedGarage });
       }
       
-      // Then update Firebase
+      // Update Firebase
       await updateDoc(doc(db, 'users', user.uid, 'garage', carId), updates);
       
-      // Reload to ensure consistency
-      if (profile) {
-        const freshGarage = await loadGarage(user.uid);
-        setProfile({ ...profile, garage: freshGarage });
-      }
+      // Don't reload on success - optimistic update is correct
+      
     } catch (error: any) {
       console.error('[Auth] Update car error:', error);
       // Rollback on error

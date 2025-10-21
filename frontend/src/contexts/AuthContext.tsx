@@ -130,6 +130,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         carModel: '',
         carYear: '',
         avatarURI: null,
+        premium: false,
         createdAt: Date.now(),
       };
 

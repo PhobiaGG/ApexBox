@@ -281,12 +281,10 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 36,
     fontWeight: 'bold',
-    color: COLORS.cyan,
     letterSpacing: 2,
   },
   subtitle: {
     fontSize: FONT_SIZE.sm,
-    color: COLORS.textSecondary,
     letterSpacing: 4,
     marginTop: 4,
   },
@@ -302,10 +300,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
     paddingVertical: SPACING.md,
     marginBottom: SPACING.lg,
-    backgroundColor: COLORS.card,
     borderRadius: BORDER_RADIUS.md,
     borderWidth: 1,
-    borderColor: COLORS.border,
   },
   statusItem: {
     flexDirection: 'row',
@@ -347,7 +343,6 @@ const styles = StyleSheet.create({
   },
   actionButtonText: {
     fontSize: FONT_SIZE.md,
-    color: COLORS.text,
     fontWeight: 'bold',
   },
   chartContainer: {
@@ -359,7 +354,6 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: FONT_SIZE.sm,
-    color: COLORS.textSecondary,
     marginTop: SPACING.sm,
   },
 });

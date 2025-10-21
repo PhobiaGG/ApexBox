@@ -535,6 +535,13 @@ export default function SettingsScreen() {
         onSave={handleSaveCar}
         accentColor={accentColorValue}
       />
+
+      <ChangeUsernameModal
+        visible={showChangeUsername}
+        currentUsername={profile?.displayName || ''}
+        onClose={() => setShowChangeUsername(false)}
+        onSave={handleChangeUsername}
+      />
     </View>
   );
 }

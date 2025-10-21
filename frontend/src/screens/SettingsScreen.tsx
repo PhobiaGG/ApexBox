@@ -843,6 +843,17 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZE.xs,
     fontWeight: 'bold',
   },
+  settingLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  connectivityHint: {
+    fontSize: FONT_SIZE.xs,
+    paddingHorizontal: SPACING.md,
+    paddingBottom: SPACING.sm,
+    fontStyle: 'italic',
+  },
   premiumCard: {
     borderRadius: BORDER_RADIUS.lg,
     borderWidth: 2,

@@ -137,17 +137,17 @@ export default function DashboardScreen() {
 
             <View style={styles.statusItem}>
               <MaterialCommunityIcons
-                name="sd"
+                name={status.isConnected && telemetry ? "radio-tower" : "sd"}
                 size={20}
-                color={latestSession ? COLORS.lime : COLORS.textSecondary}
+                color={status.isConnected && telemetry ? COLORS.magenta : latestSession ? COLORS.lime : COLORS.textSecondary}
               />
               <Text
                 style={[
                   styles.statusText,
-                  { color: latestSession ? COLORS.lime : COLORS.textSecondary },
+                  { color: status.isConnected && telemetry ? COLORS.magenta : latestSession ? COLORS.lime : COLORS.textSecondary },
                 ]}
               >
-                {latestSession ? 'Logs Found' : 'No Logs'}
+                {status.isConnected && telemetry ? 'Live Stream' : latestSession ? 'Logs Found' : 'No Data'}
               </Text>
             </View>
           </View>

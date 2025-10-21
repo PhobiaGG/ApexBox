@@ -231,6 +231,29 @@ export default function AddCarModal({ visible, onClose, onSave, accentColor, edi
                     />
                   </View>
                 </View>
+
+                {/* Upgrades */}
+                <View style={styles.inputContainer}>
+                  <Text style={styles.label}>Upgrades (Optional)</Text>
+                  <View style={[styles.inputWrapper, { alignItems: 'flex-start' }]}>
+                    <MaterialCommunityIcons 
+                      name="wrench" 
+                      size={20} 
+                      color={COLORS.textSecondary} 
+                      style={{ marginTop: 12 }}
+                    />
+                    <TextInput
+                      style={[styles.input, { minHeight: 80 }]}
+                      placeholder="e.g., Cold air intake, cat-back exhaust, tuned ECU..."
+                      placeholderTextColor={COLORS.textSecondary}
+                      value={upgrades}
+                      onChangeText={setUpgrades}
+                      multiline
+                      numberOfLines={4}
+                      textAlignVertical="top"
+                    />
+                  </View>
+                </View>
               </ScrollView>
 
               {/* Action Buttons */}

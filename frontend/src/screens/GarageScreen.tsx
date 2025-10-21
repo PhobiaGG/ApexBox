@@ -448,14 +448,32 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZE.sm,
     fontWeight: '600',
   },
+  actionsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    height: '100%',
+    marginBottom: SPACING.md,
+  },
+  actionButton: {
+    flex: 1,
+    height: '100%',
+  },
+  editButton: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 80,
+    height: '100%',
+    borderRadius: BORDER_RADIUS.lg,
+    marginRight: SPACING.xs,
+  },
   deleteButton: {
     justifyContent: 'center',
     alignItems: 'center',
-    width: 100,
+    width: 80,
+    height: '100%',
     borderRadius: BORDER_RADIUS.lg,
-    marginBottom: SPACING.md,
   },
-  deleteButtonText: {
+  actionButtonText: {
     fontSize: FONT_SIZE.sm,
     fontWeight: 'bold',
     marginTop: SPACING.xs,

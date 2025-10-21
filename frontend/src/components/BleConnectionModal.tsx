@@ -104,7 +104,11 @@ export default function BleConnectionModal({ visible, onClose, accentColor }: Bl
   };
 
   const handleCancel = async () => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackType.Light);
+    try {
+      await Haptics.impactAsync(Haptics.ImpactFeedbackType.Light);
+    } catch (error) {
+      console.log('Haptics error:', error);
+    }
     onClose();
   };
 

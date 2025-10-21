@@ -25,7 +25,7 @@ import { useRouter } from 'expo-router';
 
 export default function SettingsScreen() {
   const { settings, updateUnits, toggleDeveloperMode, resetSettings } = useSettings();
-  const { mode, colors, accentColor, setAccentColor, getCurrentAccent } = useTheme();
+  const { mode, colors, accentColor, setAccentColor, getCurrentAccent, toggleMode } = useTheme();
   const { profile, garage, updateProfile, updateUsername, uploadAvatar, addCar, setActiveCar, deleteCar, logout, deleteAccount } = useAuth();
   const { forgetDevice } = useBle();
   const router = useRouter();

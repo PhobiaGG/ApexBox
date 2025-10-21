@@ -52,7 +52,7 @@ export default function DashboardScreen() {
   useEffect(() => {
     if (telemetry && status.isConnected) {
       setCurrentSpeed(telemetry.speed);
-      setCurrentGForce(telemetry.g_force);
+      setCurrentGForce(telemetry.gForce);
       setCurrentTemp(telemetry.temperature);
       setCurrentAltitude(telemetry.altitude);
     } else if (latestSession?.samples && latestSession.samples.length > 0) {

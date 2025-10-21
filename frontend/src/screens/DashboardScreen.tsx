@@ -14,6 +14,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useBle } from '../contexts/BleContext';
 import { useLogs } from '../contexts/LogsContext';
 import { useSettings } from '../contexts/SettingsContext';
+import { useAccentColor } from '../hooks/useAccentColor';
 import Gauge from '../components/Gauge';
 import MetricCard from '../components/MetricCard';
 import ChartView from '../components/ChartView';

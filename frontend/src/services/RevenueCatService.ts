@@ -1,11 +1,21 @@
-import Purchases, { 
-  PurchasesOffering, 
-  PurchasesPackage,
-  CustomerInfo,
-  PurchasesError,
-  PURCHASES_ERROR_CODE 
-} from 'react-native-purchases';
 import { Platform } from 'react-native';
+
+// Optional import - only works with custom dev client, not Expo Go
+let Purchases: any = null;
+let PURCHASES_ERROR_CODE: any = null;
+
+try {
+  const purchasesModule = require('react-native-purchases');
+  Purchases = purchasesModule.default;
+  PURCHASES_ERROR_CODE = purchasesModule.PURCHASES_ERROR_CODE;
+} catch (error) {
+  console.log('[RevenueCat] Module not available in Expo Go - purchases will be mocked');
+}
+
+export type PurchasesOffering = any;
+export type PurchasesPackage = any;
+export type CustomerInfo = any;
+export type PurchasesError = any;
 
 // RevenueCat API Keys (should be stored in .env in production)
 const REVENUECAT_APPLE_API_KEY = 'appl_YOUR_KEY_HERE';  // Replace with your actual key

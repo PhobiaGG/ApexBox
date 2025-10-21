@@ -230,6 +230,61 @@ class LogService {
     console.log('[LogService] Clearing cache...');
     await AsyncStorage.removeItem('sessions_cache');
   }
+
+  /**
+   * Save a new session with telemetry and GPS data
+   */
+  async saveSession(
+    telemetryData: TelemetrySample[],
+    gpsCoordinates: any[],
+    duration: number
+  ): Promise<string> {
+    try {
+      const now = new Date();
+      const dateStr = now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).replace(/ /g, '');
+      const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }).replace(/\s/g, '').replace(':', '.');
+      
+      const fileName = `${timeStr}.csv`;
+      const sessionKey = `${dateStr}/${fileName}`;
+      
+      console.log('[LogService] Saving session:', sessionKey);
+      
+      // Create CSV content
+      const headers = 'timestamp_ms,speed,g_force,temp,humidity,lux,altitude';
+      const rows = telemetryData.map(sample => 
+        `${sample.timestamp_ms},${sample.speed},${sample.g_force},${sample.temperature},${sample.humidity || 0},${sample.lux || 0},${sample.altitude}`
+      ).join('\n');
+      
+      const csvContent = `${headers}\n${rows}`;
+      
+      // Save to AsyncStorage (for demo - in production would save to Firebase)
+      await AsyncStorage.setItem(`session_${sessionKey}`, csvContent);
+      
+      // Save GPS data separately
+      if (gpsCoordinates.length > 0) {
+        await AsyncStorage.setItem(`gps_${sessionKey}`, JSON.stringify(gpsCoordinates));
+        console.log('[LogService] Saved GPS data:', gpsCoordinates.length, 'points');
+      }
+      
+      // Save metadata
+      const metadata: SessionMetadata = {
+        date: dateStr,
+        time: timeStr,
+        fileName,
+        filePath: sessionKey,
+        stats: calculateStats({ samples: telemetryData, csvFilePath: sessionKey }),
+      };
+      
+      // Update cache
+      await this.clearCache();
+      
+      console.log('[LogService] Session saved successfully:', sessionKey);
+      return sessionKey;
+    } catch (error) {
+      console.error('[LogService] Error saving session:', error);
+      throw error;
+    }
+  }
 }
 
 export default new LogService();

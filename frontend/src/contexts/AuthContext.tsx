@@ -8,9 +8,20 @@ import {
   User as FirebaseUser,
   deleteUser,
 } from 'firebase/auth';
-import { doc, setDoc, getDoc, deleteDoc } from 'firebase/firestore';
-import { auth, db } from '../config/firebase';
+import { doc, setDoc, getDoc, deleteDoc, collection, getDocs, addDoc, updateDoc, query, where } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { auth, db, storage } from '../config/firebase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+
+export interface Car {
+  id: string;
+  nickname: string;
+  make: string;
+  model: string;
+  year: string;
+  color: string;
+  isActive: boolean;
+}
 
 export interface UserProfile {
   uid: string;
@@ -25,6 +36,7 @@ export interface UserProfile {
 interface AuthContextType {
   user: FirebaseUser | null;
   profile: UserProfile | null;
+  garage: Car[];
   loading: boolean;
   signUp: (email: string, password: string, displayName: string) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
@@ -32,6 +44,11 @@ interface AuthContextType {
   resetPassword: (email: string) => Promise<void>;
   updateProfile: (updates: Partial<UserProfile>) => Promise<void>;
   deleteAccount: () => Promise<void>;
+  uploadAvatar: (uri: string) => Promise<string>;
+  addCar: (car: Omit<Car, 'id' | 'isActive'>) => Promise<void>;
+  setActiveCar: (carId: string) => Promise<void>;
+  deleteCar: (carId: string) => Promise<void>;
+  loadGarage: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -39,6 +56,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<FirebaseUser | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [garage, setGarage] = useState<Car[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -46,10 +64,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(firebaseUser);
       
       if (firebaseUser) {
-        // Load user profile from Firestore
         await loadUserProfile(firebaseUser.uid);
+        await loadGarage();
       } else {
         setProfile(null);
+        setGarage([]);
       }
       
       setLoading(false);
@@ -71,12 +90,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const loadGarage = async () => {
+    if (!user) return;
+    
+    try {
+      const garageRef = collection(db, 'users', user.uid, 'garage');
+      const snapshot = await getDocs(garageRef);
+      const cars: Car[] = [];
+      
+      snapshot.forEach(doc => {
+        cars.push({ id: doc.id, ...doc.data() } as Car);
+      });
+      
+      setGarage(cars);
+      console.log(`[Auth] Loaded ${cars.length} cars from garage`);
+    } catch (error) {
+      console.error('[Auth] Error loading garage:', error);
+    }
+  };
+
   const signUp = async (email: string, password: string, displayName: string) => {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const { uid } = userCredential.user;
 
-      // Create user profile in Firestore
       const newProfile: UserProfile = {
         uid,
         email,
@@ -112,6 +149,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await signOut(auth);
       await AsyncStorage.multiRemove(['@apexbox_auth', '@apexbox_profile']);
       setProfile(null);
+      setGarage([]);
       console.log('[Auth] User logged out');
     } catch (error) {
       console.error('[Auth] Logout error:', error);
@@ -145,12 +183,107 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const uploadAvatar = async (uri: string): Promise<string> => {
+    if (!user) {
+      throw new Error('No user logged in');
+    }
+
+    try {
+      // Convert URI to blob
+      const response = await fetch(uri);
+      const blob = await response.blob();
+
+      // Upload to Firebase Storage
+      const storageRef = ref(storage, `avatars/${user.uid}`);
+      await uploadBytes(storageRef, blob);
+
+      // Get download URL
+      const downloadURL = await getDownloadURL(storageRef);
+      console.log('[Auth] Avatar uploaded:', downloadURL);
+      
+      return downloadURL;
+    } catch (error) {
+      console.error('[Auth] Upload avatar error:', error);
+      throw error;
+    }
+  };
+
+  const addCar = async (car: Omit<Car, 'id' | 'isActive'>) => {
+    if (!user) {
+      throw new Error('No user logged in');
+    }
+
+    try {
+      // If this is the first car, make it active
+      const isActive = garage.length === 0;
+
+      const garageRef = collection(db, 'users', user.uid, 'garage');
+      const newCar = { ...car, isActive };
+      
+      await addDoc(garageRef, newCar);
+      await loadGarage();
+      
+      console.log('[Auth] Car added to garage');
+    } catch (error) {
+      console.error('[Auth] Add car error:', error);
+      throw error;
+    }
+  };
+
+  const setActiveCar = async (carId: string) => {
+    if (!user) {
+      throw new Error('No user logged in');
+    }
+
+    try {
+      // Deactivate all cars
+      for (const car of garage) {
+        const carRef = doc(db, 'users', user.uid, 'garage', car.id);
+        await updateDoc(carRef, { isActive: false });
+      }
+
+      // Activate selected car
+      const carRef = doc(db, 'users', user.uid, 'garage', carId);
+      await updateDoc(carRef, { isActive: true });
+
+      await loadGarage();
+      console.log('[Auth] Active car switched');
+    } catch (error) {
+      console.error('[Auth] Set active car error:', error);
+      throw error;
+    }
+  };
+
+  const deleteCar = async (carId: string) => {
+    if (!user) {
+      throw new Error('No user logged in');
+    }
+
+    try {
+      const carRef = doc(db, 'users', user.uid, 'garage', carId);
+      await deleteDoc(carRef);
+      
+      await loadGarage();
+      console.log('[Auth] Car deleted from garage');
+    } catch (error) {
+      console.error('[Auth] Delete car error:', error);
+      throw error;
+    }
+  };
+
   const deleteAccount = async () => {
     if (!user) {
       throw new Error('No user logged in');
     }
 
     try {
+      // Delete garage
+      const garageRef = collection(db, 'users', user.uid, 'garage');
+      const snapshot = await getDocs(garageRef);
+      for (const doc of snapshot.docs) {
+        await deleteDoc(doc.ref);
+      }
+
       // Delete Firestore document
       await deleteDoc(doc(db, 'users', user.uid));
       
@@ -172,6 +305,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       value={{
         user,
         profile,
+        garage,
         loading,
         signUp,
         signIn,
@@ -179,6 +313,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         resetPassword,
         updateProfile,
         deleteAccount,
+        uploadAvatar,
+        addCar,
+        setActiveCar,
+        deleteCar,
+        loadGarage,
       }}
     >
       {children}

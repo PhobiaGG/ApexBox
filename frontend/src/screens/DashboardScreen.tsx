@@ -41,63 +41,99 @@ export default function DashboardScreen() {
   const [autoConnect, setAutoConnect] = useState(false);
   const [showBleModal, setShowBleModal] = useState(false);
   const [isTrackingGPS, setIsTrackingGPS] = useState(false);
+  const [gpsCoordinateCount, setGpsCoordinateCount] = useState(0);
+  const [sessionStartTime, setSessionStartTime] = useState<number | null>(null);
+
+  // Update GPS coordinate count in real-time
+  useEffect(() => {
+    if (isTrackingGPS) {
+      const unsubscribe = GpsService.onCoordinateUpdate(() => {
+        const coords = GpsService.getCoordinates();
+        setGpsCoordinateCount(coords.length);
+      });
+      return unsubscribe;
+    }
+  }, [isTrackingGPS]);
 
   // Handle Start Analysis with GPS tracking
   const handleStartAnalysis = async () => {
     try {
+      setIsAnalyzing(true);
+      setSessionStartTime(Date.now());
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+      
+      console.log('[Dashboard] Requesting GPS permissions...');
       
       // Request GPS permissions and start tracking
       const gpsStarted = await GpsService.startTracking();
       
       if (gpsStarted) {
         setIsTrackingGPS(true);
-        setIsAnalyzing(true);
-        Alert.alert(
-          '✅ Analysis Started',
-          'GPS tracking is active. Recording your session...',
-          [{ text: 'OK' }]
-        );
+        setGpsCoordinateCount(0);
+        console.log('[Dashboard] GPS tracking started successfully');
+        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       } else {
+        console.warn('[Dashboard] GPS tracking failed to start');
         Alert.alert(
           '⚠️ GPS Unavailable',
-          'Could not start GPS tracking. Session will record without location data.',
+          'Could not start GPS tracking. Session will record telemetry without location data.',
           [
-            { text: 'Cancel', style: 'cancel' },
+            { text: 'Cancel', style: 'cancel', onPress: () => {
+              setIsAnalyzing(false);
+              setSessionStartTime(null);
+            }},
             {
               text: 'Continue Anyway',
-              onPress: () => setIsAnalyzing(true),
+              onPress: () => {
+                console.log('[Dashboard] Continuing without GPS');
+              },
             },
           ]
         );
       }
     } catch (error) {
       console.error('[Dashboard] Start analysis error:', error);
+      setIsAnalyzing(false);
+      setSessionStartTime(null);
       Alert.alert('Error', 'Failed to start analysis');
     }
   };
 
   const handleStopAnalysis = async () => {
     try {
+      console.log('[Dashboard] Stopping analysis...');
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
       
       // Stop GPS tracking and get coordinates
       const coordinates = GpsService.stopTracking();
+      const duration = sessionStartTime ? Math.floor((Date.now() - sessionStartTime) / 1000) : 0;
+      
       setIsTrackingGPS(false);
       setIsAnalyzing(false);
+      setGpsCoordinateCount(0);
+      setSessionStartTime(null);
       
-      console.log(`[Dashboard] Session ended. Captured ${coordinates.length} GPS points`);
+      console.log(`[Dashboard] Session ended. Duration: ${duration}s, Captured ${coordinates.length} GPS points`);
       
       // TODO: Save coordinates with session data to Firebase
       
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      
       Alert.alert(
-        '✅ Session Saved',
-        `Recorded ${coordinates.length} GPS coordinates`,
+        '✅ Session Complete',
+        `Duration: ${Math.floor(duration / 60)}m ${duration % 60}s\nGPS Points: ${coordinates.length}\n\n${
+          coordinates.length > 0 
+            ? 'Location data saved with session.' 
+            : 'No GPS data captured.'
+        }`,
         [{ text: 'OK' }]
       );
     } catch (error) {
       console.error('[Dashboard] Stop analysis error:', error);
+      setIsAnalyzing(false);
+      setIsTrackingGPS(false);
+      setGpsCoordinateCount(0);
+      setSessionStartTime(null);
       Alert.alert('Error', 'Failed to stop analysis');
     }
   };

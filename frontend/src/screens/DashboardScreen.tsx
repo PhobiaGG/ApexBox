@@ -173,22 +173,20 @@ export default function DashboardScreen() {
           </View>
 
           {/* Metrics */}
-          {stats && (
-            <View style={styles.metricsContainer}>
-              <MetricCard
-                icon="thermometer"
-                label="Temperature"
-                value={formatTemp(stats.maxTemp, settings.units.tempCelsius)}
-                color={COLORS.lime}
-              />
-              <MetricCard
-                icon="altimeter"
-                label="Altitude"
-                value={formatAltitude(stats.maxAltitude, settings.units.altitudeMetric)}
-                color={COLORS.cyan}
-              />
-            </View>
-          )}
+          <View style={styles.metricsContainer}>
+            <MetricCard
+              icon="thermometer"
+              label="Temperature"
+              value={formatTemp(currentTemp, settings.units.tempCelsius)}
+              color={COLORS.lime}
+            />
+            <MetricCard
+              icon="altimeter"
+              label="Altitude"
+              value={formatAltitude(currentAltitude, settings.units.altitudeMetric)}
+              color={COLORS.cyan}
+            />
+          </View>
 
           {/* Action Buttons */}
           <View style={styles.actionsContainer}>

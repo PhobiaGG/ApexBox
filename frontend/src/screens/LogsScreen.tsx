@@ -100,6 +100,14 @@ export default function LogsScreen() {
           style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={COLORS.cyan}
+              colors={[COLORS.cyan, COLORS.magenta, COLORS.lime]}
+            />
+          }
         >
           {dates.map(date => {
             const isExpanded = expandedDates.has(date);

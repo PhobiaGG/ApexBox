@@ -523,30 +523,36 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  crewTabs: {
-    marginBottom: SPACING.md,
-  },
-  crewTabsContent: {
-    paddingHorizontal: SPACING.lg,
-    gap: SPACING.sm,
-  },
-  crewTab: {
+  crewSelector: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: SPACING.sm,
-    paddingVertical: 6,
-    borderRadius: BORDER_RADIUS.md,
+    justifyContent: 'space-between',
+    marginHorizontal: SPACING.lg,
+    marginBottom: SPACING.md,
+    padding: SPACING.md,
+    borderRadius: BORDER_RADIUS.lg,
     borderWidth: 1,
-    gap: 6,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
   },
-  crewTabText: {
-    fontSize: FONT_SIZE.xs,
+  crewSelectorLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.xs,
+  },
+  crewSelectorLabel: {
+    fontSize: FONT_SIZE.sm,
     fontWeight: '600',
+  },
+  crewDropdown: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.sm,
+    flex: 1,
+    marginLeft: SPACING.md,
+  },
+  crewDropdownText: {
+    fontSize: FONT_SIZE.md,
+    fontWeight: 'bold',
+    flex: 1,
   },
   memberBadge: {
     paddingHorizontal: 6,

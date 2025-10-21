@@ -232,12 +232,33 @@ export default function GarageScreen() {
                     <Text style={[styles.carDetails, { color: colors.textSecondary }]}>
                       {car.year} {car.make} {car.model}
                     </Text>
-                    <View style={styles.colorRow}>
-                      <View style={[styles.colorSwatch, { borderColor: colors.border }]}>
-                        <Text style={[styles.colorText, { color: colors.textTertiary }]}>
-                          {car.color}
-                        </Text>
-                      </View>
+                  </View>
+                  
+                  {/* Action Buttons */}
+                  <View style={styles.actionButtons}>
+                    <TouchableOpacity
+                      style={[styles.iconButton, { backgroundColor: colors.background }]}
+                      onPress={() => handleEditCar(car)}
+                    >
+                      <MaterialCommunityIcons name="pencil" size={18} color={colors.cyan} />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.iconButton, { backgroundColor: colors.background }]}
+                      onPress={() => handleDeleteCar(car.id)}
+                    >
+                      <MaterialCommunityIcons name="delete" size={18} color={colors.magenta} />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+                
+                <View style={styles.carFooter}>
+                  <View style={styles.colorRow}>
+                    <View style={[styles.colorSwatch, { borderColor: colors.border }]}>
+                      <Text style={[styles.colorText, { color: colors.textTertiary }]}>
+                        {car.color || 'No color'}
+                      </Text>
+                    </View>
+                  </View>
                     </View>
                   </View>
                   {car.isActive && (

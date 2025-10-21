@@ -1,0 +1,15 @@
+# EAS Build Ignore
+node_modules/
+.expo/
+.git/
+*.log
+.DS_Store
+.env.local
+.env.development
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+build/
+dist/

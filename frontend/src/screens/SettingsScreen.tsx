@@ -17,6 +17,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import UserAvatar from '../components/UserAvatar';
 import AddCarModal, { CarData } from '../components/AddCarModal';
+import ChangeUsernameModal from '../components/ChangeUsernameModal';
 import * as ImagePicker from 'expo-image-picker';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';

@@ -6,24 +6,35 @@
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "apexbox",
-    "userInterfaceStyle": "dark",
+    "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/images/icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0A0A0A"
+    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.apexbox.companion",
+      "buildNumber": "1",
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "ApexBox tracks your location during performance sessions to create track replays",
-        "NSBluetoothAlwaysUsageDescription": "ApexBox uses Bluetooth to connect to your performance tracker device",
-        "NSCameraUsageDescription": "ApexBox needs camera access to take profile pictures",
-        "NSPhotoLibraryUsageDescription": "ApexBox needs photo access to set your profile picture"
+        "NSLocationWhenInUseUsageDescription": "ApexBox tracks your location during performance sessions to create track replays and analyze your driving data.",
+        "NSBluetoothAlwaysUsageDescription": "ApexBox uses Bluetooth to connect to your OBD-II performance tracker device for real-time telemetry.",
+        "NSCameraUsageDescription": "ApexBox needs camera access to take profile pictures for your account.",
+        "NSPhotoLibraryUsageDescription": "ApexBox needs photo access to set your profile picture and save session screenshots.",
+        "ITSAppUsesNonExemptEncryption": false
+      },
+      "config": {
+        "usesNonExemptEncryption": false
       }
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "foregroundImage": "./assets/images/icon.png",
         "backgroundColor": "#0A0A0A"
       },
       "package": "com.apexbox.companion",
+      "versionCode": 1,
       "permissions": [
         "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION",
@@ -40,22 +51,40 @@
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/icon.png"
     },
     "plugins": [
       "expo-router",
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash-icon.png",
+          "image": "./assets/images/icon.png",
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#0A0A0A"
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "deploymentTarget": "13.4"
+          },
+          "android": {
+            "compileSdkVersion": 34,
+            "targetSdkVersion": 34,
+            "minSdkVersion": 23
+          }
         }
       ]
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "your-project-id-here"
+      }
     }
   }
 }

@@ -319,9 +319,13 @@ export default function GarageScreen() {
 
       <AddCarModal
         visible={showAddModal}
-        onClose={() => setShowAddModal(false)}
+        onClose={() => {
+          setShowAddModal(false);
+          setEditingCar(null);
+        }}
         onSave={handleAddCar}
         accentColor={accentColor}
+        editCar={editingCar}
       />
     </View>
   );

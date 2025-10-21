@@ -556,6 +556,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const upgradeToPremium = async () => {
+    if (!user) throw new Error('No user logged in');
+    
+    try {
+      // For now, just set premium to true in Firestore
+      // In production, this would be triggered by successful in-app purchase
+      await updateDoc(doc(db, 'users', user.uid), {
+        premium: true,
+      });
+      
+      if (profile) {
+        setProfile({ ...profile, premium: true });
+      }
+      
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } catch (error: any) {
+      console.error('[Auth] Upgrade to premium error:', error);
+      throw new Error('Failed to upgrade to premium');
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{

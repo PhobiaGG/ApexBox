@@ -61,7 +61,7 @@ const generateMockGlobalLeaderboard = () => ({
 
 export default function GroupsScreen() {
   const router = useRouter();
-  const { profile, user, createCrew, joinCrew, leaveCrew } = useAuth();
+  const { profile, user, createCrew, joinCrew, leaveCrew, getUserCrews } = useAuth();
   const { colors, getCurrentAccent } = useTheme();
   const accentColor = getCurrentAccent();
 

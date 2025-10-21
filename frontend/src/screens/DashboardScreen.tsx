@@ -92,13 +92,8 @@ export default function DashboardScreen() {
     if (status.isConnected) {
       await disconnect();
     } else {
+      setAutoConnect(true);
       await scan();
-      // Wait a bit for state to update, then use devices from context
-      setTimeout(async () => {
-        if (devices && devices.length > 0) {
-          await connect(devices[0]);
-        }
-      }, 100);
     }
   };
 

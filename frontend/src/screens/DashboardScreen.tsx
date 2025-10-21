@@ -127,23 +127,6 @@ export default function DashboardScreen() {
     }
   }, [telemetry, latestSession, status.isConnected]);
 
-  const handleStartAnalysis = async () => {
-    if (!status.isConnected) {
-      Alert.alert('Not Connected', 'Please connect to an ApexBox device first');
-      return;
-    }
-
-    try {
-      setIsAnalyzing(true);
-      await sendCommand('START_ANALYSIS');
-      Alert.alert('Analysis Started', 'ApexBox is now collecting telemetry data');
-    } catch (error) {
-      Alert.alert('Error', 'Failed to start analysis');
-    } finally {
-      setIsAnalyzing(false);
-    }
-  };
-
   const handleSyncLogs = async () => {
     if (!status.isConnected) {
       Alert.alert('Not Connected', 'Please connect to an ApexBox device first');

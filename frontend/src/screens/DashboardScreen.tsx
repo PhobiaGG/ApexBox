@@ -235,8 +235,8 @@ export default function DashboardScreen() {
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
               >
-                <MaterialCommunityIcons name="sync" size={24} color={COLORS.text} />
-                <Text style={styles.actionButtonText}>Sync Logs</Text>
+                <MaterialCommunityIcons name="sync" size={24} color={colors.text} />
+                <Text style={[styles.actionButtonText, { color: colors.text }]}>Sync Logs</Text>
               </LinearGradient>
             </TouchableOpacity>
           </View>
@@ -247,7 +247,7 @@ export default function DashboardScreen() {
               <ChartView
                 data={chartData}
                 title="Latest Session Preview"
-                color={COLORS.cyan}
+                color={accentColor}
                 yLabel="Speed (km/h)"
               />
             </View>
@@ -255,8 +255,8 @@ export default function DashboardScreen() {
 
           {isLoading && (
             <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color={COLORS.cyan} />
-              <Text style={styles.loadingText}>Loading telemetry...</Text>
+              <ActivityIndicator size="large" color={accentColor} />
+              <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Loading telemetry...</Text>
             </View>
           )}
         </ScrollView>

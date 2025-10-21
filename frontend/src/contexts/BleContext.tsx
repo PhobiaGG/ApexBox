@@ -1,10 +1,12 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import MockBleService, { BleDevice, BleStatus } from '../services/MockBleService';
+import { TelemetryData } from '../utils/telemetry';
 import * as Haptics from 'expo-haptics';
 
 interface BleContextType {
   status: BleStatus;
   devices: BleDevice[];
+  telemetry: TelemetryData | null;
   scan: () => Promise<void>;
   connect: (device: BleDevice) => Promise<void>;
   disconnect: () => Promise<void>;

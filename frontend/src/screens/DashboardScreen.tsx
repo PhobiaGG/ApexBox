@@ -121,6 +121,21 @@ export default function DashboardScreen() {
           <Text style={[styles.subtitle, { color: colors.textSecondary }]}>COMPANION</Text>
         </View>
 
+        {/* Active Car Display */}
+        {activeCar && (
+          <View style={[styles.activeCarContainer, { backgroundColor: colors.card, borderColor: accentColor }]}>
+            <MaterialCommunityIcons name="car-sports" size={24} color={accentColor} />
+            <View style={styles.activeCarInfo}>
+              <Text style={[styles.activeCarLabel, { color: colors.textSecondary }]}>
+                Current Vehicle
+              </Text>
+              <Text style={[styles.activeCarName, { color: colors.text }]}>
+                {activeCar.year} {activeCar.make} {activeCar.model}
+              </Text>
+            </View>
+          </View>
+        )}
+
         <ScrollView
           style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}

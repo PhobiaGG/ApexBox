@@ -475,6 +475,36 @@ export default function SettingsScreen() {
           </View>
         </View>
 
+        {/* ========== PREMIUM SECTION ========== */}
+        {!profile?.premium && (
+          <TouchableOpacity
+            style={[styles.premiumCard, { backgroundColor: colors.card, borderColor: accentColorValue }]}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+              router.push('/premium');
+            }}
+            activeOpacity={0.8}
+          >
+            <LinearGradient
+              colors={[accentColorValue + '40', colors.card]}
+              style={styles.premiumGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+            >
+              <View style={styles.premiumContent}>
+                <MaterialCommunityIcons name="crown" size={32} color={accentColorValue} />
+                <View style={styles.premiumText}>
+                  <Text style={[styles.premiumTitle, { color: colors.text }]}>Upgrade to Pro</Text>
+                  <Text style={[styles.premiumSubtitle, { color: colors.textSecondary }]}>
+                    Unlock Track Replay & Crew Leaderboards
+                  </Text>
+                </View>
+              </View>
+              <MaterialCommunityIcons name="chevron-right" size={24} color={accentColorValue} />
+            </LinearGradient>
+          </TouchableOpacity>
+        )}
+
         {/* ========== SYSTEM SECTION ========== */}
         <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>System</Text>

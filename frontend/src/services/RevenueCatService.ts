@@ -41,6 +41,12 @@ class RevenueCatService {
         return;
       }
 
+      if (!Purchases) {
+        console.log('[RevenueCat] SDK not available (Expo Go) - using mock mode');
+        this.initialized = true;
+        return;
+      }
+
       const apiKey = Platform.select({
         ios: REVENUECAT_APPLE_API_KEY,
         android: REVENUECAT_GOOGLE_API_KEY,

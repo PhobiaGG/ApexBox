@@ -250,6 +250,36 @@ export default function DashboardScreen() {
           <MaterialCommunityIcons name="cog" size={20} color={status.isConnected ? accentColor : colors.textSecondary} />
         </TouchableOpacity>
 
+        {/* Recording Indicator */}
+        {isAnalyzing && (
+          <View style={[styles.recordingBanner, { backgroundColor: colors.magenta + '15', borderColor: colors.magenta }]}>
+            <View style={styles.recordingLeft}>
+              <View style={styles.recordingDot} />
+              <Text style={[styles.recordingText, { color: colors.magenta }]}>
+                🔴 RECORDING SESSION
+              </Text>
+            </View>
+            <View style={styles.recordingStats}>
+              {isTrackingGPS && (
+                <View style={styles.recordingStat}>
+                  <MaterialCommunityIcons name="map-marker" size={16} color={colors.lime} />
+                  <Text style={[styles.recordingStatText, { color: colors.lime }]}>
+                    {gpsCoordinateCount} pts
+                  </Text>
+                </View>
+              )}
+              {sessionStartTime && (
+                <View style={styles.recordingStat}>
+                  <MaterialCommunityIcons name="timer" size={16} color={colors.cyan} />
+                  <Text style={[styles.recordingStatText, { color: colors.cyan }]}>
+                    {Math.floor((Date.now() - sessionStartTime) / 1000)}s
+                  </Text>
+                </View>
+              )}
+            </View>
+          </View>
+        )}
+
         <ScrollView
           style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}

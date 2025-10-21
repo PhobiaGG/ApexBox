@@ -84,10 +84,12 @@ export default function DashboardScreen() {
       await disconnect();
     } else {
       await scan();
-      // Devices are now available in context
-      if (devices && devices.length > 0) {
-        await connect(devices[0]);
-      }
+      // Wait a bit for state to update, then use devices from context
+      setTimeout(async () => {
+        if (devices && devices.length > 0) {
+          await connect(devices[0]);
+        }
+      }, 100);
     }
   };
 

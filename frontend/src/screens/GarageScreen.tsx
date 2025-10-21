@@ -23,17 +23,31 @@ export default function GarageScreen() {
   const accentColor = getCurrentAccent();
   
   const [showAddModal, setShowAddModal] = useState(false);
+  const [editingCar, setEditingCar] = useState<any>(null);
   const swipeableRefs = useRef<Map<string, Swipeable>>(new Map());
 
   const handleAddCar = async (carData: CarData) => {
     try {
-      await addCar(carData);
+      if (editingCar) {
+        // Update existing car
+        await deleteCar(editingCar.id);
+        await addCar({ ...carData, id: editingCar.id });
+        setEditingCar(null);
+      } else {
+        // Add new car
+        await addCar(carData);
+      }
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       setShowAddModal(false);
     } catch (error) {
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      Alert.alert('Error', 'Failed to add car');
+      Alert.alert('Error', editingCar ? 'Failed to update car' : 'Failed to add car');
     }
+  };
+
+  const handleEditCar = (car: any) => {
+    setEditingCar(car);
+    setShowAddModal(true);
   };
 
   const handleSetActive = async (carId: string) => {

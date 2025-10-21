@@ -114,10 +114,15 @@ export default function GroupsScreen() {
   const handleCreateCrew = async (name: string, description: string) => {
     try {
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-      // In production: await createCrew(name, description);
-      Alert.alert('Success', `Crew "${name}" created!\n\nShare this code with friends:\nSPEED-12345`);
+      const crewCode = await createCrew(name, description);
+      Alert.alert(
+        'Crew Created!',
+        `Your crew "${name}" has been created!\n\nShare this code with friends to invite them:\n\n${crewCode}`,
+        [{ text: 'OK' }]
+      );
       await loadData();
     } catch (error: any) {
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       throw error;
     }
   };
@@ -125,10 +130,12 @@ export default function GroupsScreen() {
   const handleJoinCrew = async (code: string) => {
     try {
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-      // In production: await joinCrew(code);
-      Alert.alert('Success', 'You have joined the crew!');
+      await joinCrew(code);
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      Alert.alert('Success!', 'You have joined the crew!');
       await loadData();
     } catch (error: any) {
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       throw error;
     }
   };

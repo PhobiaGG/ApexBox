@@ -5,10 +5,14 @@
 
 export interface TelemetryData {
   speed: number;          // km/h (0-200)
-  g_force: number;        // g (0-3)
+  gForce: number;         // g (0-3) - renamed from g_force
+  gForceX?: number;       // optional for detailed data
+  gForceY?: number;
+  gForceZ?: number;
   temperature: number;    // °C (20-95)
   altitude: number;       // meters (0-2000)
-  timestamp_ms: number;
+  humidity?: number;      // optional
+  timestamp: number;      // renamed from timestamp_ms
 }
 
 export class TelemetrySimulator {

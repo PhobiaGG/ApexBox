@@ -1,6 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet, Dimensions } from 'react-native';
 import { COLORS, SPACING, FONT_SIZE } from '../constants/theme';
+import { CartesianChart, Line, useChartPressState } from 'victory-native';
+import { Circle, useFont } from '@shopify/react-native-skia';
 
 interface ChartData {
   x: number;
@@ -17,6 +19,8 @@ interface ChartViewProps {
 const screenWidth = Dimensions.get('window').width;
 
 export default function ChartView({ data, title, color, yLabel }: ChartViewProps) {
+  const { state, isActive } = useChartPressState({ x: 0, y: { y: 0 } });
+
   if (!data || data.length === 0) {
     return (
       <View style={styles.container}>
@@ -32,27 +36,67 @@ export default function ChartView({ data, title, color, yLabel }: ChartViewProps
   const yValues = data.map(d => d.y);
   const minY = Math.min(...yValues);
   const maxY = Math.max(...yValues);
+  const avgY = yValues.reduce((a, b) => a + b, 0) / yValues.length;
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>{title}</Text>
-      <View style={styles.chartPlaceholder}>
-        <Text style={[styles.chartLabel, { color }]}>{yLabel}</Text>
-        <View style={styles.statsRow}>
-          <View style={styles.statBox}>
-            <Text style={styles.statLabel}>Min</Text>
-            <Text style={[styles.statValue, { color }]}>{minY.toFixed(1)}</Text>
-          </View>
-          <View style={styles.statBox}>
-            <Text style={styles.statLabel}>Max</Text>
-            <Text style={[styles.statValue, { color }]}>{maxY.toFixed(1)}</Text>
-          </View>
-          <View style={styles.statBox}>
-            <Text style={styles.statLabel}>Samples</Text>
-            <Text style={[styles.statValue, { color }]}>{data.length}</Text>
-          </View>
+      
+      {/* Interactive value display */}
+      {isActive && (
+        <View style={styles.activeValue}>
+          <Text style={[styles.activeValueText, { color }]}>
+            {state.y.y.value.toFixed(2)}
+          </Text>
+          <Text style={styles.activeValueLabel}>{yLabel}</Text>
         </View>
-        <Text style={styles.chartNote}>Charts will render in native Expo Go app</Text>
+      )}
+
+      <View style={styles.chartContainer}>
+        <CartesianChart
+          data={data}
+          xKey="x"
+          yKeys={["y"]}
+          domainPadding={{ left: 20, right: 20, top: 20, bottom: 20 }}
+          chartPressState={state}
+        >
+          {({ points, chartBounds }) => (
+            <>
+              <Line
+                points={points.y}
+                color={color}
+                strokeWidth={2.5}
+                curveType="natural"
+                animate={{ type: "timing", duration: 300 }}
+              />
+              {isActive && (
+                <Circle
+                  cx={state.x.position}
+                  cy={state.y.y.position}
+                  r={6}
+                  color={color}
+                  opacity={0.8}
+                />
+              )}
+            </>
+          )}
+        </CartesianChart>
+      </View>
+
+      {/* Stats Row */}
+      <View style={styles.statsRow}>
+        <View style={styles.statBox}>
+          <Text style={styles.statLabel}>Min</Text>
+          <Text style={[styles.statValue, { color }]}>{minY.toFixed(1)}</Text>
+        </View>
+        <View style={styles.statBox}>
+          <Text style={styles.statLabel}>Avg</Text>
+          <Text style={[styles.statValue, { color }]}>{avgY.toFixed(1)}</Text>
+        </View>
+        <View style={styles.statBox}>
+          <Text style={styles.statLabel}>Max</Text>
+          <Text style={[styles.statValue, { color }]}>{maxY.toFixed(1)}</Text>
+        </View>
       </View>
     </View>
   );

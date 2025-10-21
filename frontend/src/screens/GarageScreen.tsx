@@ -330,12 +330,6 @@ export default function GarageScreen() {
           </LinearGradient>
         </TouchableOpacity>
 
-        <View style={styles.hintContainer}>
-          <MaterialCommunityIcons name="gesture-swipe-left" size={20} color={colors.textTertiary} />
-          <Text style={[styles.hintText, { color: colors.textTertiary }]}>
-            Swipe left on a car to delete
-          </Text>
-        </View>
       </ScrollView>
 
       <AddCarModal

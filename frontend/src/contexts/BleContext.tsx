@@ -137,7 +137,20 @@ export function BleProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <BleContext.Provider value={{ status, devices, telemetry, scan, connect, disconnect, sendCommand, usingRealBle }}>
+    <BleContext.Provider
+      value={{
+        status,
+        devices,
+        telemetry,
+        scan,
+        connect,
+        disconnect,
+        sendCommand,
+        forgetDevice,
+        tryAutoConnect,
+        usingRealBle,
+      }}
+    >
       {children}
     </BleContext.Provider>
   );

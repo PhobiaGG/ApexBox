@@ -20,6 +20,7 @@ import Gauge from '../components/Gauge';
 import MetricCard from '../components/MetricCard';
 import ChartView from '../components/ChartView';
 import BleConnectionModal from '../components/BleConnectionModal';
+import GpsService from '../services/GpsService';
 import { formatTemp, formatAltitude, formatHumidity } from '../utils/format';
 import { calculateStats } from '../utils/csv';
 import * as Haptics from 'expo-haptics';

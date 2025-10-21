@@ -316,16 +316,115 @@ export default function TrackReplayScreen() {
       </View>
 
       <View style={[styles.canvasContainer, { backgroundColor: colors.card, borderColor: colors.border }]}>
-        <View style={styles.placeholderContainer}>
-          <MaterialCommunityIcons name="map-marker-path" size={80} color={accentColor} />
-          <Text style={[styles.placeholderTitle, { color: colors.text }]}>Track Visualization</Text>
-          <Text style={[styles.placeholderText, { color: colors.textSecondary }]}>
-            GPS track replay available on physical devices
-          </Text>
-          <Text style={[styles.placeholderSubtext, { color: colors.textTertiary }]}>
-            {gpsData.length} GPS points recorded
-          </Text>
-        </View>
+        {loading ? (
+          <View style={styles.placeholderContainer}>
+            <MaterialCommunityIcons name="loading" size={48} color={accentColor} />
+            <Text style={[styles.placeholderText, { color: colors.textSecondary }]}>
+              Loading GPS data...
+            </Text>
+          </View>
+        ) : gpsData.length === 0 ? (
+          <View style={styles.placeholderContainer}>
+            <MaterialCommunityIcons name="map-marker-off" size={64} color={colors.textSecondary} />
+            <Text style={[styles.placeholderTitle, { color: colors.text }]}>No GPS Data</Text>
+            <Text style={[styles.placeholderText, { color: colors.textSecondary }]}>
+              This session doesn't have GPS tracking data
+            </Text>
+          </View>
+        ) : (
+          <Svg
+            width={width - 80}
+            height={400}
+            viewBox={`0 0 ${width - 80} 400`}
+            style={styles.svg}
+          >
+            <Defs>
+              <SvgGradient id="trackGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                <Stop offset="0%" stopColor={colors.textTertiary} stopOpacity="0.3" />
+                <Stop offset="100%" stopColor={colors.textTertiary} stopOpacity="0.1" />
+              </SvgGradient>
+            </Defs>
+
+            {/* Full track path (dimmed) */}
+            <Path
+              d={pathData}
+              stroke={colors.textTertiary}
+              strokeWidth={3}
+              strokeOpacity={0.2}
+              fill="none"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+
+            {/* Current path with G-force coloring */}
+            {currentIndex > 0 && (
+              <>
+                {gpsData.slice(0, currentIndex).map((point, i) => {
+                  if (i === 0) return null;
+                  
+                  const prevPoint = gpsData[i - 1];
+                  const start = convertToCanvasCoords(prevPoint.lat, prevPoint.lon);
+                  const end = convertToCanvasCoords(point.lat, point.lon);
+                  const color = getColorForGForce(point.gForce);
+                  
+                  return (
+                    <Path
+                      key={`segment-${i}`}
+                      d={`M ${start.x} ${start.y} L ${end.x} ${end.y}`}
+                      stroke={color}
+                      strokeWidth={4}
+                      fill="none"
+                      strokeLinecap="round"
+                    />
+                  );
+                })}
+              </>
+            )}
+
+            {/* Current position marker */}
+            {currentPoint && (
+              <G>
+                <Circle
+                  cx={currentCoords.x}
+                  cy={currentCoords.y}
+                  r={12}
+                  fill={accentColor}
+                  opacity={0.3}
+                />
+                <Circle
+                  cx={currentCoords.x}
+                  cy={currentCoords.y}
+                  r={6}
+                  fill={accentColor}
+                />
+              </G>
+            )}
+
+            {/* Start marker */}
+            {gpsData.length > 0 && (
+              <Circle
+                cx={convertToCanvasCoords(gpsData[0].lat, gpsData[0].lon).x}
+                cy={convertToCanvasCoords(gpsData[0].lat, gpsData[0].lon).y}
+                r={8}
+                fill="#00FF88"
+                stroke={colors.card}
+                strokeWidth={2}
+              />
+            )}
+
+            {/* End marker */}
+            {gpsData.length > 0 && (
+              <Circle
+                cx={convertToCanvasCoords(gpsData[gpsData.length - 1].lat, gpsData[gpsData.length - 1].lon).x}
+                cy={convertToCanvasCoords(gpsData[gpsData.length - 1].lat, gpsData[gpsData.length - 1].lon).y}
+                r={8}
+                fill="#FF0055"
+                stroke={colors.card}
+                strokeWidth={2}
+              />
+            )}
+          </Svg>
+        )}
       </View>
 
       {currentPoint && (

@@ -15,6 +15,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useSettings } from '../contexts/SettingsContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
+import { useBle } from '../contexts/BleContext';
 import UserAvatar from '../components/UserAvatar';
 import AddCarModal, { CarData } from '../components/AddCarModal';
 import ChangeUsernameModal from '../components/ChangeUsernameModal';

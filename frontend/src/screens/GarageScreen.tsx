@@ -18,11 +18,31 @@ import AddCarModal, { CarData } from '../components/AddCarModal';
 import * as Haptics from 'expo-haptics';
 
 export default function GarageScreen() {
-  const { profile, addCar, setActiveCar, deleteCar, user } = useAuth();
+  const { profile, addCar, setActiveCar, deleteCar, user, updateCar } = useAuth();
   const { colors, getCurrentAccent } = useTheme();
   const accentColor = getCurrentAccent();
 
-  const garage = profile?.garage || [];
+  // Remove duplicates and use unique IDs with index fallback
+  const rawGarage = profile?.garage || [];
+  const garage = rawGarage.map((car, index) => ({
+    ...car,
+    // If duplicate ID detected, use index-based unique key for rendering
+    uniqueKey: `${car.id}-${index}`,
+  }));
+  
+  // Detect duplicates
+  React.useEffect(() => {
+    const ids = rawGarage.map(c => c.id);
+    const duplicates = ids.filter((id, index) => ids.indexOf(id) !== index);
+    if (duplicates.length > 0) {
+      console.warn('[Garage] ⚠️ DUPLICATE CAR IDs DETECTED:', duplicates);
+      Alert.alert(
+        'Duplicate Cars Detected',
+        'You have duplicate cars in your garage. This can cause deletion issues. Please contact support or delete all duplicates.',
+        [{ text: 'OK' }]
+      );
+    }
+  }, [rawGarage]);
   
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingCar, setEditingCar] = useState<any>(null);

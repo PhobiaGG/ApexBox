@@ -29,6 +29,15 @@ export default function DashboardScreen() {
   const [currentTemp, setCurrentTemp] = useState(65);
   const [currentAltitude, setCurrentAltitude] = useState(350);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [autoConnect, setAutoConnect] = useState(false);
+
+  // Auto-connect after scan completes
+  useEffect(() => {
+    if (autoConnect && devices && devices.length > 0 && !status.isConnected) {
+      connect(devices[0]);
+      setAutoConnect(false);
+    }
+  }, [autoConnect, devices, status.isConnected, connect]);
 
   // Update gauges with live telemetry when connected
   useEffect(() => {

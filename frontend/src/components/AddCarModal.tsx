@@ -43,6 +43,16 @@ export default function AddCarModal({ visible, onClose, onSave, accentColor, edi
   const [upgrades, setUpgrades] = useState(editCar?.upgrades || '');
   const [loading, setLoading] = useState(false);
 
+  // Reset form fields when editCar changes
+  useEffect(() => {
+    setNickname(editCar?.nickname || '');
+    setMake(editCar?.make || '');
+    setModel(editCar?.model || '');
+    setYear(editCar?.year || '');
+    setColor(editCar?.color || '');
+    setUpgrades(editCar?.upgrades || '');
+  }, [editCar]);
+
   const validateInputs = (): boolean => {
     if (!nickname.trim()) {
       Alert.alert('Error', 'Please enter a nickname for your car');

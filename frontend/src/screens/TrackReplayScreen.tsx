@@ -6,8 +6,8 @@ import {
   TouchableOpacity,
   Dimensions,
   Alert,
+  ScrollView,
 } from 'react-native';
-import { Canvas, Path, Circle as SkiaCircle, vec, Skia, LinearGradient as SkiaGradient } from '@shopify/react-native-skia';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';

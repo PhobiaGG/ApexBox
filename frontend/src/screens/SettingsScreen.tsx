@@ -103,6 +103,29 @@ export default function SettingsScreen() {
     }
   };
 
+  const handleForgetDevice = async () => {
+    Alert.alert(
+      'Forget Device',
+      'This will clear the remembered ApexBox device. You\'ll need to manually reconnect next time.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Forget',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+              await forgetDevice();
+              Alert.alert('Success', 'Device forgotten. You can reconnect from the Dashboard.');
+            } catch (error) {
+              Alert.alert('Error', 'Failed to forget device');
+            }
+          },
+        },
+      ]
+    );
+  };
+
   const handleSaveCar = async (carData: CarData) => {
     await addCar(carData);
   };

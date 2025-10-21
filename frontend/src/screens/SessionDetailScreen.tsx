@@ -458,4 +458,37 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZE.sm,
     color: COLORS.textSecondary,
   },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    alignItems: 'center',
+    padding: SPACING.lg,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    gap: SPACING.md,
+    marginTop: SPACING.xl,
+  },
+  modalButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: SPACING.md,
+    paddingHorizontal: SPACING.xl,
+    borderRadius: BORDER_RADIUS.md,
+    gap: SPACING.sm,
+    minWidth: 120,
+  },
+  cancelButton: {
+    borderWidth: 1,
+  },
+  shareButton: {},
+  modalButtonText: {
+    fontSize: FONT_SIZE.md,
+    fontWeight: '600',
+  },
 });

@@ -75,7 +75,7 @@ export function BleProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <BleContext.Provider value={{ status, devices, scan, connect, disconnect, sendCommand }}>
+    <BleContext.Provider value={{ status, devices, telemetry, scan, connect, disconnect, sendCommand }}>
       {children}
     </BleContext.Provider>
   );

@@ -21,20 +21,31 @@ import { formatTemp, formatAltitude, formatHumidity } from '../utils/format';
 import { calculateStats } from '../utils/csv';
 
 export default function DashboardScreen() {
-  const { status, scan, connect, disconnect, devices, sendCommand } = useBle();
+  const { status, scan, connect, disconnect, devices, sendCommand, telemetry } = useBle();
   const { latestSession, isLoading, rescan } = useLogs();
   const { settings } = useSettings();
   const [currentSpeed, setCurrentSpeed] = useState(0);
   const [currentGForce, setCurrentGForce] = useState(0);
+  const [currentTemp, setCurrentTemp] = useState(65);
+  const [currentAltitude, setCurrentAltitude] = useState(350);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
+  // Update gauges with live telemetry when connected
   useEffect(() => {
-    if (latestSession?.samples && latestSession.samples.length > 0) {
+    if (telemetry && status.isConnected) {
+      setCurrentSpeed(telemetry.speed);
+      setCurrentGForce(telemetry.g_force);
+      setCurrentTemp(telemetry.temperature);
+      setCurrentAltitude(telemetry.altitude);
+    } else if (latestSession?.samples && latestSession.samples.length > 0) {
+      // Fallback to latest session data when disconnected
       const lastSample = latestSession.samples[latestSession.samples.length - 1];
       setCurrentSpeed(lastSample.speed);
       setCurrentGForce(lastSample.g_force);
+      setCurrentTemp(lastSample.temperature);
+      setCurrentAltitude(lastSample.altitude);
     }
-  }, [latestSession]);
+  }, [telemetry, latestSession, status.isConnected]);
 
   const handleStartAnalysis = async () => {
     if (!status.isConnected) {

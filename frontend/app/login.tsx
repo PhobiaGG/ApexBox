@@ -231,33 +231,6 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZE.md,
   },
 });
-    fontSize: FONT_SIZE.sm,
-    color: COLORS.textSecondary,
-  },
-  linkText: {
-    fontSize: FONT_SIZE.sm,
-    fontWeight: '600',
-  },
-  loginButton: {
-    borderRadius: BORDER_RADIUS.md,
-    overflow: 'hidden',
-    marginBottom: SPACING.lg,
-  },
-  buttonGradient: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: SPACING.md,
-    gap: SPACING.sm,
-  },
-  buttonText: {
-    fontSize: FONT_SIZE.lg,
-    fontWeight: 'bold',
-    color: COLORS.text,
-  },
-  signUpContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
     alignItems: 'center',
   },
   signUpText: {

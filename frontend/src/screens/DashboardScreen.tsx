@@ -529,6 +529,46 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZE.sm,
     fontWeight: '600',
   },
+  recordingBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginHorizontal: SPACING.lg,
+    marginBottom: SPACING.md,
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.sm,
+    borderRadius: BORDER_RADIUS.md,
+    borderWidth: 2,
+  },
+  recordingLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.sm,
+  },
+  recordingDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#FF0055',
+  },
+  recordingText: {
+    fontSize: FONT_SIZE.sm,
+    fontWeight: 'bold',
+    letterSpacing: 1,
+  },
+  recordingStats: {
+    flexDirection: 'row',
+    gap: SPACING.md,
+  },
+  recordingStat: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  recordingStatText: {
+    fontSize: FONT_SIZE.xs,
+    fontWeight: 'bold',
+  },
   scrollView: {
     flex: 1,
   },

@@ -293,14 +293,6 @@ export default function TrackReplayScreen() {
     );
   }
 
-  const pathString = gpsData
-    .slice(0, currentIndex + 1)
-    .map((point, i) => {
-      const { x, y } = convertToCanvasCoords(point.lat, point.lon);
-      return i === 0 ? `M ${x} ${y}` : `L ${x} ${y}`;
-    })
-    .join(' ');
-
   const currentPoint = gpsData[currentIndex];
   const currentCoords = currentPoint ? convertToCanvasCoords(currentPoint.lat, currentPoint.lon) : { x: 0, y: 0 };
 

@@ -746,6 +746,23 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     letterSpacing: 1,
   },
+  friendIdDisplay: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: BORDER_RADIUS.md,
+    borderWidth: 2,
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.md,
+    gap: SPACING.sm,
+    justifyContent: 'space-between',
+  },
+  friendIdText: {
+    flex: 1,
+    fontSize: FONT_SIZE.lg,
+    fontWeight: 'bold',
+    letterSpacing: 2,
+    textAlign: 'center',
+  },
   modalInput: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -759,6 +776,11 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZE.md,
     marginLeft: SPACING.sm,
     paddingVertical: SPACING.xs,
+  },
+  modalHint: {
+    fontSize: FONT_SIZE.xs,
+    marginTop: SPACING.xs,
+    fontStyle: 'italic',
   },
   modalButtons: {
     flexDirection: 'row',

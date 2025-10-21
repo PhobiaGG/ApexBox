@@ -526,6 +526,11 @@ const styles = StyleSheet.create({
     borderRadius: BORDER_RADIUS.md,
     borderWidth: 1,
     gap: SPACING.xs,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   crewTabText: {
     fontSize: FONT_SIZE.sm,

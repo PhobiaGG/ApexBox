@@ -270,6 +270,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     try {
+      // Optimistically update local state first for immediate UI feedback
+      const updatedGarage = garage.map(car => ({
+        ...car,
+        isActive: car.id === carId,
+      }));
+      setGarage([...updatedGarage]);
+
+      // Then update Firestore
       // Deactivate all cars
       for (const car of garage) {
         const carRef = doc(db, 'users', user.uid, 'garage', car.id);
@@ -284,6 +292,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log('[Auth] Active car switched');
     } catch (error) {
       console.error('[Auth] Set active car error:', error);
+      // Rollback on error
+      await loadGarage();
       throw error;
     }
   };

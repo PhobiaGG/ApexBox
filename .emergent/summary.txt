@@ -1,157 +1,72 @@
 <analysis>
-The AI engineer began by analyzing the provided app_description and confirming key requirements for the ApexBox Companion App — a mobile interface for an ESP32-based performance tracker. The user clarified that the app should interpret existing ApexBox CSV logs, simulate BLE connections, and later support real telemetry sync. After gathering user input, the engineer installed all dependencies, set up the Expo project with expo-router, created the folder structure, and generated mock log files. Core contexts, services, components, and screens (Dashboard, Logs, Groups, Settings, SessionDetail) were implemented.
-
-The app successfully bundled and rendered the Dashboard screen in Expo Go with the neon-dark theme, connection indicators, gauges, and metric cards visible. Debugging focused on victory-native and @shopify/react-native-skia compatibility. The charts were temporarily simplified for performance testing, and the app declared stable and functional at the UI layer.
-The next phase will focus on enabling interactive logic — connecting BLE simulation, restoring charts, populating logs and group data, and integrating persistent settings.
+The AI engineer started by building the ApexBox Companion app's foundation, including UI, navigation, and core screens. Phase 1 focused on **BLE telemetry simulation**, successfully implementing realistic racing data, integrating it into  and , and updating  for live data display. Phase 2 involved **data visualization and analytics**, restoring  charts, enhancing CSV parsing, and adding pull-to-refresh to the Logs screen. An initial attempt at unit conversion and haptics in Settings was made, encountering  web compatibility issues which were addressed with a platform-specific fallback. Subsequent Phase 3 iterations initiated **immersive UX refinements and ecosystem integration**, beginning with an onboarding modal, animated gauges, sparklines in logs, and a dynamic accent color hook. User feedback consistently highlighted that many of these UI integrations, particularly theme and unit system changes, were not visually apparent. Following this, **Firebase authentication infrastructure** was set up, including contexts and basic login/signup screens. The latest user feedback indicated that the altitude settings merge, garage section, consistent accent colors, and light/dark mode were still not visible. The AI is currently addressing this by creating a completely updated  and is in the process of replacing the old file with this new version to implement all visible UI changes.
 </analysis>
+
 <product_requirements>
-The ApexBox Companion app serves as a dashboard and data viewer for an ESP32-powered performance tracking device.
-It must read and interpret /ApexBox_Logs/{Date}/{Time}.csv files, simulate BLE telemetry connections, display real-time data visualization, and manage user preferences.
-
-Core product goals:
-
-Mock BLE simulation: Connect/disconnect to devices named ApexBox-001, ApexBox-002, simulate telemetry (speed, G-force, temp, altitude), and mock commands for “Start Analysis” and “Sync Logs” with haptic feedback.
-
-Data Handling: Use Expo FileSystem to browse and load CSV sessions, compute key metrics (Peak Speed, Avg Speed, Peak G-Force, Temp Range, Altitude Change, Duration), and cache results with AsyncStorage.
-
-Navigation: Bottom tab navigator featuring:
-
-Dashboard: Live telemetry gauges and metric cards.
-
-Logs: Session browser grouped by date.
-
-Session Detail: Detailed summaries and charts.
-
-Groups: Local leaderboard and community mock data.
-
-Settings: Profile, Units, Theme, Connectivity, System Info.
-
-Design: Neon-dark theme with Orbitron/Rajdhani fonts, accent colors (Cyan, Magenta, Lime), rounded glossy cards, haptic-enhanced interactions.
-
-Compatibility: Fully functional in Expo Go and Android build targets.
-
-Stability: Graceful empty-state handling when no CSVs or BLE connections exist.
+The ApexBox Companion app is a dashboard and data viewer for an ESP32 performance tracker. It requires mock BLE simulation for devices like ApexBox-001/002, providing realistic telemetry (0-200 km/h speed, 0-3g G-force, temperature, altitude) with haptic feedback for actions like Start Analysis and Sync Logs. The app must read and interpret  files, compute key metrics (Peak/Avg Speed, Peak G-Force, Temp Range, Alt Change, Duration), and cache results. Navigation is via a bottom tab navigator with Dashboard, Logs, Session Detail, Groups (local leaderboard), and Settings (profile, units, theme, BLE). The design follows a neon-dark theme with specific fonts and accent colors (Cyan, Magenta, Lime), rounded cards, and haptics. It must be Expo Go/Android compatible with graceful empty-state handling. Future requirements include full user authentication (Firebase Auth), profile management with avatars (Firebase Storage/Firestore), a garage system for multiple cars, a dynamic theme system (light/dark mode, accent color picker), global unit conversion (Metric/Imperial), enhanced BLE device management, improved logs with sparklines/sorting/batch delete, animated charts with tap-to-zoom, and a multi-slide onboarding carousel.
 </product_requirements>
+
 <key_technical_concepts>
-Expo React Native: Core framework for mobile app development.
-
-expo-router: File-based navigation handling.
-
-React Navigation: Tab and stack navigation management.
-
-Expo FileSystem: Reads and parses ApexBox CSV logs from local assets.
-
-AsyncStorage: Persists settings, mock data, and user state.
-
-Victory-native: For telemetry chart visualization (Speed, G, Temp, Alt vs Time).
-
-Expo Haptics: Provides tactile feedback for BLE and button interactions.
-
-Mock BLE: Simulated BLE logic for testing connectivity and telemetry updates.
-
-@shopify/react-native-skia: Peer dependency required for victory-native rendering.
-
-Expo Sharing: Enables CSV exports for sessions.
+- Expo React Native: Mobile app development framework.
+- : File-based navigation.
+- React Navigation: Tab/stack navigation.
+- Expo FileSystem: CSV log parsing.
+- AsyncStorage: Persistent storage.
+- Victory-native: Telemetry chart visualization.
+- Expo Haptics: Tactile feedback.
+- Mock BLE: Simulated BLE functionality.
+- Firebase: Authentication, Firestore, Storage.
+- : Animations.
+- : Avatar uploads.
+- : Chart rendering dependency.
 </key_technical_concepts>
+
 <code_architecture>
-The project uses a modular Expo React Native structure emphasizing scalability and clean separation between UI, logic, and storage.
 
-/app
-├── backend/
-├── frontend/
-    ├── app/
-        ├── (tabs)/
-            ├── _layout.tsx
-            ├── dashboard.tsx
-            ├── logs.tsx
-            ├── groups.tsx
-            ├── settings.tsx
-        ├── logs/[date]/[file].tsx  (SessionDetailScreen)
-        ├── _layout.tsx
-    ├── src/
-        ├── components/
-            ├── ChartView.tsx
-            ├── Gauge.tsx
-            ├── GroupCard.tsx
-            ├── MetricCard.tsx
-            ├── SettingSection.tsx
-        ├── constants/
-            ├── theme.ts
-        ├── contexts/
-            ├── BleContext.tsx
-            ├── LogsContext.tsx
-            ├── SettingsContext.tsx
-        ├── services/
-            ├── BleService.ts
-            ├── MockBleService.ts
-            ├── LogService.ts
-            ├── GroupService.ts
-            ├── SettingsService.ts
-        ├── utils/
-            ├── csv.ts
-            ├── format.ts
-
-
-Dashboard: Displays telemetry gauges, BLE state, and quick stats.
-
-Logs: Lists sessions, grouped by date, linking to detail pages.
-
-SessionDetail: Displays parsed CSV data and charts.
-
-Groups: Shows local leaderboard data from AsyncStorage.
-
-Settings: Manages user profile, theme, units, and BLE preferences.
+   -  (DashboardScreen): Displays live telemetry. Modified to use dynamic accent colors and remove hardcoded style values.
+   - : Root layout. Integrates , , and .
+   - , , : New authentication screens for Firebase Auth.
+   - : Telemetry charts. Restored  and added web fallbacks.
+   - : Telemetry gauges. Enhanced with  for animations.
+   - : New component for first-launch onboarding.
+   - : New component for mini-charts in session previews.
+   - : New reusable avatar component (image or initials).
+   - : New modal for adding garage cars.
+   - : Firebase config. Corrected  import for React Native.
+   - : Manages Firebase authentication, profile, garage. Extended with garage management and avatar upload.
+   - : Manages BLE connection and telemetry. Updated to expose live telemetry.
+   - : New context for light/dark mode and accent color management.
+   - : New hook for dynamic accent color.
+   - : Simulates BLE telemetry streaming.
+   - : Session logs. Added pull-to-refresh, sorting, and  integration.
+   - : User settings. Was previously updated for haptics and dynamic unit display, now targeted for full replacement to consolidate all UI features.
+   - : A newly created file containing the intended complete implementation for .
+   - : Utility. Added safe defaults for number formatting.
+   - : New utility to simulate racing telemetry data.
 </code_architecture>
+
 <pending_tasks>
- BLE Simulation Logic: Implement scanning, connecting, and streaming mock telemetry (speed, g, temp, altitude) via MockBleService.
-
- BLE Context Integration: Reflect real-time BLE state on Dashboard and Settings.
-
- Victory-native Restoration: Re-enable and debug chart rendering for Speed, G, Temp, and Altitude data.
-
- Logs & Analytics: Parse CSVs asynchronously, compute session stats, and save to AsyncStorage.
-
- Groups: Display dynamic leaderboards and allow join/create mock functionality.
-
- Settings Enhancements: Persist profile data, handle BLE auto-connect, implement reset and export options.
-
- Haptics: Add tactile feedback for BLE actions, Start/Stop buttons, and navigation.
-
- Error Handling: Gracefully handle missing CSVs, corrupted data, or BLE disconnections.
-
- Developer Options: Add hidden settings for debugging mock BLE and logs.
+- Complete  UI: Implement unified unit system, accent color picker, light/dark mode toggles, and ensure global application and persistence.
+- Finalize Garage system: Implement car editing, dynamic Dashboard display of active car, and real-time Firestore sync.
+- Create  and integrate mock logging with Start Analysis button.
+- Implement real BLE integration with .
+- Cloud session sync with Firebase Storage/Firestore.
+- Implement Leaderboards and Crews.
+- All remaining UI/UX refinements, animations, and performance optimizations.
 </pending_tasks>
+
 <current_work>
-The app currently builds and runs successfully in Expo Go, with all navigation routes functioning.
-The Dashboard is fully themed and renders gauges, connection indicators, and metrics correctly.
-Mock CSVs are accessible and partially parsed by LogService.
-The chart visualization (ChartView.tsx) was simplified during debugging but is planned for reactivation in the next iteration.
+The AI engineer is currently addressing critical user feedback that previously claimed UI updates (e.g., dynamic unit system toggles, consistent accent colors, light/dark mode, garage features) are not visually reflected in the application, particularly on the Settings screen. Earlier efforts focused on building the underlying infrastructure (contexts, hooks, services) for these features. However, the UI was not fully updated or correctly connected to display these changes.
 
-Focus is now shifting to:
+The immediate action being undertaken is to replace the existing  file with a completely updated version. A new file, , has been created. This new file is intended to contain the full, correct implementation of the Settings screen, incorporating:
+- A unified unit system (Metric/Imperial) affecting all relevant measurements.
+- An Appearance section with light/dark mode toggles and an accent color picker.
+- Functional profile and garage management sections.
+- Proper integration with  and  to ensure dynamic updates are visible.
 
-Integrating BLE simulation and telemetry updates,
-
-Restoring full chart visualization,
-
-Populating the Logs, Groups, and Settings screens with live mock data,
-
-Adding haptics and persistent user configuration.
-
-The app’s visual design, theming, and navigation layer are confirmed to be stable and production-quality.
+The AI's last reported action is Now I need to replace the old file with the new one, indicating it is about to perform the file replacement to make these features visible.
 </current_work>
+
 <optional_next_step>
-Once mock BLE and telemetry logic are stable:
-
-Replace simulated BLE with real BLE streaming using react-native-ble-plx and ApexBox’s advertised services (Speed, G, Temp, Alt characteristics).
-
-Add Firebase integration for user authentication, cloud log sync, and leaderboards.
-
-Introduce session replay animations and export options (CSV, JSON).
-
-Optionally add a Firmware Update via BLE (OTA) system for advanced users.
-
-In the short term, the next goal is to:
-
-Fully connect BLE simulation → Dashboard → Logs parsing → Victory charts
-producing a self-contained, interactive demo ready for real ApexBox hardware integration.
+Replace  with the content from .
 </optional_next_step>

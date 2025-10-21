@@ -6,6 +6,7 @@ export interface TelemetrySample {
   humidity: number;
   lux: number;
   altitude: number;
+  temperature?: number; // Alias for temp
 }
 
 export interface SessionStats {
@@ -19,32 +20,67 @@ export interface SessionStats {
   maxAltitude: number;
   duration: number;
   sampleCount: number;
+  altitudeChange: number;
 }
 
 export function parseCSV(csvContent: string): TelemetrySample[] {
-  const lines = csvContent.trim().split('\n');
-  if (lines.length < 2) return [];
+  try {
+    const lines = csvContent.trim().split('\n');
+    if (lines.length < 2) {
+      console.warn('[CSV] File has insufficient data');
+      return [];
+    }
 
-  const samples: TelemetrySample[] = [];
-  for (let i = 1; i < lines.length; i++) {
-    const line = lines[i].trim();
-    if (!line) continue;
+    const samples: TelemetrySample[] = [];
+    let validSamples = 0;
+    let invalidSamples = 0;
 
-    const values = line.split(',');
-    if (values.length < 7) continue;
+    for (let i = 1; i < lines.length; i++) {
+      const line = lines[i].trim();
+      if (!line) continue;
 
-    samples.push({
-      timestamp_ms: parseFloat(values[0]),
-      speed: parseFloat(values[1]),
-      g_force: parseFloat(values[2]),
-      temp: parseFloat(values[3]),
-      humidity: parseFloat(values[4]),
-      lux: parseFloat(values[5]),
-      altitude: parseFloat(values[6]),
-    });
+      const values = line.split(',');
+      if (values.length < 7) {
+        invalidSamples++;
+        continue;
+      }
+
+      try {
+        const sample: TelemetrySample = {
+          timestamp_ms: parseFloat(values[0]),
+          speed: parseFloat(values[1]),
+          g_force: parseFloat(values[2]),
+          temp: parseFloat(values[3]),
+          humidity: parseFloat(values[4]),
+          lux: parseFloat(values[5]),
+          altitude: parseFloat(values[6]),
+        };
+
+        // Validate sample has valid numbers
+        if (
+          !isNaN(sample.timestamp_ms) &&
+          !isNaN(sample.speed) &&
+          !isNaN(sample.g_force) &&
+          !isNaN(sample.temp) &&
+          !isNaN(sample.altitude)
+        ) {
+          samples.push(sample);
+          validSamples++;
+        } else {
+          invalidSamples++;
+        }
+      } catch (err) {
+        invalidSamples++;
+        console.warn(`[CSV] Error parsing line ${i}:`, err);
+      }
+    }
+
+    console.log(`[CSV] Parsed ${validSamples} valid samples, ${invalidSamples} invalid`);
+    return samples;
+  } catch (error) {
+    console.error('[CSV] Fatal parsing error:', error);
+    return [];
   }
-
-  return samples;
 }
 
 export function calculateStats(samples: TelemetrySample[]): SessionStats {

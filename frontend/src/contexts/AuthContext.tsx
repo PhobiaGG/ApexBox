@@ -359,6 +359,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         profile,
         garage,
         loading,
+        initializing,
         signUp,
         signIn,
         logout,
@@ -372,6 +373,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         deleteCar,
         loadGarage,
         getActiveCar,
+        upgradeToPremium,
       }}
     >
       {children}

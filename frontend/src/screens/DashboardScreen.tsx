@@ -98,12 +98,8 @@ export default function DashboardScreen() {
   };
 
   const handleBlePress = async () => {
-    if (status.isConnected) {
-      await disconnect();
-    } else {
-      setAutoConnect(true);
-      await scan();
-    }
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setShowBleModal(true);
   };
 
   const stats = latestSession?.samples ? calculateStats(latestSession.samples) : null;

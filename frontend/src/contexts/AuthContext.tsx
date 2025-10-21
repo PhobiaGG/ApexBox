@@ -86,6 +86,7 @@ interface AuthContextType {
   getUserCrews: () => Promise<Crew[]>;
   addMemberToCrew: (crewId: string, memberFriendId: string) => Promise<void>;
   removeMemberFromCrew: (crewId: string, memberUid: string) => Promise<void>;
+  upgradeToPremium: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);

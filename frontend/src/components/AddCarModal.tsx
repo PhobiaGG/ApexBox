@@ -339,6 +339,12 @@ const styles = StyleSheet.create({
     color: COLORS.text,
     marginTop: SPACING.sm,
   },
+  subtitle: {
+    fontSize: FONT_SIZE.sm,
+    color: COLORS.textSecondary,
+    marginTop: SPACING.xs,
+    textAlign: 'center',
+  },
   closeButton: {
     position: 'absolute',
     top: 0,

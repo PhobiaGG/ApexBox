@@ -189,12 +189,11 @@ export default function TrackReplayScreen() {
   }, [isPlaying, currentIndex, gpsData.length]);
 
   const convertToCanvasCoords = (lat: number, lon: number) => {
-    const padding = 40;
-    const canvasWidth = width - padding * 2;
+    const canvasWidth = width - 80;
     const canvasHeight = 400;
 
-    const x = padding + ((lon - mapBounds.minLon) / (mapBounds.maxLon - mapBounds.minLon)) * canvasWidth;
-    const y = padding + ((mapBounds.maxLat - lat) / (mapBounds.maxLat - mapBounds.minLat)) * canvasHeight;
+    const x = ((lon - mapBounds.minLon) / (mapBounds.maxLon - mapBounds.minLon)) * canvasWidth;
+    const y = ((mapBounds.maxLat - lat) / (mapBounds.maxLat - mapBounds.minLat)) * canvasHeight;
 
     return { x, y };
   };
@@ -207,6 +206,34 @@ export default function TrackReplayScreen() {
     if (gForce < 2.0) return '#FFAA00';
     return '#FF0055';
   };
+
+  // Memoize path string generation for performance
+  const pathData = useMemo(() => {
+    if (gpsData.length === 0) return '';
+    
+    const points = gpsData.map((point) => {
+      const { x, y } = convertToCanvasCoords(point.lat, point.lon);
+      return { x, y };
+    });
+
+    return points
+      .map((point, i) => (i === 0 ? `M ${point.x} ${point.y}` : `L ${point.x} ${point.y}`))
+      .join(' ');
+  }, [gpsData, mapBounds]);
+
+  // Memoize current path (up to playback position) for performance
+  const currentPathData = useMemo(() => {
+    if (gpsData.length === 0 || currentIndex === 0) return '';
+    
+    const points = gpsData.slice(0, currentIndex + 1).map((point) => {
+      const { x, y } = convertToCanvasCoords(point.lat, point.lon);
+      return { x, y };
+    });
+
+    return points
+      .map((point, i) => (i === 0 ? `M ${point.x} ${point.y}` : `L ${point.x} ${point.y}`))
+      .join(' ');
+  }, [gpsData, currentIndex, mapBounds]);
 
   const handlePlayPause = async () => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);

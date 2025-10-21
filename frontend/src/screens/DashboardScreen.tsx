@@ -118,7 +118,7 @@ export default function DashboardScreen() {
       
       // Save session with telemetry data (using mock data for demo)
       try {
-        const logService = new LogService();
+        const logService = LogService;
         
         // Create mock telemetry samples based on duration
         const mockSamples = [];

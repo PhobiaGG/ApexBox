@@ -246,7 +246,7 @@ export default function BleConnectionModal({ visible, onClose, accentColor }: Bl
                 <TouchableOpacity
                   style={styles.scanButton}
                   onPress={handleScan}
-                  disabled={scanning}
+                  disabled={scanning || connecting}
                   activeOpacity={0.8}
                 >
                   <LinearGradient
@@ -261,6 +261,17 @@ export default function BleConnectionModal({ visible, onClose, accentColor }: Bl
                     </Text>
                   </LinearGradient>
                 </TouchableOpacity>
+              )}
+
+              {scanning && (
+                <View style={[styles.scanButton, { backgroundColor: colors.card, borderWidth: 1, borderColor: accentColor }]}>
+                  <View style={styles.scanGradient}>
+                    <ActivityIndicator size="small" color={accentColor} />
+                    <Text style={[styles.scanText, { color: colors.textSecondary }]}>
+                      Scanning...
+                    </Text>
+                  </View>
+                </View>
               )}
             </>
           )}

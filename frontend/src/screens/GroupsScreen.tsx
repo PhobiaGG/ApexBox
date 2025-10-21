@@ -41,38 +41,29 @@ interface Crew {
   createdAt: number;
 }
 
-// Animated Crown Component
+// Simple Crown Component with CSS-based animation
 function AnimatedCrown({ color, size = 14 }: { color: string; size?: number }) {
-  const scale = useSharedValue(1);
-  const opacity = useSharedValue(1);
+  const pulseAnim = new Animated.Value(1);
 
   useEffect(() => {
-    // Pulsing animation
-    scale.value = withRepeat(
-      withSequence(
-        withTiming(1.2, { duration: 1000, easing: Easing.inOut(Easing.ease) }),
-        withTiming(1, { duration: 1000, easing: Easing.inOut(Easing.ease) })
-      ),
-      -1,
-      false
-    );
-    opacity.value = withRepeat(
-      withSequence(
-        withTiming(0.6, { duration: 1000, easing: Easing.inOut(Easing.ease) }),
-        withTiming(1, { duration: 1000, easing: Easing.inOut(Easing.ease) })
-      ),
-      -1,
-      false
-    );
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 1.2,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
   }, []);
 
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-    opacity: opacity.value,
-  }));
-
   return (
-    <Animated.View style={animatedStyle}>
+    <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
       <MaterialCommunityIcons name="crown" size={size} color={color} />
     </Animated.View>
   );

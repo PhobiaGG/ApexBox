@@ -111,90 +111,115 @@ user_problem_statement: |
   - Ensure no module resolution errors or blank screens
   - Test complete app flow: login -> dashboard -> logs -> groups -> settings
 
+backend:
+  - task: "Firebase Backend Services"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Backend services running. Need to verify all API endpoints are responsive and Firebase connections are stable."
+
 frontend:
-  - task: "Theme System - Dark/Light Mode Toggle"
+  - task: "Gauge Component - Native Animated Migration"
     implemented: true
     working: "NA"
-    file: "/app/frontend/src/screens/SettingsScreen.tsx"
+    file: "/app/frontend/src/components/Gauge.tsx"
     stuck_count: 0
     priority: "high"
     needs_retesting: true
     status_history:
       - working: "NA"
         agent: "main"
-        comment: "Implemented dark/light mode toggle in Appearance section using ThemeContext. Toggle uses Switch component with haptic feedback and persists to AsyncStorage via @apexbox_theme_mode key. Should update entire UI instantly when toggled."
+        comment: "Migrated from react-native-reanimated to native Animated API. Gauge should render properly with smooth animations. Added null/undefined guards for value prop. CRITICAL: Verify no module resolution errors and gauge displays correctly on Dashboard."
 
-  - task: "Theme System - Accent Color Picker"
+  - task: "ChartView Component - Victory-Native Replacement"
     implemented: true
     working: "NA"
-    file: "/app/frontend/src/screens/SettingsScreen.tsx"
+    file: "/app/frontend/src/components/ChartView.tsx"
     stuck_count: 0
     priority: "high"
     needs_retesting: true
     status_history:
       - working: "NA"
         agent: "main"
-        comment: "Implemented accent color picker with three options: Cyan (#00D4FF), Magenta (#FF00FF), Lime (#00FF88). Uses TouchableOpacity with border highlighting current selection. Colors persist via @apexbox_accent_color key. Should dynamically recolor primary UI elements."
+        comment: "Replaced victory-native with custom react-native-svg implementation. Should render line charts for telemetry data (speed, g-force, etc.). CRITICAL: Verify charts display correctly in Session Detail screen without crashes."
 
-  - task: "Units System - Metric/Imperial Toggle"
+  - task: "GroupsScreen - Animation Refactor"
     implemented: true
     working: "NA"
-    file: "/app/frontend/src/screens/SettingsScreen.tsx"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: true
-    status_history:
-      - working: "NA"
-        agent: "main"
-        comment: "Implemented unified unit system toggle affecting speed (km/h ↔ mph), temperature (°C ↔ °F), altitude (m ↔ ft). Uses SettingsContext.updateUnits() to propagate changes globally. Must verify conversion on Dashboard gauges and Logs screen."
-
-  - task: "Profile Section - Avatar Display & Upload"
-    implemented: true
-    working: "NA"
-    file: "/app/frontend/src/screens/SettingsScreen.tsx"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: true
-    status_history:
-      - working: "NA"
-        agent: "main"
-        comment: "Implemented profile section showing user's display name, email, and avatar using UserAvatar component. Avatar falls back to user initials if no image. 'Change Avatar' button uses expo-image-picker and uploads to Firebase Storage at /avatars/{uid}. Requires Firebase Auth login to test."
-
-  - task: "Garage Section - Car Management"
-    implemented: true
-    working: "NA"
-    file: "/app/frontend/src/screens/SettingsScreen.tsx"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: true
-    status_history:
-      - working: "NA"
-        agent: "main"
-        comment: "Implemented garage section listing all cars from Firestore users/{uid}/garage collection. Shows active car with border highlight and badge. 'Add New Car' button opens AddCarModal. Each car card has 'Set Active' and 'Delete' actions. First car added is automatically set as active."
-
-  - task: "Settings Screen - Layout & Navigation"
-    implemented: true
-    working: "NA"
-    file: "/app/frontend/app/(tabs)/settings.tsx"
+    file: "/app/frontend/src/screens/GroupsScreen.tsx"
     stuck_count: 0
     priority: "medium"
     needs_retesting: true
     status_history:
       - working: "NA"
         agent: "main"
-        comment: "Settings screen properly routed via expo-router at (tabs)/settings.tsx. Uses ScrollView with proper spacing and section organization. All sections use theme colors for background/text."
+        comment: "Removed AnimatedCrown component that relied on reanimated. Replaced with simpler animation. Verify crown animation on leaderboard positions works and no crashes occur."
 
-  - task: "Context Integration - Theme, Settings, Auth"
+  - task: "GPS Tracking Integration"
     implemented: true
     working: "NA"
-    file: "/app/frontend/src/contexts/"
+    file: "/app/frontend/src/screens/DashboardScreen.tsx"
     stuck_count: 0
     priority: "high"
     needs_retesting: true
     status_history:
       - working: "NA"
         agent: "main"
-        comment: "All three contexts (ThemeContext, SettingsContext, AuthContext) are properly integrated. ThemeProvider manages colors and mode, SettingsProvider manages units, AuthProvider manages profile/garage. All providers wrapped in root _layout.tsx."
+        comment: "Integrated GPS tracking with isRecording and recordedPath state. GpsService.ts should capture location data during sessions. Verify GPS permissions, tracking start/stop, and path recording work correctly."
+
+  - task: "Session Saving Functionality"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/services/LogService.ts"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added saveSession function to persist telemetry and GPS data. Should save sessions with both OBD data and GPS coordinates. Verify sessions are saved correctly and retrievable."
+
+  - task: "BLE Connection Management"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/contexts/BleContext.tsx"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "BLE context with device memory and auto-connect functionality. BleConnectionModal allows scanning and connecting. Verify BLE scan, connect, and remember device features work."
+
+  - task: "App Navigation Flow"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/app/"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Complete navigation: Login -> Dashboard -> Logs -> Groups -> Settings -> Garage. Verify no blank screens, proper routing, and all tabs accessible without crashes."
+
+  - task: "Theme & Settings Persistence"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/contexts/ThemeContext.tsx"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Theme mode, accent colors, and units persist via AsyncStorage. Verify theme changes apply globally and persist across app restarts."
 
 metadata:
   created_by: "main_agent"

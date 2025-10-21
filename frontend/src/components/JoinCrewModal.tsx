@@ -261,6 +261,8 @@ const styles = StyleSheet.create({
   },
   cancelButton: {
     borderWidth: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   joinButton: {},
   buttonGradient: {

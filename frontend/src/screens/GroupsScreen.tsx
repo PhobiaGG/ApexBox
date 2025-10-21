@@ -519,11 +519,11 @@ const styles = StyleSheet.create({
   crewTab: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.sm,
+    paddingHorizontal: SPACING.sm,
+    paddingVertical: 6,
     borderRadius: BORDER_RADIUS.md,
     borderWidth: 1,
-    gap: SPACING.xs,
+    gap: 6,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -531,17 +531,17 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   crewTabText: {
-    fontSize: FONT_SIZE.sm,
+    fontSize: FONT_SIZE.xs,
     fontWeight: '600',
   },
   memberBadge: {
-    paddingHorizontal: SPACING.xs,
-    paddingVertical: 2,
-    borderRadius: 8,
-    marginLeft: SPACING.xs,
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderRadius: 6,
+    marginLeft: 4,
   },
   memberBadgeText: {
-    fontSize: FONT_SIZE.xs,
+    fontSize: 10,
     fontWeight: 'bold',
   },
   scrollView: {

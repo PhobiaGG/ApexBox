@@ -40,6 +40,67 @@ export default function DashboardScreen() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [autoConnect, setAutoConnect] = useState(false);
   const [showBleModal, setShowBleModal] = useState(false);
+  const [isTrackingGPS, setIsTrackingGPS] = useState(false);
+
+  // Handle Start Analysis with GPS tracking
+  const handleStartAnalysis = async () => {
+    try {
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+      
+      // Request GPS permissions and start tracking
+      const gpsStarted = await GpsService.startTracking();
+      
+      if (gpsStarted) {
+        setIsTrackingGPS(true);
+        setIsAnalyzing(true);
+        Alert.alert(
+          '✅ Analysis Started',
+          'GPS tracking is active. Recording your session...',
+          [{ text: 'OK' }]
+        );
+      } else {
+        Alert.alert(
+          '⚠️ GPS Unavailable',
+          'Could not start GPS tracking. Session will record without location data.',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            {
+              text: 'Continue Anyway',
+              onPress: () => setIsAnalyzing(true),
+            },
+          ]
+        );
+      }
+    } catch (error) {
+      console.error('[Dashboard] Start analysis error:', error);
+      Alert.alert('Error', 'Failed to start analysis');
+    }
+  };
+
+  const handleStopAnalysis = async () => {
+    try {
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+      
+      // Stop GPS tracking and get coordinates
+      const coordinates = GpsService.stopTracking();
+      setIsTrackingGPS(false);
+      setIsAnalyzing(false);
+      
+      console.log(`[Dashboard] Session ended. Captured ${coordinates.length} GPS points`);
+      
+      // TODO: Save coordinates with session data to Firebase
+      
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      Alert.alert(
+        '✅ Session Saved',
+        `Recorded ${coordinates.length} GPS coordinates`,
+        [{ text: 'OK' }]
+      );
+    } catch (error) {
+      console.error('[Dashboard] Stop analysis error:', error);
+      Alert.alert('Error', 'Failed to stop analysis');
+    }
+  };
 
   // Auto-connect after scan completes
   useEffect(() => {

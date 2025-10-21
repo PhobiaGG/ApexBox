@@ -335,21 +335,6 @@ export default function GroupsScreen() {
             />
           }
         >
-          <View style={[styles.statsHeader, { backgroundColor: colors.card, borderColor: colors.border }]}>
-            <View style={styles.statColumn}>
-              <MaterialCommunityIcons name="speedometer" size={20} color={accentColor} />
-              <Text style={[styles.statHeaderText, { color: colors.textSecondary }]}>Fastest</Text>
-            </View>
-            <View style={styles.statColumn}>
-              <MaterialCommunityIcons name="arrow-up-bold" size={20} color={accentColor} />
-              <Text style={[styles.statHeaderText, { color: colors.textSecondary }]}>Avg G</Text>
-            </View>
-            <View style={styles.statColumn}>
-              <MaterialCommunityIcons name="chart-line" size={20} color={accentColor} />
-              <Text style={[styles.statHeaderText, { color: colors.textSecondary }]}>Sessions</Text>
-            </View>
-          </View>
-
           {selectedCrew.leaderboard.map((entry, index) => (
             <View
               key={entry.uid}

@@ -10,7 +10,10 @@ export function formatGForce(g: number): string {
   return `${g.toFixed(2)}g`;
 }
 
-export function formatTemp(temp: number, isCelsius: boolean = true): string {
+export function formatTemp(temp: number | undefined, isCelsius: boolean = true): string {
+  if (temp === undefined || temp === null) {
+    return '--°' + (isCelsius ? 'C' : 'F');
+  }
   if (isCelsius) {
     return `${temp.toFixed(1)}°C`;
   } else {
@@ -18,7 +21,10 @@ export function formatTemp(temp: number, isCelsius: boolean = true): string {
   }
 }
 
-export function formatAltitude(altitude: number, isMetric: boolean = true): string {
+export function formatAltitude(altitude: number | undefined, isMetric: boolean = true): string {
+  if (altitude === undefined || altitude === null) {
+    return '--' + (isMetric ? 'm' : 'ft');
+  }
   if (isMetric) {
     return `${altitude.toFixed(0)}m`;
   } else {

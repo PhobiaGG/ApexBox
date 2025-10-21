@@ -5,204 +5,411 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Modal,
   TextInput,
   Alert,
   ActivityIndicator,
+  Modal,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
-import { COLORS, SPACING, FONT_SIZE, BORDER_RADIUS } from '../constants/theme';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import GroupService, { Group } from '../services/GroupService';
-import GroupCard from '../components/GroupCard';
+import { BlurView } from 'expo-blur';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
+import { SPACING, FONT_SIZE, BORDER_RADIUS } from '../constants/theme';
+import UserAvatar from '../components/UserAvatar';
+import * as Haptics from 'expo-haptics';
+
+interface LeaderboardEntry {
+  uid: string;
+  displayName: string;
+  avatarURI?: string;
+  fastestSpeed: number;
+  avgGForce: number;
+  totalSessions: number;
+}
+
+interface Crew {
+  id: string;
+  name: string;
+  members: string[];
+  leaderboard: LeaderboardEntry[];
+  createdAt: number;
+}
+
+// Mock crew data for demonstration
+const generateMockCrews = (): Crew[] => [
+  {
+    id: 'crew1',
+    name: 'Speed Demons',
+    members: ['user1', 'user2', 'user3', 'user4'],
+    leaderboard: [
+      {
+        uid: 'user1',
+        displayName: 'RacerX',
+        fastestSpeed: 245,
+        avgGForce: 2.1,
+        totalSessions: 42,
+      },
+      {
+        uid: 'user2',
+        displayName: 'TurboTim',
+        fastestSpeed: 238,
+        avgGForce: 1.9,
+        totalSessions: 38,
+      },
+      {
+        uid: 'user3',
+        displayName: 'NitroNina',
+        fastestSpeed: 232,
+        avgGForce: 1.8,
+        totalSessions: 35,
+      },
+      {
+        uid: 'user4',
+        displayName: 'ApexAce',
+        fastestSpeed: 228,
+        avgGForce: 1.7,
+        totalSessions: 30,
+      },
+    ],
+    createdAt: Date.now() - 86400000 * 30,
+  },
+  {
+    id: 'crew2',
+    name: 'Track Warriors',
+    members: ['user5', 'user6', 'user7'],
+    leaderboard: [
+      {
+        uid: 'user5',
+        displayName: 'DriftKing',
+        fastestSpeed: 215,
+        avgGForce: 2.3,
+        totalSessions: 28,
+      },
+      {
+        uid: 'user6',
+        displayName: 'CornerCarver',
+        fastestSpeed: 210,
+        avgGForce: 2.2,
+        totalSessions: 25,
+      },
+      {
+        uid: 'user7',
+        displayName: 'SpeedSeeker',
+        fastestSpeed: 205,
+        avgGForce: 2.0,
+        totalSessions: 22,
+      },
+    ],
+    createdAt: Date.now() - 86400000 * 15,
+  },
+];
 
 export default function GroupsScreen() {
-  const [groups, setGroups] = useState<Group[]>([]);
+  const router = useRouter();
+  const { profile, user } = useAuth();
+  const { colors, getCurrentAccent } = useTheme();
+  const accentColor = getCurrentAccent();
+
+  const [crews, setCrews] = useState<Crew[]>([]);
+  const [selectedCrew, setSelectedCrew] = useState<Crew | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [newGroupName, setNewGroupName] = useState('');
-  const [newGroupDescription, setNewGroupDescription] = useState('');
+  const [showAddFriendModal, setShowAddFriendModal] = useState(false);
+  const [friendUID, setFriendUID] = useState('');
 
   useEffect(() => {
-    loadGroups();
+    loadCrews();
   }, []);
 
-  const loadGroups = async () => {
+  const loadCrews = async () => {
     try {
       setIsLoading(true);
-      const loaded = await GroupService.getGroups();
-      setGroups(loaded);
-    } catch (error) {
-      console.error('Error loading groups:', error);
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 500));
+      setCrews(generateMockCrews());
+      if (generateMockCrews().length > 0) {
+        setSelectedCrew(generateMockCrews()[0]);
+      }
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleCreateGroup = async () => {
-    if (!newGroupName.trim()) {
-      Alert.alert('Error', 'Please enter a group name');
+  const handleAddFriend = async () => {
+    if (!friendUID.trim()) {
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      Alert.alert('Error', 'Please enter a friend ID');
       return;
     }
 
-    try {
-      await GroupService.createGroup(newGroupName, newGroupDescription);
-      setShowCreateModal(false);
-      setNewGroupName('');
-      setNewGroupDescription('');
-      await loadGroups();
-      Alert.alert('Success', 'Group created successfully');
-    } catch (error) {
-      Alert.alert('Error', 'Failed to create group');
-    }
+    await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    Alert.alert('Success', 'Friend added to crew!');
+    setShowAddFriendModal(false);
+    setFriendUID('');
   };
 
-  return (
-    <View style={styles.container}>
-      <LinearGradient colors={[COLORS.background, '#0F0F0F']} style={styles.gradient}>
+  // Premium gate
+  if (!profile?.premium) {
+    return (
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
         <View style={styles.header}>
-          <Text style={styles.title}>Groups</Text>
-          <TouchableOpacity
-            style={styles.createButton}
-            onPress={() => setShowCreateModal(true)}
-          >
-            <MaterialCommunityIcons name="plus-circle" size={28} color={COLORS.lime} />
-          </TouchableOpacity>
+          <Text style={[styles.title, { color: colors.text }]}>Crew Leaderboards</Text>
         </View>
 
-        {isLoading ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={COLORS.cyan} />
+        <View style={styles.lockedContainer}>
+          <View style={[styles.lockIconContainer, { backgroundColor: colors.card }]}>
+            <MaterialCommunityIcons name="lock" size={64} color={colors.textSecondary} />
           </View>
-        ) : (
-          <ScrollView
-            style={styles.scrollView}
-            contentContainerStyle={styles.scrollContent}
-            showsVerticalScrollIndicator={false}
+          <Text style={[styles.lockedTitle, { color: colors.text }]}>Premium Feature</Text>
+          <Text style={[styles.lockedSubtitle, { color: colors.textSecondary }]}>
+            Crew Leaderboards are available with ApexBox Pro Pack
+          </Text>
+          <TouchableOpacity
+            style={styles.upgradeButton}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+              router.push('/premium');
+            }}
+            activeOpacity={0.8}
           >
-            {groups.map(group => (
-              <GroupCard
-                key={group.id}
-                group={group}
-                onPress={() => setSelectedGroup(group)}
-              />
-            ))}
-          </ScrollView>
-        )}
+            <LinearGradient
+              colors={[accentColor, colors.background]}
+              style={styles.upgradeGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+            >
+              <MaterialCommunityIcons name="crown" size={20} color={colors.text} />
+              <Text style={[styles.upgradeText, { color: colors.text }]}>Upgrade to Pro</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
 
-        {/* Group Detail Modal */}
-        <Modal
-          visible={selectedGroup !== null}
-          animationType="slide"
-          transparent={true}
-          onRequestClose={() => setSelectedGroup(null)}
+  if (isLoading) {
+    return (
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <View style={styles.header}>
+          <Text style={[styles.title, { color: colors.text }]}>Crew Leaderboards</Text>
+        </View>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={accentColor} />
+        </View>
+      </View>
+    );
+  }
+
+  return (
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={styles.header}>
+        <Text style={[styles.title, { color: colors.text }]}>Crew Leaderboards</Text>
+        <TouchableOpacity
+          style={[styles.addButton, { backgroundColor: colors.card, borderColor: accentColor }]}
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            setShowAddFriendModal(true);
+          }}
+          activeOpacity={0.8}
         >
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              {selectedGroup && (
-                <>
-                  <View style={styles.modalHeader}>
-                    <Text style={styles.modalTitle}>{selectedGroup.name}</Text>
-                    <TouchableOpacity onPress={() => setSelectedGroup(null)}>
-                      <MaterialCommunityIcons name="close" size={24} color={COLORS.text} />
-                    </TouchableOpacity>
-                  </View>
+          <MaterialCommunityIcons name="account-plus" size={24} color={accentColor} />
+        </TouchableOpacity>
+      </View>
 
-                  <Text style={styles.modalDescription}>{selectedGroup.description}</Text>
+      {/* Crew Tabs */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.crewTabs}
+        contentContainerStyle={styles.crewTabsContent}
+      >
+        {crews.map(crew => (
+          <TouchableOpacity
+            key={crew.id}
+            style={[
+              styles.crewTab,
+              { backgroundColor: colors.card, borderColor: colors.border },
+              selectedCrew?.id === crew.id && { borderColor: accentColor, borderWidth: 2 },
+            ]}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              setSelectedCrew(crew);
+            }}
+            activeOpacity={0.8}
+          >
+            <MaterialCommunityIcons
+              name="shield-account"
+              size={24}
+              color={selectedCrew?.id === crew.id ? accentColor : colors.textSecondary}
+            />
+            <Text
+              style={[
+                styles.crewTabText,
+                { color: selectedCrew?.id === crew.id ? colors.text : colors.textSecondary },
+              ]}
+            >
+              {crew.name}
+            </Text>
+            <View style={[styles.memberBadge, { backgroundColor: accentColor }]}>
+              <Text style={[styles.memberBadgeText, { color: colors.background }]}>
+                {crew.members.length}
+              </Text>
+            </View>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
 
-                  <Text style={styles.sectionTitle}>Leaderboard</Text>
-                  <ScrollView style={styles.leaderboardScroll}>
-                    {selectedGroup.leaderboard.map((entry, index) => (
-                      <View key={entry.memberId} style={styles.leaderboardItem}>
-                        <View style={styles.leaderboardRank}>
-                          <MaterialCommunityIcons
-                            name={index === 0 ? 'trophy' : 'account'}
-                            size={24}
-                            color={index === 0 ? COLORS.lime : COLORS.cyan}
-                          />
-                          <Text style={styles.leaderboardPosition}>{index + 1}</Text>
-                        </View>
-                        <View style={styles.leaderboardInfo}>
-                          <Text style={styles.leaderboardName}>{entry.memberName}</Text>
-                          <View style={styles.leaderboardStats}>
-                            <Text style={styles.leaderboardStat}>
-                              Peak: {entry.peakSpeed.toFixed(1)} km/h
-                            </Text>
-                            <Text style={styles.leaderboardStat}>
-                              Avg G: {entry.avgGForce.toFixed(2)}g
-                            </Text>
-                            <Text style={styles.leaderboardStat}>
-                              Sessions: {entry.sessionCount}
-                            </Text>
-                          </View>
-                        </View>
-                      </View>
-                    ))}
-                  </ScrollView>
-
-                  <TouchableOpacity
-                    style={styles.joinButton}
-                    onPress={() => {
-                      Alert.alert('Joined', `You've joined ${selectedGroup.name}`);
-                      setSelectedGroup(null);
-                    }}
-                  >
-                    <LinearGradient colors={[COLORS.lime, '#88CC00']} style={styles.joinGradient}>
-                      <MaterialCommunityIcons name="account-plus" size={20} color={COLORS.background} />
-                      <Text style={styles.joinButtonText}>Join Group</Text>
-                    </LinearGradient>
-                  </TouchableOpacity>
-                </>
-              )}
+      {/* Leaderboard */}
+      {selectedCrew && (
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={[styles.statsHeader, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <View style={styles.statColumn}>
+              <MaterialCommunityIcons name="speedometer" size={20} color={accentColor} />
+              <Text style={[styles.statHeaderText, { color: colors.textSecondary }]}>Fastest</Text>
+            </View>
+            <View style={styles.statColumn}>
+              <MaterialCommunityIcons name="arrow-up-bold" size={20} color={accentColor} />
+              <Text style={[styles.statHeaderText, { color: colors.textSecondary }]}>Avg G</Text>
+            </View>
+            <View style={styles.statColumn}>
+              <MaterialCommunityIcons name="chart-line" size={20} color={accentColor} />
+              <Text style={[styles.statHeaderText, { color: colors.textSecondary }]}>Sessions</Text>
             </View>
           </View>
-        </Modal>
 
-        {/* Create Group Modal */}
-        <Modal
-          visible={showCreateModal}
-          animationType="slide"
-          transparent={true}
-          onRequestClose={() => setShowCreateModal(false)}
-        >
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>Create Group</Text>
-                <TouchableOpacity onPress={() => setShowCreateModal(false)}>
-                  <MaterialCommunityIcons name="close" size={24} color={COLORS.text} />
-                </TouchableOpacity>
+          {selectedCrew.leaderboard.map((entry, index) => (
+            <View
+              key={entry.uid}
+              style={[
+                styles.leaderboardEntry,
+                { backgroundColor: colors.card, borderColor: colors.border },
+                index === 0 && { borderColor: accentColor, borderWidth: 2 },
+              ]}
+            >
+              <View style={styles.entryLeft}>
+                <View style={[styles.rankBadge, index === 0 && { backgroundColor: accentColor }]}>
+                  <Text
+                    style={[
+                      styles.rankText,
+                      { color: index === 0 ? colors.background : colors.textSecondary },
+                    ]}
+                  >
+                    #{index + 1}
+                  </Text>
+                </View>
+                <UserAvatar
+                  uri={entry.avatarURI}
+                  displayName={entry.displayName}
+                  size={48}
+                />
+                <View style={styles.entryInfo}>
+                  <Text style={[styles.entryName, { color: colors.text }]}>{entry.displayName}</Text>
+                  {index === 0 && (
+                    <View style={styles.crownBadge}>
+                      <MaterialCommunityIcons name="crown" size={14} color={accentColor} />
+                      <Text style={[styles.crownText, { color: accentColor }]}>Leader</Text>
+                    </View>
+                  )}
+                </View>
               </View>
 
-              <TextInput
-                style={styles.input}
-                placeholder="Group Name"
-                placeholderTextColor={COLORS.textTertiary}
-                value={newGroupName}
-                onChangeText={setNewGroupName}
-              />
+              <View style={styles.entryStats}>
+                <Text style={[styles.statValue, { color: colors.text }]}>
+                  {entry.fastestSpeed}
+                </Text>
+                <Text style={[styles.statUnit, { color: colors.textSecondary }]}>km/h</Text>
+              </View>
 
-              <TextInput
-                style={[styles.input, styles.textArea]}
-                placeholder="Description"
-                placeholderTextColor={COLORS.textTertiary}
-                value={newGroupDescription}
-                onChangeText={setNewGroupDescription}
-                multiline
-                numberOfLines={4}
-              />
+              <View style={styles.entryStats}>
+                <Text style={[styles.statValue, { color: colors.text }]}>
+                  {entry.avgGForce.toFixed(1)}
+                </Text>
+                <Text style={[styles.statUnit, { color: colors.textSecondary }]}>g</Text>
+              </View>
 
-              <TouchableOpacity style={styles.createConfirmButton} onPress={handleCreateGroup}>
-                <LinearGradient colors={[COLORS.cyan, '#0088AA']} style={styles.createGradient}>
-                  <MaterialCommunityIcons name="check" size={20} color={COLORS.text} />
-                  <Text style={styles.createButtonText}>Create Group</Text>
-                </LinearGradient>
-              </TouchableOpacity>
+              <View style={styles.entryStats}>
+                <Text style={[styles.statValue, { color: colors.text }]}>
+                  {entry.totalSessions}
+                </Text>
+              </View>
             </View>
-          </View>
-        </Modal>
-      </LinearGradient>
+          ))}
+        </ScrollView>
+      )}
+
+      {/* Add Friend Modal */}
+      <Modal
+        visible={showAddFriendModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowAddFriendModal(false)}
+      >
+        <BlurView intensity={80} style={styles.blurContainer}>
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={styles.keyboardView}
+          >
+            <View style={[styles.modalContainer, { backgroundColor: colors.card, borderColor: colors.border }]}>
+              <View style={styles.modalHeader}>
+                <MaterialCommunityIcons name="account-plus" size={40} color={accentColor} />
+                <Text style={[styles.modalTitle, { color: colors.text }]}>Add Friend to Crew</Text>
+              </View>
+
+              <View style={styles.modalContent}>
+                <Text style={[styles.modalLabel, { color: colors.textSecondary }]}>FRIEND ID (UID)</Text>
+                <View style={[styles.modalInput, { backgroundColor: colors.background, borderColor: colors.border }]}>
+                  <MaterialCommunityIcons name="identifier" size={20} color={colors.textSecondary} />
+                  <TextInput
+                    style={[styles.input, { color: colors.text }]}
+                    placeholder="Enter friend's ApexBox ID"
+                    placeholderTextColor={colors.textSecondary}
+                    value={friendUID}
+                    onChangeText={setFriendUID}
+                    autoCapitalize="none"
+                    autoFocus
+                  />
+                </View>
+              </View>
+
+              <View style={styles.modalButtons}>
+                <TouchableOpacity
+                  style={[styles.modalButton, { borderColor: colors.border }]}
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    setShowAddFriendModal(false);
+                    setFriendUID('');
+                  }}
+                  activeOpacity={0.8}
+                >
+                  <Text style={[styles.modalButtonText, { color: colors.textSecondary }]}>Cancel</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.modalButtonPrimary}
+                  onPress={handleAddFriend}
+                  activeOpacity={0.8}
+                >
+                  <LinearGradient
+                    colors={[accentColor, colors.background]}
+                    style={styles.modalButtonGradient}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                  >
+                    <Text style={[styles.modalButtonText, { color: colors.text }]}>Add</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </KeyboardAvoidingView>
+        </BlurView>
+      </Modal>
     </View>
   );
 }
@@ -210,26 +417,56 @@ export default function GroupsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
-  },
-  gradient: {
-    flex: 1,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
     paddingTop: 60,
     paddingHorizontal: SPACING.lg,
     paddingBottom: SPACING.md,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   title: {
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: 'bold',
-    color: COLORS.text,
   },
-  createButton: {
-    padding: SPACING.sm,
+  addButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    borderWidth: 2,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  crewTabs: {
+    marginBottom: SPACING.md,
+  },
+  crewTabsContent: {
+    paddingHorizontal: SPACING.lg,
+    gap: SPACING.sm,
+  },
+  crewTab: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.sm,
+    borderRadius: BORDER_RADIUS.md,
+    borderWidth: 1,
+    gap: SPACING.xs,
+  },
+  crewTabText: {
+    fontSize: FONT_SIZE.sm,
+    fontWeight: '600',
+  },
+  memberBadge: {
+    paddingHorizontal: SPACING.xs,
+    paddingVertical: 2,
+    borderRadius: 8,
+    marginLeft: SPACING.xs,
+  },
+  memberBadgeText: {
+    fontSize: FONT_SIZE.xs,
+    fontWeight: 'bold',
   },
   scrollView: {
     flex: 1,
@@ -238,129 +475,194 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.lg,
     paddingBottom: 100,
   },
+  statsHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingVertical: SPACING.md,
+    borderRadius: BORDER_RADIUS.md,
+    borderWidth: 1,
+    marginBottom: SPACING.md,
+  },
+  statColumn: {
+    alignItems: 'center',
+    gap: SPACING.xs,
+  },
+  statHeaderText: {
+    fontSize: FONT_SIZE.xs,
+    fontWeight: '600',
+  },
+  leaderboardEntry: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: SPACING.md,
+    borderRadius: BORDER_RADIUS.lg,
+    borderWidth: 1,
+    marginBottom: SPACING.sm,
+  },
+  entryLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    gap: SPACING.sm,
+  },
+  rankBadge: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  rankText: {
+    fontSize: FONT_SIZE.xs,
+    fontWeight: 'bold',
+  },
+  entryInfo: {
+    flex: 1,
+  },
+  entryName: {
+    fontSize: FONT_SIZE.md,
+    fontWeight: 'bold',
+  },
+  crownBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 2,
+  },
+  crownText: {
+    fontSize: FONT_SIZE.xs,
+    fontWeight: '600',
+  },
+  entryStats: {
+    alignItems: 'center',
+    width: 60,
+  },
+  statValue: {
+    fontSize: FONT_SIZE.md,
+    fontWeight: 'bold',
+  },
+  statUnit: {
+    fontSize: FONT_SIZE.xs,
+  },
   loadingContainer: {
     flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  lockedContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: SPACING.xl,
+  },
+  lockIconContainer: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: SPACING.lg,
+  },
+  lockedTitle: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    marginBottom: SPACING.xs,
+  },
+  lockedSubtitle: {
+    fontSize: FONT_SIZE.md,
+    textAlign: 'center',
+    marginBottom: SPACING.xl,
+  },
+  upgradeButton: {
+    borderRadius: BORDER_RADIUS.lg,
+    overflow: 'hidden',
+  },
+  upgradeGradient: {
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    paddingVertical: SPACING.lg,
+    paddingHorizontal: SPACING.xl,
+    gap: SPACING.sm,
   },
-  modalOverlay: {
+  upgradeText: {
+    fontSize: FONT_SIZE.lg,
+    fontWeight: 'bold',
+  },
+  blurContainer: {
     flex: 1,
-    backgroundColor: COLORS.overlay,
-    justifyContent: 'flex-end',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  modalContent: {
-    backgroundColor: COLORS.card,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    padding: SPACING.lg,
-    maxHeight: '80%',
+  keyboardView: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '100%',
+  },
+  modalContainer: {
+    width: '85%',
+    maxWidth: 400,
+    borderRadius: BORDER_RADIUS.lg,
+    borderWidth: 1,
+    padding: SPACING.xl,
   },
   modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: SPACING.md,
+    marginBottom: SPACING.lg,
   },
   modalTitle: {
     fontSize: FONT_SIZE.xl,
-    color: COLORS.text,
     fontWeight: 'bold',
+    marginTop: SPACING.sm,
   },
-  modalDescription: {
-    fontSize: FONT_SIZE.md,
-    color: COLORS.textSecondary,
+  modalContent: {
     marginBottom: SPACING.lg,
   },
-  sectionTitle: {
-    fontSize: FONT_SIZE.lg,
-    color: COLORS.text,
-    fontWeight: 'bold',
-    marginBottom: SPACING.md,
-  },
-  leaderboardScroll: {
-    maxHeight: 300,
-    marginBottom: SPACING.lg,
-  },
-  leaderboardItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: SPACING.md,
-    backgroundColor: COLORS.background,
-    borderRadius: BORDER_RADIUS.md,
+  modalLabel: {
+    fontSize: FONT_SIZE.xs,
     marginBottom: SPACING.sm,
+    textTransform: 'uppercase',
+    fontWeight: '600',
+    letterSpacing: 1,
   },
-  leaderboardRank: {
+  modalInput: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: SPACING.xs,
-    marginRight: SPACING.md,
+    borderRadius: BORDER_RADIUS.md,
+    borderWidth: 1,
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.sm,
   },
-  leaderboardPosition: {
-    fontSize: FONT_SIZE.lg,
-    color: COLORS.text,
-    fontWeight: 'bold',
-  },
-  leaderboardInfo: {
+  input: {
     flex: 1,
-  },
-  leaderboardName: {
     fontSize: FONT_SIZE.md,
-    color: COLORS.text,
-    fontWeight: '600',
-    marginBottom: 4,
+    marginLeft: SPACING.sm,
+    paddingVertical: SPACING.xs,
   },
-  leaderboardStats: {
+  modalButtons: {
     flexDirection: 'row',
     gap: SPACING.md,
   },
-  leaderboardStat: {
-    fontSize: FONT_SIZE.xs,
-    color: COLORS.textSecondary,
-  },
-  joinButton: {
-    borderRadius: BORDER_RADIUS.md,
-    overflow: 'hidden',
-  },
-  joinGradient: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+  modalButton: {
+    flex: 1,
     paddingVertical: SPACING.md,
-    gap: SPACING.sm,
-  },
-  joinButtonText: {
-    fontSize: FONT_SIZE.md,
-    color: COLORS.background,
-    fontWeight: 'bold',
-  },
-  input: {
-    backgroundColor: COLORS.background,
-    borderRadius: BORDER_RADIUS.sm,
+    borderRadius: BORDER_RADIUS.md,
     borderWidth: 1,
-    borderColor: COLORS.border,
-    padding: SPACING.md,
-    color: COLORS.text,
-    fontSize: FONT_SIZE.md,
-    marginBottom: SPACING.md,
+    alignItems: 'center',
   },
-  textArea: {
-    height: 100,
-    textAlignVertical: 'top',
-  },
-  createConfirmButton: {
+  modalButtonPrimary: {
+    flex: 1,
     borderRadius: BORDER_RADIUS.md,
     overflow: 'hidden',
   },
-  createGradient: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+  modalButtonGradient: {
     paddingVertical: SPACING.md,
-    gap: SPACING.sm,
+    alignItems: 'center',
   },
-  createButtonText: {
+  modalButtonText: {
     fontSize: FONT_SIZE.md,
-    color: COLORS.text,
-    fontWeight: 'bold',
+    fontWeight: '600',
   },
 });

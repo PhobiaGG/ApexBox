@@ -29,9 +29,16 @@ export default function SessionDetailScreen() {
   const { date, fileName } = useLocalSearchParams<{ date: string; fileName: string }>();
   const router = useRouter();
   const { settings } = useSettings();
+  const { colors, getCurrentAccent } = useTheme();
+  const { profile } = useAuth();
   const [samples, setSamples] = useState<TelemetrySample[]>([]);
   const [stats, setStats] = useState<SessionStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [isGeneratingShare, setIsGeneratingShare] = useState(false);
+  const shareCardRef = useRef<View>(null);
+
+  const accentColor = getCurrentAccent();
 
   useEffect(() => {
     loadSession();

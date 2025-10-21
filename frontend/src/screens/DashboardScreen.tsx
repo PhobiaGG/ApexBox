@@ -312,6 +312,13 @@ export default function DashboardScreen() {
           )}
         </ScrollView>
       </LinearGradient>
+
+      {/* BLE Connection Modal */}
+      <BleConnectionModal
+        visible={showBleModal}
+        onClose={() => setShowBleModal(false)}
+        accentColor={accentColor}
+      />
     </View>
   );
 }

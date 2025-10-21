@@ -1,320 +1,521 @@
+diff --git a/frontend/src/components/AddCarModal.tsx b/frontend/src/components/AddCarModal.tsx
+index 781101d..c14bf99 100644
+--- a/frontend/src/components/AddCarModal.tsx
++++ b/frontend/src/components/AddCarModal.tsx
+@@ -1,4 +1,4 @@
+-import React, { useState } from 'react';
++import React, { useState, useEffect } from 'react';
+ import {
+   View,
+   Text,
+@@ -43,6 +43,16 @@ export default function AddCarModal({ visible, onClose, onSave, accentColor, edi
+   const [upgrades, setUpgrades] = useState(editCar?.upgrades || '');
+   const [loading, setLoading] = useState(false);
+ 
++  // Reset form fields when editCar changes
++  useEffect(() => {
++    setNickname(editCar?.nickname || '');
++    setMake(editCar?.make || '');
++    setModel(editCar?.model || '');
++    setYear(editCar?.year || '');
++    setColor(editCar?.color || '');
++    setUpgrades(editCar?.upgrades || '');
++  }, [editCar]);
++
+   const validateInputs = (): boolean => {
+     if (!nickname.trim()) {
+       Alert.alert('Error', 'Please enter a nickname for your car');
+diff --git a/frontend/src/screens/GarageScreen.tsx b/frontend/src/screens/GarageScreen.tsx
+index a36f64d..6345246 100644
+--- a/frontend/src/screens/GarageScreen.tsx
++++ b/frontend/src/screens/GarageScreen.tsx
+@@ -23,19 +23,33 @@ export default function GarageScreen() {
+   const accentColor = getCurrentAccent();
+   
+   const [showAddModal, setShowAddModal] = useState(false);
++  const [editingCar, setEditingCar] = useState<any>(null);
+   const swipeableRefs = useRef<Map<string, Swipeable>>(new Map());
+ 
+   const handleAddCar = async (carData: CarData) => {
+     try {
+-      await addCar(carData);
++      if (editingCar) {
++        // Update existing car
++        await deleteCar(editingCar.id);
++        await addCar({ ...carData, id: editingCar.id });
++        setEditingCar(null);
++      } else {
++        // Add new car
++        await addCar(carData);
++      }
+       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+       setShowAddModal(false);
+     } catch (error) {
+       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+-      Alert.alert('Error', 'Failed to add car');
++      Alert.alert('Error', editingCar ? 'Failed to update car' : 'Failed to add car');
+     }
+   };
+ 
++  const handleEditCar = (car: any) => {
++    setEditingCar(car);
++    setShowAddModal(true);
++  };
++
+   const handleSetActive = async (carId: string) => {
+     Alert.alert(
+       'Set Active Car',
+@@ -90,29 +104,52 @@ export default function GarageScreen() {
+     );
+   };
+ 
+-  const renderRightActions = (progress: Animated.AnimatedInterpolation<number>, dragX: Animated.AnimatedInterpolation<number>, carId: string, carName: string) => {
++  const renderRightActions = (progress: Animated.AnimatedInterpolation<number>, dragX: Animated.AnimatedInterpolation<number>, car: any) => {
+     const trans = dragX.interpolate({
+-      inputRange: [-100, 0],
+-      outputRange: [0, 100],
++      inputRange: [-160, 0],
++      outputRange: [0, 160],
+       extrapolate: 'clamp',
+     });
+ 
+     return (
+-      <TouchableOpacity
+-        onPress={() => handleDelete(carId, carName)}
+-        activeOpacity={0.8}
++      <Animated.View
++        style={[
++          styles.actionsContainer,
++          { transform: [{ translateX: trans }] },
++        ]}
+       >
+-        <Animated.View
+-          style={[
+-            styles.deleteButton,
+-            { backgroundColor: colors.magenta },
+-            { transform: [{ translateX: trans }] },
+-          ]}
++        <TouchableOpacity
++          onPress={() => handleEditCar(car)}
++          activeOpacity={0.8}
++          style={styles.actionButton}
++        >
++          <View
++            style={[
++              styles.editButton,
++              { backgroundColor: accentColor },
++            ]}
++          >
++            <MaterialCommunityIcons name="pencil" size={24} color={colors.text} />
++            <Text style={[styles.actionButtonText, { color: colors.text }]}>Edit</Text>
++          </View>
++        </TouchableOpacity>
++        
++        <TouchableOpacity
++          onPress={() => handleDelete(car.id, car.nickname)}
++          activeOpacity={0.8}
++          style={styles.actionButton}
+         >
+-          <MaterialCommunityIcons name="delete" size={28} color={colors.text} />
+-          <Text style={[styles.deleteButtonText, { color: colors.text }]}>Delete</Text>
+-        </Animated.View>
+-      </TouchableOpacity>
++          <View
++            style={[
++              styles.deleteButton,
++              { backgroundColor: colors.magenta },
++            ]}
++          >
++            <MaterialCommunityIcons name="delete" size={24} color={colors.text} />
++            <Text style={[styles.actionButtonText, { color: colors.text }]}>Delete</Text>
++          </View>
++        </TouchableOpacity>
++      </Animated.View>
+     );
+   };
+ 
+@@ -163,7 +200,7 @@ export default function GarageScreen() {
+                 if (ref) swipeableRefs.current.set(car.id, ref);
+               }}
+               renderRightActions={(progress, dragX) =>
+-                renderRightActions(progress, dragX, car.id, car.nickname)
++                renderRightActions(progress, dragX, car)
+               }
+               overshootRight={false}
+               friction={2}
+@@ -282,9 +319,13 @@ export default function GarageScreen() {
+ 
+       <AddCarModal
+         visible={showAddModal}
+-        onClose={() => setShowAddModal(false)}
++        onClose={() => {
++          setShowAddModal(false);
++          setEditingCar(null);
++        }}
+         onSave={handleAddCar}
+         accentColor={accentColor}
++        editCar={editingCar}
+       />
+     </View>
+   );
+@@ -411,14 +452,32 @@ const styles = StyleSheet.create({
+     fontSize: FONT_SIZE.sm,
+     fontWeight: '600',
+   },
++  actionsContainer: {
++    flexDirection: 'row',
++    alignItems: 'center',
++    height: '100%',
++    marginBottom: SPACING.md,
++  },
++  actionButton: {
++    flex: 1,
++    height: '100%',
++  },
++  editButton: {
++    justifyContent: 'center',
++    alignItems: 'center',
++    width: 80,
++    height: '100%',
++    borderRadius: BORDER_RADIUS.lg,
++    marginRight: SPACING.xs,
++  },
+   deleteButton: {
+     justifyContent: 'center',
+     alignItems: 'center',
+-    width: 100,
++    width: 80,
++    height: '100%',
+     borderRadius: BORDER_RADIUS.lg,
+-    marginBottom: SPACING.md,
+   },
+-  deleteButtonText: {
++  actionButtonText: {
+     fontSize: FONT_SIZE.sm,
+     fontWeight: 'bold',
+     marginTop: SPACING.xs,
 diff --git a/model.patch b/model.patch
-index 73c4172..e69de29 100644
+index 8d724ae..e86d665 100644
 --- a/model.patch
 +++ b/model.patch
-@@ -1,315 +0,0 @@
--diff --git a/frontend/src/screens/SettingsScreen.tsx b/frontend/src/screens/SettingsScreen.tsx
--index 51246a5..621d95a 100644
----- a/frontend/src/screens/SettingsScreen.tsx
--+++ b/frontend/src/screens/SettingsScreen.tsx
--@@ -796,6 +796,35 @@ const styles = StyleSheet.create({
--     fontSize: FONT_SIZE.xs,
--     fontWeight: 'bold',
--   },
--+  premiumCard: {
--+    borderRadius: BORDER_RADIUS.lg,
--+    borderWidth: 2,
--+    overflow: 'hidden',
--+    marginBottom: SPACING.md,
--+  },
--+  premiumGradient: {
--+    flexDirection: 'row',
--+    alignItems: 'center',
--+    justifyContent: 'space-between',
--+    padding: SPACING.lg,
--+  },
--+  premiumContent: {
--+    flexDirection: 'row',
--+    alignItems: 'center',
--+    flex: 1,
--+    gap: SPACING.md,
--+  },
--+  premiumText: {
--+    flex: 1,
--+  },
--+  premiumTitle: {
--+    fontSize: FONT_SIZE.lg,
--+    fontWeight: 'bold',
--+    marginBottom: 4,
--+  },
--+  premiumSubtitle: {
--+    fontSize: FONT_SIZE.sm,
--+  },
--   dangerButton: {
--     paddingVertical: SPACING.md,
--     alignItems: 'center',
+@@ -1,320 +0,0 @@
 -diff --git a/model.patch b/model.patch
--index 390a439..e69de29 100644
+-index 73c4172..e69de29 100644
 ---- a/model.patch
 -+++ b/model.patch
--@@ -1,270 +0,0 @@
---diff --git a/frontend/src/contexts/AuthContext.tsx b/frontend/src/contexts/AuthContext.tsx
---index 7d9190f..78e3192 100644
------ a/frontend/src/contexts/AuthContext.tsx
---+++ b/frontend/src/contexts/AuthContext.tsx
---@@ -65,6 +65,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
---   const [profile, setProfile] = useState<UserProfile | null>(null);
---   const [garage, setGarage] = useState<Car[]>([]);
---   const [loading, setLoading] = useState(true);
---+  const [initializing, setInitializing] = useState(true);
--- 
---   useEffect(() => {
---     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
---@@ -79,6 +80,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
---       }
---       
---       setLoading(false);
---+      setInitializing(false);
---     });
--- 
---     return unsubscribe;
---@@ -128,6 +130,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
---         carModel: '',
---         carYear: '',
---         avatarURI: null,
---+        premium: false,
---         createdAt: Date.now(),
---       };
--- 
---@@ -334,6 +337,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
---     }
---   };
--- 
---+  const upgradeToPremium = async () => {
---+    if (!user || !profile) {
---+      throw new Error('No user logged in');
---+    }
---+
---+    try {
---+      const updatedProfile = { ...profile, premium: true };
---+      await setDoc(doc(db, 'users', user.uid), updatedProfile, { merge: true });
---+      setProfile(updatedProfile);
---+      console.log('[Auth] User upgraded to premium');
---+    } catch (error) {
---+      console.error('[Auth] Upgrade to premium error:', error);
---+      throw error;
---+    }
---+  };
---+
---   return (
---     <AuthContext.Provider
---       value={{
---@@ -341,6 +360,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
---         profile,
---         garage,
---         loading,
---+        initializing,
---         signUp,
---         signIn,
---         logout,
---@@ -354,6 +374,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
---         deleteCar,
---         loadGarage,
---         getActiveCar,
---+        upgradeToPremium,
---       }}
---     >
---       {children}
+-@@ -1,315 +0,0 @@
+--diff --git a/frontend/src/screens/SettingsScreen.tsx b/frontend/src/screens/SettingsScreen.tsx
+--index 51246a5..621d95a 100644
+----- a/frontend/src/screens/SettingsScreen.tsx
+--+++ b/frontend/src/screens/SettingsScreen.tsx
+--@@ -796,6 +796,35 @@ const styles = StyleSheet.create({
+--     fontSize: FONT_SIZE.xs,
+--     fontWeight: 'bold',
+--   },
+--+  premiumCard: {
+--+    borderRadius: BORDER_RADIUS.lg,
+--+    borderWidth: 2,
+--+    overflow: 'hidden',
+--+    marginBottom: SPACING.md,
+--+  },
+--+  premiumGradient: {
+--+    flexDirection: 'row',
+--+    alignItems: 'center',
+--+    justifyContent: 'space-between',
+--+    padding: SPACING.lg,
+--+  },
+--+  premiumContent: {
+--+    flexDirection: 'row',
+--+    alignItems: 'center',
+--+    flex: 1,
+--+    gap: SPACING.md,
+--+  },
+--+  premiumText: {
+--+    flex: 1,
+--+  },
+--+  premiumTitle: {
+--+    fontSize: FONT_SIZE.lg,
+--+    fontWeight: 'bold',
+--+    marginBottom: 4,
+--+  },
+--+  premiumSubtitle: {
+--+    fontSize: FONT_SIZE.sm,
+--+  },
+--   dangerButton: {
+--     paddingVertical: SPACING.md,
+--     alignItems: 'center',
 --diff --git a/model.patch b/model.patch
---index d6e1fb5..e69de29 100644
+--index 390a439..e69de29 100644
 ----- a/model.patch
 --+++ b/model.patch
---@@ -1,198 +0,0 @@
+--@@ -1,270 +0,0 @@
+---diff --git a/frontend/src/contexts/AuthContext.tsx b/frontend/src/contexts/AuthContext.tsx
+---index 7d9190f..78e3192 100644
+------ a/frontend/src/contexts/AuthContext.tsx
+---+++ b/frontend/src/contexts/AuthContext.tsx
+---@@ -65,6 +65,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
+---   const [profile, setProfile] = useState<UserProfile | null>(null);
+---   const [garage, setGarage] = useState<Car[]>([]);
+---   const [loading, setLoading] = useState(true);
+---+  const [initializing, setInitializing] = useState(true);
+--- 
+---   useEffect(() => {
+---     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+---@@ -79,6 +80,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
+---       }
+---       
+---       setLoading(false);
+---+      setInitializing(false);
+---     });
+--- 
+---     return unsubscribe;
+---@@ -128,6 +130,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
+---         carModel: '',
+---         carYear: '',
+---         avatarURI: null,
+---+        premium: false,
+---         createdAt: Date.now(),
+---       };
+--- 
+---@@ -334,6 +337,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
+---     }
+---   };
+--- 
+---+  const upgradeToPremium = async () => {
+---+    if (!user || !profile) {
+---+      throw new Error('No user logged in');
+---+    }
+---+
+---+    try {
+---+      const updatedProfile = { ...profile, premium: true };
+---+      await setDoc(doc(db, 'users', user.uid), updatedProfile, { merge: true });
+---+      setProfile(updatedProfile);
+---+      console.log('[Auth] User upgraded to premium');
+---+    } catch (error) {
+---+      console.error('[Auth] Upgrade to premium error:', error);
+---+      throw error;
+---+    }
+---+  };
+---+
+---   return (
+---     <AuthContext.Provider
+---       value={{
+---@@ -341,6 +360,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
+---         profile,
+---         garage,
+---         loading,
+---+        initializing,
+---         signUp,
+---         signIn,
+---         logout,
+---@@ -354,6 +374,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
+---         deleteCar,
+---         loadGarage,
+---         getActiveCar,
+---+        upgradeToPremium,
+---       }}
+---     >
+---       {children}
 ---diff --git a/model.patch b/model.patch
----index d5740b5..e69de29 100644
+---index d6e1fb5..e69de29 100644
 ------ a/model.patch
 ---+++ b/model.patch
----@@ -1,193 +0,0 @@
-----diff --git a/frontend/src/screens/DashboardScreen.tsx b/frontend/src/screens/DashboardScreen.tsx
-----index c43ff6e..87acbf1 100644
-------- a/frontend/src/screens/DashboardScreen.tsx
-----+++ b/frontend/src/screens/DashboardScreen.tsx
-----@@ -14,6 +14,7 @@ import { LinearGradient } from 'expo-linear-gradient';
----- import { useBle } from '../contexts/BleContext';
----- import { useLogs } from '../contexts/LogsContext';
----- import { useSettings } from '../contexts/SettingsContext';
-----+import { useAccentColor } from '../hooks/useAccentColor';
----- import Gauge from '../components/Gauge';
----- import MetricCard from '../components/MetricCard';
----- import ChartView from '../components/ChartView';
-----@@ -24,6 +25,7 @@ export default function DashboardScreen() {
-----   const { status, scan, connect, disconnect, devices, sendCommand, telemetry } = useBle();
-----   const { latestSession, isLoading, rescan } = useLogs();
-----   const { settings } = useSettings();
-----+  const accentColor = useAccentColor();
-----   const [currentSpeed, setCurrentSpeed] = useState(0);
-----   const [currentGForce, setCurrentGForce] = useState(0);
-----   const [currentTemp, setCurrentTemp] = useState(65);
+---@@ -1,198 +0,0 @@
 ----diff --git a/model.patch b/model.patch
-----index 612d2bc..e69de29 100644
+----index d5740b5..e69de29 100644
 ------- a/model.patch
 ----+++ b/model.patch
-----@@ -1,168 +0,0 @@
------diff --git a/frontend/src/screens/LogsScreen.tsx b/frontend/src/screens/LogsScreen.tsx
------index 0c00a18..c4f084c 100644
--------- a/frontend/src/screens/LogsScreen.tsx
------+++ b/frontend/src/screens/LogsScreen.tsx
------@@ -312,11 +312,53 @@ const styles = StyleSheet.create({
------     borderColor: COLORS.border,
------   },
------   sessionGradient: {
------+    flexDirection: 'column',
------+    paddingHorizontal: SPACING.md,
------+    paddingVertical: SPACING.md,
------+    borderRadius: BORDER_RADIUS.md,
------+    gap: SPACING.sm,
------+  },
------+  sessionHeader: {
------+    flexDirection: 'row',
------+    alignItems: 'center',
------+    justifyContent: 'space-between',
------+  },
------+  sessionLeft: {
------     flexDirection: 'row',
------     alignItems: 'center',
-------    padding: SPACING.md,
------     gap: SPACING.sm,
------   },
------+  sessionStats: {
------+    flexDirection: 'row',
------+    gap: SPACING.xs,
------+  },
------+  statChip: {
------+    flexDirection: 'row',
------+    alignItems: 'center',
------+    gap: 4,
------+    paddingHorizontal: SPACING.sm,
------+    paddingVertical: 4,
------+    backgroundColor: COLORS.background,
------+    borderRadius: 12,
------+  },
------+  statChipText: {
------+    fontSize: FONT_SIZE.xs,
------+    fontWeight: '600',
------+  },
------+  sparklineContainer: {
------+    marginVertical: SPACING.xs,
------+    borderRadius: 8,
------+    overflow: 'hidden',
------+  },
------+  sessionFooter: {
------+    flexDirection: 'row',
------+    alignItems: 'center',
------+    justifyContent: 'space-between',
------+  },
------+  sessionHint: {
------+    fontSize: FONT_SIZE.xs,
------+    color: COLORS.textTertiary,
------+  },
------   sessionTime: {
------     flex: 1,
------     fontSize: FONT_SIZE.md,
+----@@ -1,193 +0,0 @@
+-----diff --git a/frontend/src/screens/DashboardScreen.tsx b/frontend/src/screens/DashboardScreen.tsx
+-----index c43ff6e..87acbf1 100644
+-------- a/frontend/src/screens/DashboardScreen.tsx
+-----+++ b/frontend/src/screens/DashboardScreen.tsx
+-----@@ -14,6 +14,7 @@ import { LinearGradient } from 'expo-linear-gradient';
+----- import { useBle } from '../contexts/BleContext';
+----- import { useLogs } from '../contexts/LogsContext';
+----- import { useSettings } from '../contexts/SettingsContext';
+-----+import { useAccentColor } from '../hooks/useAccentColor';
+----- import Gauge from '../components/Gauge';
+----- import MetricCard from '../components/MetricCard';
+----- import ChartView from '../components/ChartView';
+-----@@ -24,6 +25,7 @@ export default function DashboardScreen() {
+-----   const { status, scan, connect, disconnect, devices, sendCommand, telemetry } = useBle();
+-----   const { latestSession, isLoading, rescan } = useLogs();
+-----   const { settings } = useSettings();
+-----+  const accentColor = useAccentColor();
+-----   const [currentSpeed, setCurrentSpeed] = useState(0);
+-----   const [currentGForce, setCurrentGForce] = useState(0);
+-----   const [currentTemp, setCurrentTemp] = useState(65);
 -----diff --git a/model.patch b/model.patch
------index 5e16e3c..e69de29 100644
+-----index 612d2bc..e69de29 100644
 -------- a/model.patch
 -----+++ b/model.patch
------@@ -1,104 +0,0 @@
-------diff --git a/frontend/src/components/Gauge.tsx b/frontend/src/components/Gauge.tsx
-------index 1cf1b8e..69b0147 100644
---------- a/frontend/src/components/Gauge.tsx
-------+++ b/frontend/src/components/Gauge.tsx
-------@@ -1,8 +1,16 @@
--------import React from 'react';
-------+import React, { useEffect } from 'react';
------- import { View, Text, StyleSheet } from 'react-native';
------- import { COLORS, SPACING, FONT_SIZE, BORDER_RADIUS } from '../constants/theme';
------- import { LinearGradient } from 'expo-linear-gradient';
------- import Svg, { Circle } from 'react-native-svg';
-------+import Animated, {
-------+  useSharedValue,
-------+  useAnimatedStyle,
-------+  useAnimatedProps,
-------+  withSpring,
-------+  withTiming,
-------+  Easing,
-------+} from 'react-native-reanimated';
------- 
------- interface GaugeProps {
-------   value: number;
-------@@ -13,15 +21,48 @@ interface GaugeProps {
-------   size?: number;
------- }
------- 
-------+// Create animated Circle component
-------+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
-------+
------- export default function Gauge({ value, maxValue, label, unit, color, size = 140 }: GaugeProps) {
--------  const percentage = Math.min((value / maxValue) * 100, 100);
-------+  const progress = useSharedValue(0);
-------+  const scale = useSharedValue(0.95);
-------+  const opacity = useSharedValue(0);
-------+
-------   const strokeWidth = 12;
-------   const radius = (size - strokeWidth) / 2;
-------   const circumference = 2 * Math.PI * radius;
--------  const strokeDashoffset = circumference - (percentage / 100) * circumference;
-------+
-------+  useEffect(() => {
-------+    // Entry animation
-------+    opacity.value = withTiming(1, { duration: 300 });
-------+    scale.value = withSpring(1, { damping: 15, stiffness: 150 });
-------+
-------+    // Update progress with smooth spring
-------+    const targetProgress = Math.min((value / maxValue) * 100, 100);
-------+    progress.value = withSpring(targetProgress, {
-------+      damping: 20,
-------+      stiffness: 90,
-------+      mass: 1,
-------+    });
-------+  }, [value, maxValue]);
-------+
-------+  const animatedProps = useAnimatedProps(() => {
-------+    const strokeDashoffset = circumference - (progress.value / 100) * circumference;
-------+    return {
-------+      strokeDashoffset,
-------+    };
-------+  });
-------+
-------+  const animatedContainerStyle = useAnimatedStyle(() => ({
-------+    transform: [{ scale: scale.value }],
-------+    opacity: opacity.value,
-------+  }));
-------+
-------+  const percentage = Math.min((value / maxValue) * 100, 100);
------- 
-------   return (
--------    <View style={[styles.container, { width: size + 20, height: size + 60 }]}>
-------+    <Animated.View style={[styles.container, { width: size + 20, height: size + 60 }, animatedContainerStyle]}>
-------       <View style={styles.gaugeContainer}>
-------         <Svg width={size} height={size}>
-------           <Circle
-------@@ -32,7 +73,7 @@ export default function Gauge({ value, maxValue, label, unit, color, size = 140
-------             strokeWidth={strokeWidth}
-------             fill="none"
-------           />
--------          <Circle
-------+          <AnimatedCircle
-------             cx={size / 2}
-------             cy={size / 2}
-------             r={radius}
-------@@ -40,10 +81,10 @@ export default function Gauge({ value, maxValue, label, unit, color, size = 140
-------             strokeWidth={strokeWidth}
-------             fill="none"
-------             strokeDasharray={circumference}
--------            strokeDashoffset={strokeDashoffset}
-------             strokeLinecap="round"
-------             rotation="-90"
-------             origin={`${size / 2}, ${size / 2}`}
-------+            animatedProps={animatedProps}
-------           />
-------         </Svg>
-------         <View style={styles.valueContainer}>
-------@@ -52,7 +93,7 @@ export default function Gauge({ value, maxValue, label, unit, color, size = 140
-------         </View>
-------       </View>
-------       <Text style={styles.label}>{label}</Text>
--------    </View>
-------+    </Animated.View>
-------   );
------- }
------- 
+-----@@ -1,168 +0,0 @@
+------diff --git a/frontend/src/screens/LogsScreen.tsx b/frontend/src/screens/LogsScreen.tsx
+------index 0c00a18..c4f084c 100644
+--------- a/frontend/src/screens/LogsScreen.tsx
+------+++ b/frontend/src/screens/LogsScreen.tsx
+------@@ -312,11 +312,53 @@ const styles = StyleSheet.create({
+------     borderColor: COLORS.border,
+------   },
+------   sessionGradient: {
+------+    flexDirection: 'column',
+------+    paddingHorizontal: SPACING.md,
+------+    paddingVertical: SPACING.md,
+------+    borderRadius: BORDER_RADIUS.md,
+------+    gap: SPACING.sm,
+------+  },
+------+  sessionHeader: {
+------+    flexDirection: 'row',
+------+    alignItems: 'center',
+------+    justifyContent: 'space-between',
+------+  },
+------+  sessionLeft: {
+------     flexDirection: 'row',
+------     alignItems: 'center',
+-------    padding: SPACING.md,
+------     gap: SPACING.sm,
+------   },
+------+  sessionStats: {
+------+    flexDirection: 'row',
+------+    gap: SPACING.xs,
+------+  },
+------+  statChip: {
+------+    flexDirection: 'row',
+------+    alignItems: 'center',
+------+    gap: 4,
+------+    paddingHorizontal: SPACING.sm,
+------+    paddingVertical: 4,
+------+    backgroundColor: COLORS.background,
+------+    borderRadius: 12,
+------+  },
+------+  statChipText: {
+------+    fontSize: FONT_SIZE.xs,
+------+    fontWeight: '600',
+------+  },
+------+  sparklineContainer: {
+------+    marginVertical: SPACING.xs,
+------+    borderRadius: 8,
+------+    overflow: 'hidden',
+------+  },
+------+  sessionFooter: {
+------+    flexDirection: 'row',
+------+    alignItems: 'center',
+------+    justifyContent: 'space-between',
+------+  },
+------+  sessionHint: {
+------+    fontSize: FONT_SIZE.xs,
+------+    color: COLORS.textTertiary,
+------+  },
+------   sessionTime: {
+------     flex: 1,
+------     fontSize: FONT_SIZE.md,
+------diff --git a/model.patch b/model.patch
+------index 5e16e3c..e69de29 100644
+--------- a/model.patch
+------+++ b/model.patch
+------@@ -1,104 +0,0 @@
+-------diff --git a/frontend/src/components/Gauge.tsx b/frontend/src/components/Gauge.tsx
+-------index 1cf1b8e..69b0147 100644
+---------- a/frontend/src/components/Gauge.tsx
+-------+++ b/frontend/src/components/Gauge.tsx
+-------@@ -1,8 +1,16 @@
+--------import React from 'react';
+-------+import React, { useEffect } from 'react';
+------- import { View, Text, StyleSheet } from 'react-native';
+------- import { COLORS, SPACING, FONT_SIZE, BORDER_RADIUS } from '../constants/theme';
+------- import { LinearGradient } from 'expo-linear-gradient';
+------- import Svg, { Circle } from 'react-native-svg';
+-------+import Animated, {
+-------+  useSharedValue,
+-------+  useAnimatedStyle,
+-------+  useAnimatedProps,
+-------+  withSpring,
+-------+  withTiming,
+-------+  Easing,
+-------+} from 'react-native-reanimated';
+------- 
+------- interface GaugeProps {
+-------   value: number;
+-------@@ -13,15 +21,48 @@ interface GaugeProps {
+-------   size?: number;
+------- }
+------- 
+-------+// Create animated Circle component
+-------+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
+-------+
+------- export default function Gauge({ value, maxValue, label, unit, color, size = 140 }: GaugeProps) {
+--------  const percentage = Math.min((value / maxValue) * 100, 100);
+-------+  const progress = useSharedValue(0);
+-------+  const scale = useSharedValue(0.95);
+-------+  const opacity = useSharedValue(0);
+-------+
+-------   const strokeWidth = 12;
+-------   const radius = (size - strokeWidth) / 2;
+-------   const circumference = 2 * Math.PI * radius;
+--------  const strokeDashoffset = circumference - (percentage / 100) * circumference;
+-------+
+-------+  useEffect(() => {
+-------+    // Entry animation
+-------+    opacity.value = withTiming(1, { duration: 300 });
+-------+    scale.value = withSpring(1, { damping: 15, stiffness: 150 });
+-------+
+-------+    // Update progress with smooth spring
+-------+    const targetProgress = Math.min((value / maxValue) * 100, 100);
+-------+    progress.value = withSpring(targetProgress, {
+-------+      damping: 20,
+-------+      stiffness: 90,
+-------+      mass: 1,
+-------+    });
+-------+  }, [value, maxValue]);
+-------+
+-------+  const animatedProps = useAnimatedProps(() => {
+-------+    const strokeDashoffset = circumference - (progress.value / 100) * circumference;
+-------+    return {
+-------+      strokeDashoffset,
+-------+    };
+-------+  });
+-------+
+-------+  const animatedContainerStyle = useAnimatedStyle(() => ({
+-------+    transform: [{ scale: scale.value }],
+-------+    opacity: opacity.value,
+-------+  }));
+-------+
+-------+  const percentage = Math.min((value / maxValue) * 100, 100);
+------- 
+-------   return (
+--------    <View style={[styles.container, { width: size + 20, height: size + 60 }]}>
+-------+    <Animated.View style={[styles.container, { width: size + 20, height: size + 60 }, animatedContainerStyle]}>
+-------       <View style={styles.gaugeContainer}>
+-------         <Svg width={size} height={size}>
+-------           <Circle
+-------@@ -32,7 +73,7 @@ export default function Gauge({ value, maxValue, label, unit, color, size = 140
+-------             strokeWidth={strokeWidth}
+-------             fill="none"
+-------           />
+--------          <Circle
+-------+          <AnimatedCircle
+-------             cx={size / 2}
+-------             cy={size / 2}
+-------             r={radius}
+-------@@ -40,10 +81,10 @@ export default function Gauge({ value, maxValue, label, unit, color, size = 140
+-------             strokeWidth={strokeWidth}
+-------             fill="none"
+-------             strokeDasharray={circumference}
+--------            strokeDashoffset={strokeDashoffset}
+-------             strokeLinecap="round"
+-------             rotation="-90"
+-------             origin={`${size / 2}, ${size / 2}`}
+-------+            animatedProps={animatedProps}
+-------           />
+-------         </Svg>
+-------         <View style={styles.valueContainer}>
+-------@@ -52,7 +93,7 @@ export default function Gauge({ value, maxValue, label, unit, color, size = 140
+-------         </View>
+-------       </View>
+-------       <Text style={styles.label}>{label}</Text>
+--------    </View>
+-------+    </Animated.View>
+-------   );
+------- }
+------- 

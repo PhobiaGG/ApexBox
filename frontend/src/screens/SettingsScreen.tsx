@@ -25,7 +25,7 @@ import { useRouter } from 'expo-router';
 export default function SettingsScreen() {
   const { settings, updateUnits, toggleDeveloperMode, resetSettings } = useSettings();
   const { mode, colors, accentColor, toggleMode, setAccentColor, getCurrentAccent } = useTheme();
-  const { profile, garage, updateProfile, uploadAvatar, addCar, setActiveCar, deleteCar, logout, deleteAccount } = useAuth();
+  const { profile, garage, updateProfile, updateUsername, uploadAvatar, addCar, setActiveCar, deleteCar, logout, deleteAccount } = useAuth();
   const router = useRouter();
   
   const [tapCount, setTapCount] = useState(0);
@@ -33,6 +33,7 @@ export default function SettingsScreen() {
   const [carYear, setCarYear] = useState(profile?.carYear || '');
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [showAddCar, setShowAddCar] = useState(false);
+  const [showChangeUsername, setShowChangeUsername] = useState(false);
 
   const accentColorValue = getCurrentAccent();
 

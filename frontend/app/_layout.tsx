@@ -56,27 +56,29 @@ function AuthWrapper({ children }: { children: React.ReactNode }) {
 
 export default function RootLayout() {
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <SettingsProvider>
-          <BleProvider>
-            <LogsProvider>
-              <AuthWrapper>
-                <OnboardingModal />
-                <Stack screenOptions={{ headerShown: false }}>
-                  <Stack.Screen name="login" options={{ headerShown: false }} />
-                  <Stack.Screen name="signup" options={{ headerShown: false }} />
-                  <Stack.Screen name="forgot-password" options={{ headerShown: false }} />
-                  <Stack.Screen name="premium" options={{ headerShown: false }} />
-                  <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-                  <Stack.Screen name="logs/[date]/[file]" options={{ headerShown: false }} />
-                </Stack>
-              </AuthWrapper>
-            </LogsProvider>
-          </BleProvider>
-        </SettingsProvider>
-      </AuthProvider>
-    </ThemeProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <ThemeProvider>
+        <AuthProvider>
+          <SettingsProvider>
+            <BleProvider>
+              <LogsProvider>
+                <AuthWrapper>
+                  <OnboardingModal />
+                  <Stack screenOptions={{ headerShown: false }}>
+                    <Stack.Screen name="login" options={{ headerShown: false }} />
+                    <Stack.Screen name="signup" options={{ headerShown: false }} />
+                    <Stack.Screen name="forgot-password" options={{ headerShown: false }} />
+                    <Stack.Screen name="premium" options={{ headerShown: false }} />
+                    <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                    <Stack.Screen name="logs/[date]/[file]" options={{ headerShown: false }} />
+                  </Stack>
+                </AuthWrapper>
+              </LogsProvider>
+            </BleProvider>
+          </SettingsProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    </GestureHandlerRootView>
   );
 }
 

@@ -231,14 +231,3 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZE.md,
   },
 });
-    alignItems: 'center',
-  },
-  signUpText: {
-    fontSize: FONT_SIZE.md,
-    color: COLORS.textSecondary,
-  },
-  signUpLink: {
-    fontSize: FONT_SIZE.md,
-    fontWeight: 'bold',
-  },
-});

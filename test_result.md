@@ -209,13 +209,14 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Gauge Component - Native Animated Migration"
-    - "ChartView Component - Victory-Native Replacement"
+    - "Session Sharing Feature"
+    - "Track Replay with Canvas Visualization"
+    - "Settings - Dark/Light Mode Toggle"
+    - "Authentication Flow"
     - "App Navigation Flow"
-    - "GPS Tracking Integration"
-    - "Session Saving Functionality"
-  stuck_tasks: []
-  test_all: true
+  stuck_tasks:
+    - "Authentication Required for Feature Testing"
+  test_all: false
   test_priority: "high_first"
 
 agent_communication:

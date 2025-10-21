@@ -32,6 +32,7 @@ export interface UserProfile {
   carModel: string;
   carYear: string;
   avatarURI: string | null;
+  premium: boolean;
   createdAt: number;
 }
 

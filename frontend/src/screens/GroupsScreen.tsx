@@ -291,11 +291,19 @@ export default function GroupsScreen() {
             Alert.alert(
               'Select Crew',
               'Choose which crew leaderboard to view',
-              crews.map(crew => ({
-                text: `${crew.name} (${crew.members.length} members)`,
-                onPress: () => setSelectedCrew(crew),
-                style: selectedCrew?.id === crew.id ? 'cancel' : 'default',
-              })).concat({ text: 'Cancel', style: 'cancel' })
+              [
+                ...crews.map(crew => ({
+                  text: `${crew.name} (${crew.members.length} members)`,
+                  onPress: () => {
+                    setSelectedCrew(crew);
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  },
+                })),
+                {
+                  text: 'Cancel',
+                  style: 'cancel' as const,
+                },
+              ]
             );
           }}
           activeOpacity={0.8}

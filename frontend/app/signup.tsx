@@ -188,16 +188,16 @@ export default function SignUpScreen() {
               activeOpacity={0.8}
             >
               <LinearGradient
-                colors={[accentColor, COLORS.background]}
+                colors={[accentColor, colors.background]}
                 style={styles.buttonGradient}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
               >
                 {loading ? (
-                  <ActivityIndicator color={COLORS.text} />
+                  <ActivityIndicator color={colors.text} />
                 ) : (
                   <>
-                    <MaterialCommunityIcons name="account-check" size={24} color={COLORS.text} />
+                    <MaterialCommunityIcons name="account-check" size={24} color={colors.text} />
                     <Text style={styles.buttonText}>Create Account</Text>
                   </>
                 )}

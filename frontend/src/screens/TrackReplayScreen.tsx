@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -15,6 +15,9 @@ import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { SPACING, FONT_SIZE, BORDER_RADIUS } from '../constants/theme';
 import * as Haptics from 'expo-haptics';
+import Svg, { Path, Circle, G, Defs, LinearGradient as SvgGradient, Stop } from 'react-native-svg';
+import { GestureHandlerRootView, PinchGestureHandler, PanGestureHandler, State } from 'react-native-gesture-handler';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width, height } = Dimensions.get('window');
 
@@ -26,22 +29,53 @@ interface GPSPoint {
   timestamp: number;
 }
 
-// Mock GPS data for demonstration
+// Performance optimization: Downsample GPS points for display
+const downsamplePoints = (points: GPSPoint[], maxPoints: number = 200): GPSPoint[] => {
+  if (points.length <= maxPoints) return points;
+  
+  const step = Math.floor(points.length / maxPoints);
+  const downsampled: GPSPoint[] = [];
+  
+  for (let i = 0; i < points.length; i += step) {
+    downsampled.push(points[i]);
+  }
+  
+  // Always include the last point
+  if (downsampled[downsampled.length - 1] !== points[points.length - 1]) {
+    downsampled.push(points[points.length - 1]);
+  }
+  
+  return downsampled;
+};
+
+// Mock GPS data for demonstration (realistic track pattern)
 const generateMockGPSData = (): GPSPoint[] => {
   const points: GPSPoint[] = [];
   const centerLat = 37.7749;
   const centerLon = -122.4194;
-  const numPoints = 50;
+  const numPoints = 100; // Increased for smoother visualization
 
+  // Create a figure-8 track pattern
   for (let i = 0; i < numPoints; i++) {
-    const angle = (i / numPoints) * Math.PI * 2;
-    const radius = 0.01 * (1 + Math.sin(angle * 3) * 0.3);
+    const t = (i / numPoints) * Math.PI * 4; // 2 loops
+    const radius = 0.008;
+    
+    // Figure-8 parametric equations
+    const lat = centerLat + radius * Math.sin(t);
+    const lon = centerLon + radius * Math.sin(t) * Math.cos(t);
+    
+    // Simulate speed variations (faster on straights, slower on turns)
+    const curvature = Math.abs(Math.cos(t * 2));
+    const speed = 40 + curvature * 80;
+    
+    // G-force correlates with speed changes and turns
+    const gForce = 0.3 + curvature * 2.5;
     
     points.push({
-      lat: centerLat + Math.cos(angle) * radius,
-      lon: centerLon + Math.sin(angle) * radius,
-      speed: 50 + Math.random() * 100,
-      gForce: 0.5 + Math.random() * 1.5,
+      lat,
+      lon,
+      speed,
+      gForce,
       timestamp: Date.now() + i * 1000,
     });
   }

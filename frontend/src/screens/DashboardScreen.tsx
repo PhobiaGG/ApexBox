@@ -38,6 +38,7 @@ export default function DashboardScreen() {
   const [currentAltitude, setCurrentAltitude] = useState(350);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [autoConnect, setAutoConnect] = useState(false);
+  const [showBleModal, setShowBleModal] = useState(false);
 
   // Auto-connect after scan completes
   useEffect(() => {

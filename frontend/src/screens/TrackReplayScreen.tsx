@@ -322,9 +322,26 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     overflow: 'hidden',
     height: 480,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  canvas: {
-    flex: 1,
+  placeholderContainer: {
+    alignItems: 'center',
+    padding: SPACING.xl,
+  },
+  placeholderTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginTop: SPACING.lg,
+  },
+  placeholderText: {
+    fontSize: FONT_SIZE.md,
+    textAlign: 'center',
+    marginTop: SPACING.sm,
+  },
+  placeholderSubtext: {
+    fontSize: FONT_SIZE.sm,
+    marginTop: SPACING.md,
   },
   statsContainer: {
     flexDirection: 'row',

@@ -206,8 +206,10 @@ export default function DashboardScreen() {
               activeOpacity={0.8}
             >
               <LinearGradient
-                colors={status.isConnected ? [COLORS.cyan, '#0088AA'] : [COLORS.border, COLORS.border]}
+                colors={status.isConnected ? [accentColor, COLORS.background] : [COLORS.border, COLORS.border]}
                 style={styles.buttonGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
               >
                 {isAnalyzing ? (
                   <ActivityIndicator color={COLORS.text} />
@@ -227,8 +229,10 @@ export default function DashboardScreen() {
               activeOpacity={0.8}
             >
               <LinearGradient
-                colors={status.isConnected ? [COLORS.magenta, '#AA0088'] : [COLORS.border, COLORS.border]}
+                colors={status.isConnected ? [COLORS.magenta, COLORS.background] : [COLORS.border, COLORS.border]}
                 style={styles.buttonGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
               >
                 <MaterialCommunityIcons name="sync" size={24} color={COLORS.text} />
                 <Text style={styles.actionButtonText}>Sync Logs</Text>

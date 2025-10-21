@@ -229,11 +229,11 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Theme System - Dark/Light Mode Toggle"
-    - "Theme System - Accent Color Picker"
-    - "Units System - Metric/Imperial Toggle"
-    - "Profile Section - Avatar Display & Upload"
-    - "Garage Section - Car Management"
+    - "Gauge Component - Native Animated Migration"
+    - "ChartView Component - Victory-Native Replacement"
+    - "App Navigation Flow"
+    - "GPS Tracking Integration"
+    - "Session Saving Functionality"
   stuck_tasks: []
   test_all: true
   test_priority: "high_first"
@@ -241,37 +241,26 @@ test_plan:
 agent_communication:
   - agent: "main"
     message: |
-      Settings screen implementation is complete with all required UI features:
+      STABILITY VERIFICATION PHASE after react-native-reanimated removal:
       
-      ✅ Appearance Section (lines 320-408):
-         - Dark/Light mode toggle with Switch component
-         - Accent color picker with 3 options (Cyan/Magenta/Lime)
-         - Connected to ThemeContext with AsyncStorage persistence
+      🔧 RECENT CHANGES:
+      1. Removed react-native-reanimated entirely due to dependency conflicts
+      2. Migrated Gauge.tsx to use native Animated API
+      3. Replaced victory-native in ChartView.tsx with custom react-native-svg implementation
+      4. Refactored GroupsScreen animations to remove reanimated dependencies
+      5. Integrated GPS tracking and session saving functionality
       
-      ✅ Units Section (lines 410-445):
-         - Unified Metric/Imperial toggle
-         - Affects speed, temperature, altitude globally
-         - Connected to SettingsContext
+      🎯 CRITICAL TESTING PRIORITIES:
+      1. Verify NO "Unable to resolve module" errors on app start
+      2. Verify Dashboard loads without blank screen
+      3. Verify all Gauge components render with proper animations
+      4. Verify ChartView displays graphs in Session Detail screen
+      5. Verify GPS tracking can start/stop correctly
+      6. Verify session saving persists data
+      7. Verify navigation between all tabs works smoothly
+      8. Verify BLE connection flow works
       
-      ✅ Profile Section (lines 178-225):
-         - Displays user display name, email, avatar
-         - Change Avatar button with expo-image-picker
-         - Uploads to Firebase Storage
+      📱 TEST SEQUENCE:
+      Backend → Frontend UI → Complete flow testing
       
-      ✅ Garage Section (lines 227-318):
-         - Lists all cars from Firestore
-         - Shows active car with accent-colored border
-         - Add/Edit/Delete car functionality
-         - AddCarModal integration
-      
-      Frontend restarted and ready for testing.
-      
-      TESTING PRIORITIES:
-      1. Verify theme toggle updates UI colors instantly across all tabs
-      2. Verify accent color picker changes highlights throughout app
-      3. Verify unit toggle affects Dashboard gauges and Logs display
-      4. Verify profile displays correctly (requires logged-in user)
-      5. Verify garage car management (requires logged-in user)
-      
-      NOTE: Profile and Garage features require Firebase Auth login to test.
-      Test user can sign up via /signup screen or use existing credentials.
+      Ready for backend testing first, then frontend verification.

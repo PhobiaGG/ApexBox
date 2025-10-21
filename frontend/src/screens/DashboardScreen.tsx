@@ -83,9 +83,10 @@ export default function DashboardScreen() {
     if (status.isConnected) {
       await disconnect();
     } else {
-      const foundDevices = await scan();
-      if (foundDevices.length > 0) {
-        await connect(foundDevices[0]);
+      await scan();
+      // Devices are now available in context
+      if (devices && devices.length > 0) {
+        await connect(devices[0]);
       }
     }
   };

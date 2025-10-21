@@ -274,18 +274,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const isFirstCar = garageSnap.empty;
       
       const newCarRef = doc(garageRef);
+      const newCar = {
+        ...car,
+        id: newCarRef.id,
+        isActive: isFirstCar,
+        createdAt: Date.now(),
+      };
+      
+      // Optimistic update - add to UI immediately
+      if (profile) {
+        const updatedGarage = [...(profile.garage || []), newCar];
+        setProfile({ ...profile, garage: updatedGarage });
+      }
+      
+      // Then save to Firebase
       await setDoc(newCarRef, {
         ...car,
         isActive: isFirstCar,
         createdAt: Date.now(),
       });
       
+      // Reload to ensure consistency
       if (profile) {
-        const updatedGarage = await loadGarage(user.uid);
-        setProfile({ ...profile, garage: updatedGarage });
+        const freshGarage = await loadGarage(user.uid);
+        setProfile({ ...profile, garage: freshGarage });
       }
     } catch (error: any) {
       console.error('[Auth] Add car error:', error);
+      // Rollback on error
+      if (profile) {
+        const freshGarage = await loadGarage(user.uid);
+        setProfile({ ...profile, garage: freshGarage });
+      }
       throw new Error(error.message);
     }
   };

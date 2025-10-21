@@ -71,15 +71,16 @@ class LogService {
     try {
       console.log('[LogService] Reading session:', session.date, session.fileName);
       
-      // Use mock CSV data
-      const csvKey = `${session.date}/${session.fileName}`;
-      const content = MOCK_CSV_DATA[csvKey];
+      // Get CSV data from AsyncStorage
+      const sessionKey = `session_${session.filePath}`;
+      const content = await AsyncStorage.getItem(sessionKey);
       
       if (!content) {
-        console.error('[LogService] Mock data not found for:', csvKey);
+        console.log('[LogService] No data found for:', sessionKey);
         return [];
       }
       
+      console.log('[LogService] Found CSV data, parsing...');
       return parseCSV(content);
     } catch (error) {
       console.error('[LogService] Error reading session data:', error);

@@ -132,12 +132,12 @@ export default function DashboardScreen() {
               <MaterialCommunityIcons
                 name="bluetooth"
                 size={20}
-                color={status.isConnected ? COLORS.cyan : COLORS.textSecondary}
+                color={status.isConnected ? accentColor : COLORS.textSecondary}
               />
               <Text
                 style={[
                   styles.statusText,
-                  { color: status.isConnected ? COLORS.cyan : COLORS.textSecondary },
+                  { color: status.isConnected ? accentColor : COLORS.textSecondary },
                 ]}
               >
                 {status.isConnected ? status.connectedDevice?.name : 'Not Connected'}
@@ -148,12 +148,12 @@ export default function DashboardScreen() {
               <MaterialCommunityIcons
                 name={status.isConnected && telemetry ? "radio-tower" : "sd"}
                 size={20}
-                color={status.isConnected && telemetry ? COLORS.magenta : latestSession ? COLORS.lime : COLORS.textSecondary}
+                color={status.isConnected && telemetry ? accentColor : latestSession ? COLORS.lime : COLORS.textSecondary}
               />
               <Text
                 style={[
                   styles.statusText,
-                  { color: status.isConnected && telemetry ? COLORS.magenta : latestSession ? COLORS.lime : COLORS.textSecondary },
+                  { color: status.isConnected && telemetry ? accentColor : latestSession ? COLORS.lime : COLORS.textSecondary },
                 ]}
               >
                 {status.isConnected && telemetry ? 'Live Stream' : latestSession ? 'Logs Found' : 'No Data'}
@@ -167,8 +167,8 @@ export default function DashboardScreen() {
               value={currentSpeed}
               maxValue={200}
               label="Speed"
-              unit="km/h"
-              color={COLORS.cyan}
+              unit={settings.units.isMetric ? 'km/h' : 'mph'}
+              color={accentColor}
               size={140}
             />
             <Gauge

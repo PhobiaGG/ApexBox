@@ -339,29 +339,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!user) throw new Error('No user logged in');
     
     try {
-      console.log('[Auth] Starting deletion for car:', carId);
+      console.log('[Auth] ======= STARTING CAR DELETION =======');
+      console.log('[Auth] Car ID to delete:', carId);
+      console.log('[Auth] Current garage count:', profile?.garage?.length || 0);
       
-      // Optimistic update - remove from UI immediately
-      if (profile) {
-        const updatedGarage = profile.garage?.filter(car => car.id !== carId) || [];
+      // IMPORTANT: Delete from Firebase FIRST before updating UI
+      // This ensures the delete operation completes successfully
+      await deleteDoc(doc(db, 'users', user.uid, 'garage', carId));
+      console.log('[Auth] ✅ Firebase delete successful');
+      
+      // Now update UI to reflect the deletion
+      if (profile && profile.garage) {
+        const updatedGarage = profile.garage.filter(car => car.id !== carId);
+        console.log('[Auth] Updated garage count:', updatedGarage.length);
         setProfile({ ...profile, garage: updatedGarage });
+        console.log('[Auth] ✅ Profile updated with new garage');
       }
       
-      // Delete from Firebase
-      await deleteDoc(doc(db, 'users', user.uid, 'garage', carId));
-      console.log('[Auth] Successfully deleted car from Firebase');
-      
-      // Don't reload on success - optimistic update is correct
-      // Only reload on error to rollback
+      console.log('[Auth] ======= CAR DELETION COMPLETE =======');
       
     } catch (error: any) {
-      console.error('[Auth] Delete car error:', error);
+      console.error('[Auth] ❌ Delete car error:', error);
+      console.error('[Auth] Error details:', error.code, error.message);
+      
       // Rollback on error - reload from Firebase
-      if (profile) {
+      if (profile && user) {
+        console.log('[Auth] Rolling back - reloading garage from Firebase');
         const freshGarage = await loadGarage(user.uid);
         setProfile({ ...profile, garage: freshGarage });
       }
-      throw new Error(error.message);
+      
+      throw new Error(error.message || 'Failed to delete car');
     }
   };
 

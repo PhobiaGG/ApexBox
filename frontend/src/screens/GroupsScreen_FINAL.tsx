@@ -682,6 +682,26 @@ const styles = StyleSheet.create({
   tabText: {
     fontSize: FONT_SIZE.md,
   },
+  categoryTabs: {
+    flexDirection: 'row',
+    marginHorizontal: SPACING.lg,
+    borderRadius: BORDER_RADIUS.lg,
+    padding: 4,
+    borderWidth: 1,
+    marginBottom: SPACING.lg,
+  },
+  categoryTab: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: SPACING.sm,
+    borderRadius: BORDER_RADIUS.md,
+    gap: SPACING.xs,
+  },
+  categoryTabText: {
+    fontSize: FONT_SIZE.sm,
+  },
   actionButtons: {
     flexDirection: 'row',
     marginHorizontal: SPACING.lg,

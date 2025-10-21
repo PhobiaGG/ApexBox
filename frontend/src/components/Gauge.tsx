@@ -1,16 +1,8 @@
-import React, { useEffect } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, Animated } from 'react-native';
 import { COLORS, SPACING, FONT_SIZE, BORDER_RADIUS } from '../constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Circle } from 'react-native-svg';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  useAnimatedProps,
-  withSpring,
-  withTiming,
-  Easing,
-} from 'react-native-reanimated';
 
 interface GaugeProps {
   value: number;
@@ -25,9 +17,9 @@ interface GaugeProps {
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
 export default function Gauge({ value, maxValue, label, unit, color, size = 140 }: GaugeProps) {
-  const progress = useSharedValue(0);
-  const scale = useSharedValue(0.95);
-  const opacity = useSharedValue(0);
+  const progressAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(0.95)).current;
+  const opacityAnim = useRef(new Animated.Value(0)).current;
 
   const strokeWidth = 12;
   const radius = (size - strokeWidth) / 2;
@@ -35,16 +27,30 @@ export default function Gauge({ value, maxValue, label, unit, color, size = 140 
 
   useEffect(() => {
     // Entry animation
-    opacity.value = withTiming(1, { duration: 300 });
-    scale.value = withSpring(1, { damping: 15, stiffness: 150 });
+    Animated.parallel([
+      Animated.timing(opacityAnim, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        tension: 150,
+        friction: 15,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
 
+  useEffect(() => {
     // Update progress with smooth spring
     const targetProgress = Math.min((value / maxValue) * 100, 100);
-    progress.value = withSpring(targetProgress, {
-      damping: 20,
-      stiffness: 90,
-      mass: 1,
-    });
+    Animated.spring(progressAnim, {
+      toValue: targetProgress,
+      tension: 90,
+      friction: 20,
+      useNativeDriver: true,
+    }).start();
   }, [value, maxValue]);
 
   const animatedProps = useAnimatedProps(() => {

@@ -96,6 +96,7 @@ export function calculateStats(samples: TelemetrySample[]): SessionStats {
       maxAltitude: 0,
       duration: 0,
       sampleCount: 0,
+      altitudeChange: 0,
     };
   }
 
@@ -104,6 +105,9 @@ export function calculateStats(samples: TelemetrySample[]): SessionStats {
   const temps = samples.map(s => s.temp);
   const altitudes = samples.map(s => s.altitude);
 
+  const minAltitude = Math.min(...altitudes);
+  const maxAltitude = Math.max(...altitudes);
+
   return {
     peakSpeed: Math.max(...speeds),
     avgSpeed: speeds.reduce((a, b) => a + b, 0) / speeds.length,
@@ -111,9 +115,26 @@ export function calculateStats(samples: TelemetrySample[]): SessionStats {
     avgG: gForces.reduce((a, b) => a + b, 0) / gForces.length,
     minTemp: Math.min(...temps),
     maxTemp: Math.max(...temps),
-    minAltitude: Math.min(...altitudes),
-    maxAltitude: Math.max(...altitudes),
-    duration: samples[samples.length - 1].timestamp_ms / 1000,
+    minAltitude,
+    maxAltitude,
+    altitudeChange: maxAltitude - minAltitude,
+    duration: (samples[samples.length - 1].timestamp_ms - samples[0].timestamp_ms) / 1000,
     sampleCount: samples.length,
+  };
+}
+
+/**
+ * Convert telemetry sample values based on unit settings
+ */
+export function convertSampleUnits(
+  sample: TelemetrySample,
+  isMetric: boolean,
+  tempCelsius: boolean
+): TelemetrySample {
+  return {
+    ...sample,
+    speed: isMetric ? sample.speed : sample.speed * 0.621371, // km/h to mph
+    temp: tempCelsius ? sample.temp : (sample.temp * 9 / 5) + 32, // C to F
+    altitude: isMetric ? sample.altitude : sample.altitude * 3.28084, // m to ft
   };
 }

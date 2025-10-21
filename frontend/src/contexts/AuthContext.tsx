@@ -69,9 +69,9 @@ interface AuthContextType {
   user: User | null;
   profile: UserProfile | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  signup: (email: string, password: string, displayName: string) => Promise<void>;
-  logout: () => Promise<void>;
+  signIn: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string, displayName: string) => Promise<void>;
+  signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   updateUsername: (newName: string) => Promise<void>;
   uploadAvatar: (uri: string) => Promise<void>;

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Stack } from 'expo-router';
 import { AuthProvider } from '../src/contexts/AuthContext';
-import { BleProvider } from '../src/contexts/BleProvider';
+import { BleProvider } from '../src/contexts/BleContext';
 import { SettingsProvider } from '../src/contexts/SettingsContext';
 import { LogsProvider } from '../src/contexts/LogsContext';
 import OnboardingModal from '../src/components/OnboardingModal';

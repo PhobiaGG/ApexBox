@@ -187,6 +187,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const updateUsername = async (newUsername: string) => {
+    if (!user || !profile) {
+      throw new Error('No user logged in');
+    }
+
+    try {
+      // Update Firebase Auth displayName
+      await updateFirebaseProfile(user, { displayName: newUsername });
+
+      // Update Firestore profile
+      const updatedProfile = { ...profile, displayName: newUsername };
+      await setDoc(doc(db, 'users', user.uid), updatedProfile, { merge: true });
+      
+      // Update local state immediately
+      setProfile(updatedProfile);
+      
+      console.log('[Auth] Username updated:', newUsername);
+    } catch (error) {
+      console.error('[Auth] Update username error:', error);
+      throw error;
+    }
+  };
+
   const uploadAvatar = async (uri: string): Promise<string> => {
     if (!user) {
       throw new Error('No user logged in');

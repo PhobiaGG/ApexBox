@@ -129,7 +129,7 @@ class RealBleService {
   // Connect to a device
   async connect(device: BleDevice): Promise<void> {
     try {
-      if (this.useMockMode) {
+      if (this.useMockMode || !this.manager) {
         console.log('[RealBleService] Using mock connection');
         this.status.isConnected = true;
         this.status.connectedDevice = device;
@@ -165,7 +165,7 @@ class RealBleService {
   // Disconnect from device
   async disconnect(): Promise<void> {
     try {
-      if (this.connectedDevice) {
+      if (this.connectedDevice && this.manager) {
         await this.manager.cancelDeviceConnection(this.connectedDevice.id);
         this.connectedDevice = null;
       }

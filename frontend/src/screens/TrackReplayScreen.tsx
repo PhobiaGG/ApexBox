@@ -11,9 +11,9 @@ import { Canvas, Path, Circle as SkiaCircle, vec, Skia, LinearGradient as SkiaGr
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { useAuth } from '../src/contexts/AuthContext';
-import { useTheme } from '../src/contexts/ThemeContext';
-import { SPACING, FONT_SIZE, BORDER_RADIUS } from '../src/constants/theme';
+import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
+import { SPACING, FONT_SIZE, BORDER_RADIUS } from '../constants/theme';
 import * as Haptics from 'expo-haptics';
 
 const { width, height } = Dimensions.get('window');

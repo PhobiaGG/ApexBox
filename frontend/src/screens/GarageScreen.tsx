@@ -104,29 +104,52 @@ export default function GarageScreen() {
     );
   };
 
-  const renderRightActions = (progress: Animated.AnimatedInterpolation<number>, dragX: Animated.AnimatedInterpolation<number>, carId: string, carName: string) => {
+  const renderRightActions = (progress: Animated.AnimatedInterpolation<number>, dragX: Animated.AnimatedInterpolation<number>, car: any) => {
     const trans = dragX.interpolate({
-      inputRange: [-100, 0],
-      outputRange: [0, 100],
+      inputRange: [-160, 0],
+      outputRange: [0, 160],
       extrapolate: 'clamp',
     });
 
     return (
-      <TouchableOpacity
-        onPress={() => handleDelete(carId, carName)}
-        activeOpacity={0.8}
+      <Animated.View
+        style={[
+          styles.actionsContainer,
+          { transform: [{ translateX: trans }] },
+        ]}
       >
-        <Animated.View
-          style={[
-            styles.deleteButton,
-            { backgroundColor: colors.magenta },
-            { transform: [{ translateX: trans }] },
-          ]}
+        <TouchableOpacity
+          onPress={() => handleEditCar(car)}
+          activeOpacity={0.8}
+          style={styles.actionButton}
         >
-          <MaterialCommunityIcons name="delete" size={28} color={colors.text} />
-          <Text style={[styles.deleteButtonText, { color: colors.text }]}>Delete</Text>
-        </Animated.View>
-      </TouchableOpacity>
+          <View
+            style={[
+              styles.editButton,
+              { backgroundColor: accentColor },
+            ]}
+          >
+            <MaterialCommunityIcons name="pencil" size={24} color={colors.text} />
+            <Text style={[styles.actionButtonText, { color: colors.text }]}>Edit</Text>
+          </View>
+        </TouchableOpacity>
+        
+        <TouchableOpacity
+          onPress={() => handleDelete(car.id, car.nickname)}
+          activeOpacity={0.8}
+          style={styles.actionButton}
+        >
+          <View
+            style={[
+              styles.deleteButton,
+              { backgroundColor: colors.magenta },
+            ]}
+          >
+            <MaterialCommunityIcons name="delete" size={24} color={colors.text} />
+            <Text style={[styles.actionButtonText, { color: colors.text }]}>Delete</Text>
+          </View>
+        </TouchableOpacity>
+      </Animated.View>
     );
   };
 

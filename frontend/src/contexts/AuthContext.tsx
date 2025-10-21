@@ -116,11 +116,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const loadGarage = async () => {
-    if (!user) return;
-    
+  const loadGarageForUser = async (uid: string) => {
     try {
-      const garageRef = collection(db, 'users', user.uid, 'garage');
+      console.log('[Auth] Loading garage for user:', uid);
+      const garageRef = collection(db, 'users', uid, 'garage');
       const snapshot = await getDocs(garageRef);
       const cars: Car[] = [];
       
@@ -133,7 +132,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log(`[Auth] Loaded ${cars.length} cars from garage`);
     } catch (error) {
       console.error('[Auth] Error loading garage:', error);
+      throw error;
     }
+  };
+
+  const loadGarage = async () => {
+    if (!user) {
+      console.warn('[Auth] Cannot load garage: no user logged in');
+      return;
+    }
+    await loadGarageForUser(user.uid);
   };
 
   // Generate unique 8-digit friend ID

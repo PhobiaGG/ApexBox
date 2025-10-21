@@ -48,6 +48,43 @@ interface Crew {
   createdAt: number;
 }
 
+// Animated Crown Component
+function AnimatedCrown({ color, size = 14 }: { color: string; size?: number }) {
+  const scale = useSharedValue(1);
+  const opacity = useSharedValue(1);
+
+  useEffect(() => {
+    // Pulsing animation
+    scale.value = withRepeat(
+      withSequence(
+        withTiming(1.2, { duration: 1000, easing: Easing.inOut(Easing.ease) }),
+        withTiming(1, { duration: 1000, easing: Easing.inOut(Easing.ease) })
+      ),
+      -1,
+      false
+    );
+    opacity.value = withRepeat(
+      withSequence(
+        withTiming(0.6, { duration: 1000, easing: Easing.inOut(Easing.ease) }),
+        withTiming(1, { duration: 1000, easing: Easing.inOut(Easing.ease) })
+      ),
+      -1,
+      false
+    );
+  }, []);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+    opacity: opacity.value,
+  }));
+
+  return (
+    <Animated.View style={animatedStyle}>
+      <MaterialCommunityIcons name="crown" size={size} color={color} />
+    </Animated.View>
+  );
+}
+
 // Mock crew data for demonstration
 const generateMockCrews = (): Crew[] => [
   {

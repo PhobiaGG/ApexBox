@@ -103,12 +103,13 @@
 #====================================================================================================
 
 user_problem_statement: |
-  Replace /app/frontend/src/screens/SettingsScreen.tsx with complete implementation containing:
-  - Appearance Section: Light/dark mode toggle and accent color picker (Cyan, Magenta, Lime) connected to ThemeContext
-  - Units Section: Unified Metric/Imperial toggle affecting all values globally via SettingsContext
-  - Profile Section: Display user's name, email, and avatar with upload functionality via AuthContext
-  - Garage Section: List saved vehicles with active badge, allow adding/editing cars via AuthContext
-  - All features must be visually apparent and persist via AsyncStorage
+  STABILITY VERIFICATION after react-native-reanimated removal:
+  - Verify Gauge.tsx renders correctly with native Animated API
+  - Verify ChartView.tsx displays data properly with react-native-svg
+  - Verify GroupsScreen.tsx animations work without reanimated
+  - Verify GPS tracking and session saving functionality
+  - Ensure no module resolution errors or blank screens
+  - Test complete app flow: login -> dashboard -> logs -> groups -> settings
 
 frontend:
   - task: "Theme System - Dark/Light Mode Toggle"

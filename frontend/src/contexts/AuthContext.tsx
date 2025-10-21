@@ -41,6 +41,7 @@ interface AuthContextType {
   profile: UserProfile | null;
   garage: Car[];
   loading: boolean;
+  initializing: boolean;
   signUp: (email: string, password: string, displayName: string) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -54,6 +55,7 @@ interface AuthContextType {
   deleteCar: (carId: string) => Promise<void>;
   loadGarage: () => Promise<void>;
   getActiveCar: () => Car | null;
+  upgradeToPremium: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);

@@ -119,7 +119,12 @@ export default function DashboardScreen() {
         <View style={styles.header}>
           <Text style={[styles.title, { color: colors.text }]}>ApexBox</Text>
           <Text style={[styles.subtitle, { color: colors.textSecondary }]}>COMPANION</Text>
-        </View>
+          {profile?.premium && (
+            <View style={[styles.proBadge, { backgroundColor: accentColor }]}>
+              <MaterialCommunityIcons name="crown" size={16} color={colors.background} />
+              <Text style={[styles.proBadgeText, { color: colors.background }]}>PRO</Text>
+            </View>
+          )}\n        </View>
 
         {/* Active Car Display */}
         {activeCar && (

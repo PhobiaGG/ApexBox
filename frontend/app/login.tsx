@@ -198,12 +198,10 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 48,
     fontWeight: 'bold',
-    color: COLORS.text,
     marginTop: SPACING.md,
   },
   subtitle: {
     fontSize: FONT_SIZE.md,
-    color: COLORS.textSecondary,
     marginTop: SPACING.sm,
   },
   form: {
@@ -212,10 +210,8 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.card,
     borderRadius: BORDER_RADIUS.md,
     borderWidth: 1,
-    borderColor: COLORS.border,
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.sm,
     marginBottom: SPACING.md,
@@ -223,31 +219,41 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     fontSize: FONT_SIZE.md,
-    color: COLORS.text,
     marginLeft: SPACING.sm,
     paddingVertical: SPACING.sm,
   },
-  optionsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+  forgotPassword: {
+    alignSelf: 'flex-end',
     marginBottom: SPACING.lg,
   },
-  rememberMe: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  linkText: {
+    fontSize: FONT_SIZE.sm,
+    fontWeight: '600',
   },
-  checkbox: {
-    width: 20,
-    height: 20,
-    borderRadius: 4,
-    borderWidth: 2,
-    borderColor: COLORS.border,
-    marginRight: SPACING.sm,
+  loginButton: {
+    borderRadius: BORDER_RADIUS.md,
+    overflow: 'hidden',
+    marginBottom: SPACING.md,
+  },
+  buttonGradient: {
+    paddingVertical: SPACING.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  buttonText: {
+    fontSize: FONT_SIZE.lg,
+    fontWeight: 'bold',
+  },
+  signupContainer: {
+    flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
+    marginTop: SPACING.lg,
   },
-  rememberText: {
+  signupText: {
+    fontSize: FONT_SIZE.md,
+  },
+});
     fontSize: FONT_SIZE.sm,
     color: COLORS.textSecondary,
   },

@@ -1,72 +1,68 @@
 <analysis>
-The AI engineer started by building the ApexBox Companion app's foundation, including UI, navigation, and core screens. Phase 1 focused on **BLE telemetry simulation**, successfully implementing realistic racing data, integrating it into  and , and updating  for live data display. Phase 2 involved **data visualization and analytics**, restoring  charts, enhancing CSV parsing, and adding pull-to-refresh to the Logs screen. An initial attempt at unit conversion and haptics in Settings was made, encountering  web compatibility issues which were addressed with a platform-specific fallback. Subsequent Phase 3 iterations initiated **immersive UX refinements and ecosystem integration**, beginning with an onboarding modal, animated gauges, sparklines in logs, and a dynamic accent color hook. User feedback consistently highlighted that many of these UI integrations, particularly theme and unit system changes, were not visually apparent. Following this, **Firebase authentication infrastructure** was set up, including contexts and basic login/signup screens. The latest user feedback indicated that the altitude settings merge, garage section, consistent accent colors, and light/dark mode were still not visible. The AI is currently addressing this by creating a completely updated  and is in the process of replacing the old file with this new version to implement all visible UI changes.
+The AI engineer has significantly advanced the ApexBox Companion app, building its foundation, integrating complex features, and addressing numerous bugs. Initial phases established UI, BLE simulation, and data visualization. Subsequent work focused on immersive UX, Firebase authentication, and a dynamic theme system. The trajectory highlights the iterative nature of development, with frequent user feedback driving refinements. Key challenges included environment-specific issues (Ngrok, Metro cache), syntax errors post-refactoring, and ensuring UI reflects backend state changes. The engineer successfully implemented a dedicated Garage tab, enhanced Profile management, and set up a premium feature infrastructure, including integrating real Firebase credentials. Currently, the engineer is debugging UI rendering issues (Gauge, UserAvatar) and state synchronization problems (Garage car deletion not immediately reflected), along with the ongoing task of transitioning from mock data to real BLE and cloud session syncing.
 </analysis>
 
 <product_requirements>
-The ApexBox Companion app is a dashboard and data viewer for an ESP32 performance tracker. It requires mock BLE simulation for devices like ApexBox-001/002, providing realistic telemetry (0-200 km/h speed, 0-3g G-force, temperature, altitude) with haptic feedback for actions like Start Analysis and Sync Logs. The app must read and interpret  files, compute key metrics (Peak/Avg Speed, Peak G-Force, Temp Range, Alt Change, Duration), and cache results. Navigation is via a bottom tab navigator with Dashboard, Logs, Session Detail, Groups (local leaderboard), and Settings (profile, units, theme, BLE). The design follows a neon-dark theme with specific fonts and accent colors (Cyan, Magenta, Lime), rounded cards, and haptics. It must be Expo Go/Android compatible with graceful empty-state handling. Future requirements include full user authentication (Firebase Auth), profile management with avatars (Firebase Storage/Firestore), a garage system for multiple cars, a dynamic theme system (light/dark mode, accent color picker), global unit conversion (Metric/Imperial), enhanced BLE device management, improved logs with sparklines/sorting/batch delete, animated charts with tap-to-zoom, and a multi-slide onboarding carousel.
+The ApexBox Companion app provides a dashboard and data viewer for an ESP32 performance tracker, simulating realistic BLE telemetry (speed, G-force, temperature, altitude) with haptic feedback. It processes CSV log files, computes metrics, and caches results. Core navigation features include Dashboard, Logs, Session Detail, Groups (leaderboard), and Settings (profile, units, theme, BLE). The app adheres to a neon-dark theme with specific fonts and accent colors (Cyan, Magenta, Lime), rounded cards, and haptics, compatible with Expo Go/Android.
+
+Key implementations to date include:
+- Full user authentication (Firebase Auth), with profile management (avatars via Firebase Storage, display name in Firestore).
+- A robust garage system allowing users to add, edit (including 'upgrades' field), set active, and swipe-to-delete cars, with data persisted in Firestore.
+- A dynamic theme system offering light/dark mode toggles and an accent color picker (Cyan, Magenta, Lime), alongside global Metric/Imperial unit conversion.
+- Comprehensive Settings screen integrating profile, appearance, units, and connectivity.
+- Core infrastructure for premium features (ApexBox Pro Pack), including a dedicated Premium screen with a mock purchase flow, and UI gating for features like Track Map Replay and Crew Leaderboards.
+- Real BLE service implementation () with graceful mock fallback for unsupported environments, and initial Firebase Storage/Firestore integration for session syncing in .
 </product_requirements>
 
 <key_technical_concepts>
-- Expo React Native: Mobile app development framework.
-- : File-based navigation.
-- React Navigation: Tab/stack navigation.
-- Expo FileSystem: CSV log parsing.
-- AsyncStorage: Persistent storage.
-- Victory-native: Telemetry chart visualization.
-- Expo Haptics: Tactile feedback.
-- Mock BLE: Simulated BLE functionality.
-- Firebase: Authentication, Firestore, Storage.
-- : Animations.
-- : Avatar uploads.
-- : Chart rendering dependency.
+- **Expo React Native:** Cross-platform mobile app development.
+- ** & React Navigation:** File-based and tab/stack navigation.
+- **Firebase:** Authentication, Firestore (database), Storage (avatars, session CSVs).
+- **:** Bluetooth Low Energy communication.
+- **:** 2D graphics rendering for animations/charts.
+- **:** GPS data capture.
+- **Context API (Auth, Theme, Settings, Ble, Logs):** Global state management.
+- **:** UI animations.
+- **:** Image selection for avatars.
+- **AsyncStorage:** Local persistent storage.
 </key_technical_concepts>
 
 <code_architecture>
 
-   -  (DashboardScreen): Displays live telemetry. Modified to use dynamic accent colors and remove hardcoded style values.
-   - : Root layout. Integrates , , and .
-   - , , : New authentication screens for Firebase Auth.
-   - : Telemetry charts. Restored  and added web fallbacks.
-   - : Telemetry gauges. Enhanced with  for animations.
-   - : New component for first-launch onboarding.
-   - : New component for mini-charts in session previews.
-   - : New reusable avatar component (image or initials).
-   - : New modal for adding garage cars.
-   - : Firebase config. Corrected  import for React Native.
-   - : Manages Firebase authentication, profile, garage. Extended with garage management and avatar upload.
-   - : Manages BLE connection and telemetry. Updated to expose live telemetry.
-   - : New context for light/dark mode and accent color management.
-   - : New hook for dynamic accent color.
-   - : Simulates BLE telemetry streaming.
-   - : Session logs. Added pull-to-refresh, sorting, and  integration.
-   - : User settings. Was previously updated for haptics and dynamic unit display, now targeted for full replacement to consolidate all UI features.
-   - : A newly created file containing the intended complete implementation for .
-   - : Utility. Added safe defaults for number formatting.
-   - : New utility to simulate racing telemetry data.
-</code_architecture>
+- : Configures the bottom tab navigator, including the newly added Garage tab, and uses dynamic accent colors. It also wraps the main app with various context providers.
+- : Implements the root app layout with authentication gating, displaying a splash screen during loading and redirecting users to login/signup or the dashboard based on their authentication status.
+- , : These screens were refactored to use  for consistent styling, and underwent multiple fixes to resolve syntax and rendering errors, including addressing Metro bundler caching issues.
+- : Manages user authentication state, profile data (display name, email, avatar), garage data, and premium status. It now includes methods for  and .
+- : A central screen for user settings. It now includes options for changing username (via ), managing profile picture, toggling theme/accent colors, unit conversion, and a link to the Premium screen.
+- : This is the route for the new Garage tab.
+- : A new screen displaying a list of user's cars, with functionality to add, edit, set as active, and swipe-to-delete vehicles.
+- : Updated to support both adding new cars and editing existing ones, including a new upgrades field.
+- : A new modal component dedicated to allowing users to change their display name.
+- : Displays live telemetry and now shows the active car's name/model and a Pro badge if the user is a premium subscriber.
+- : A new screen dedicated to displaying information about the ApexBox Pro Pack and offering a mock purchase option.
+- : A newly created service that integrates  for real BLE communication, with a fallback mechanism to  if native BLE modules are unavailable.
+- : Updated to utilize the  for BLE interactions.
+- : Significantly enhanced to incorporate Firebase Storage for CSV file uploads and Firestore for session metadata storage, facilitating cloud-based session syncing.
+- : A new screen acting as a placeholder for the premium Track Map Replay feature, intended to use .
+- : Rewritten to display Crew Leaderboards, with access gated by the user's premium status.
+- : Updated with the user's live Firebase project credentials, enabling actual backend connectivity for authentication and data storage.
+- : Modified to expose a  helper function, correcting an import error in .
 
-<pending_tasks>
-- Complete  UI: Implement unified unit system, accent color picker, light/dark mode toggles, and ensure global application and persistence.
-- Finalize Garage system: Implement car editing, dynamic Dashboard display of active car, and real-time Firestore sync.
-- Create  and integrate mock logging with Start Analysis button.
-- Implement real BLE integration with .
-- Cloud session sync with Firebase Storage/Firestore.
-- Implement Leaderboards and Crews.
-- All remaining UI/UX refinements, animations, and performance optimizations.
-</pending_tasks>
+**Pending Tasks:**
+- Implement real BLE integration with physical ESP32 devices for live data streaming.
+- Finalize session recording (Start Analysis) and Firebase Storage/Firestore syncing for session data.
+- Integrate real GPS data capture using  for Track Replay and session logging.
+- Fix UI refresh issues for Garage car deletions/additions.
+- Resolve   error when telemetry values are .
+- Resolve   error in  due to undefined  prop.
 
-<current_work>
-The AI engineer is currently addressing critical user feedback that previously claimed UI updates (e.g., dynamic unit system toggles, consistent accent colors, light/dark mode, garage features) are not visually reflected in the application, particularly on the Settings screen. Earlier efforts focused on building the underlying infrastructure (contexts, hooks, services) for these features. However, the UI was not fully updated or correctly connected to display these changes.
+**Current Work:**
+The AI engineer is actively engaged in debugging and stabilizing the application, particularly addressing critical UI rendering and state management issues that emerged after recent feature implementations. The user reported three immediate problems:
+1.  A  error originating from  when the Connect ApexBox Device button is pressed, indicating that the  prop is  at render time.
+2.  Garage car deletions do not immediately update the UI, requiring a manual page refresh. Additionally, initial cars in the garage were not visible until a new car was added, pointing to a state synchronization problem.
+3.  An  error in  when navigating to the Groups tab, suggesting the  prop supplied to  is  or null.
 
-The immediate action being undertaken is to replace the existing  file with a completely updated version. A new file, , has been created. This new file is intended to contain the full, correct implementation of the Settings screen, incorporating:
-- A unified unit system (Metric/Imperial) affecting all relevant measurements.
-- An Appearance section with light/dark mode toggles and an accent color picker.
-- Functional profile and garage management sections.
-- Proper integration with  and  to ensure dynamic updates are visible.
+The engineer has acknowledged these issues and is starting the troubleshooting process, beginning with the  component error. This follows recent successes in configuring Firebase with user-provided credentials, fixing various authentication-related UI bugs, and implementing a graceful mock fallback for BLE when  native modules are unavailable. The goal is to resolve these critical display and state management issues to ensure a stable user experience before proceeding with the deeper integration of real BLE and cloud session syncing.
 
-The AI's last reported action is Now I need to replace the old file with the new one, indicating it is about to perform the file replacement to make these features visible.
-</current_work>
-
-<optional_next_step>
-Replace  with the content from .
-</optional_next_step>
+**Optional Next Step:**
+Fix the   error and the   error, then ensure immediate UI updates for Garage car operations.

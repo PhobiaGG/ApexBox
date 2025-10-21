@@ -18,6 +18,16 @@ const BleContext = createContext<BleContextType | undefined>(undefined);
 export function BleProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<BleStatus>(MockBleService.getStatus());
   const [devices, setDevices] = useState<BleDevice[]>([]);
+  const [telemetry, setTelemetry] = useState<TelemetryData | null>(null);
+
+  // Subscribe to telemetry updates
+  useEffect(() => {
+    const unsubscribe = MockBleService.onTelemetry((data) => {
+      setTelemetry(data);
+    });
+
+    return unsubscribe;
+  }, []);
 
   const scan = async () => {
     try {

@@ -6,21 +6,25 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
+  RefreshControl,
 } from 'react-native';
 import { COLORS, SPACING, FONT_SIZE, BORDER_RADIUS } from '../constants/theme';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLogs } from '../contexts/LogsContext';
 import { useRouter } from 'expo-router';
+import * as Haptics from 'expo-haptics';
 
 export default function LogsScreen() {
   const { sessionsByDate, isLoading, rescan } = useLogs();
   const router = useRouter();
   const [expandedDates, setExpandedDates] = useState<Set<string>>(new Set());
+  const [refreshing, setRefreshing] = useState(false);
 
   const dates = Object.keys(sessionsByDate).sort().reverse();
 
-  const toggleDate = (date: string) => {
+  const toggleDate = async (date: string) => {
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setExpandedDates(prev => {
       const newSet = new Set(prev);
       if (newSet.has(date)) {
@@ -32,7 +36,8 @@ export default function LogsScreen() {
     });
   };
 
-  const handleSessionPress = (date: string, fileName: string) => {
+  const handleSessionPress = async (date: string, fileName: string) => {
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     router.push({
       pathname: '/session-detail',
       params: { date, fileName },
@@ -40,8 +45,18 @@ export default function LogsScreen() {
   };
 
   const handleRescan = async () => {
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     await rescan();
+    await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     Alert.alert('Rescan Complete', 'Logs directory has been rescanned');
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    await rescan();
+    await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    setRefreshing(false);
   };
 
   if (dates.length === 0) {

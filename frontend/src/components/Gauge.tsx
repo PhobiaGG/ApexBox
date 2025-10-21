@@ -53,25 +53,26 @@ export default function Gauge({ value, maxValue, label, unit, color, size = 140 
     }).start();
   }, [value, maxValue]);
 
-  const animatedProps = useAnimatedProps(() => {
-    const strokeDashoffset = circumference - (progress.value / 100) * circumference;
-    return {
-      strokeDashoffset,
-    };
-  });
-
-  const animatedContainerStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-    opacity: opacity.value,
-  }));
-
   const percentage = Math.min((value / maxValue) * 100, 100);
+  
+  // Calculate stroke dash offset
+  const strokeDashoffset = progressAnim.interpolate({
+    inputRange: [0, 100],
+    outputRange: [circumference, 0],
+  });
   
   // Safe formatting for telemetry value
   const displayValue = typeof value === 'number' ? value.toFixed(1) : '–';
 
   return (
-    <Animated.View style={[styles.container, { width: size + 20, height: size + 60 }, animatedContainerStyle]}>
+    <Animated.View style={[
+      styles.container, 
+      { width: size + 20, height: size + 60 },
+      { 
+        transform: [{ scale: scaleAnim }],
+        opacity: opacityAnim,
+      }
+    ]}>
       <View style={styles.gaugeContainer}>
         <Svg width={size} height={size}>
           <Circle
@@ -90,10 +91,10 @@ export default function Gauge({ value, maxValue, label, unit, color, size = 140 
             strokeWidth={strokeWidth}
             fill="none"
             strokeDasharray={circumference}
+            strokeDashoffset={strokeDashoffset}
             strokeLinecap="round"
             rotation="-90"
             origin={`${size / 2}, ${size / 2}`}
-            animatedProps={animatedProps}
           />
         </Svg>
         <View style={styles.valueContainer}>

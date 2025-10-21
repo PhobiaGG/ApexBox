@@ -44,7 +44,6 @@
     },
     "plugins": [
       "expo-router",
-      "react-native-reanimated/plugin",
       [
         "expo-splash-screen",
         {

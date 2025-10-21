@@ -9,7 +9,7 @@ const TELEMETRY_CHAR_UUID = '0000ffe1-0000-1000-8000-00805f9b34fb';
 const COMMAND_CHAR_UUID = '0000ffe2-0000-1000-8000-00805f9b34fb';
 
 class RealBleService {
-  private manager: BleManager;
+  private manager: BleManager | null = null;
   private connectedDevice: Device | null = null;
   private telemetryListeners: ((data: TelemetryData) => void)[] = [];
   private status: BleStatus = {
@@ -21,8 +21,14 @@ class RealBleService {
   private useMockMode: boolean = false;
 
   constructor() {
-    this.manager = new BleManager();
-    console.log('[RealBleService] Initialized');
+    try {
+      this.manager = new BleManager();
+      console.log('[RealBleService] BLE Manager initialized');
+    } catch (error) {
+      console.warn('[RealBleService] BLE not available, using mock mode:', error);
+      this.useMockMode = true;
+      this.manager = null;
+    }
   }
 
   // Request necessary permissions for BLE

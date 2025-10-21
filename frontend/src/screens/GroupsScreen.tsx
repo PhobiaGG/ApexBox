@@ -585,51 +585,57 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.08,
     shadowRadius: 4,
     elevation: 3,
-  },
-  entryLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
     gap: SPACING.sm,
   },
   rankBadge: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     justifyContent: 'center',
     alignItems: 'center',
   },
   rankText: {
-    fontSize: FONT_SIZE.xs,
+    fontSize: 11,
     fontWeight: 'bold',
   },
-  entryInfo: {
-    flex: 1,
+  avatarColumn: {
+    alignItems: 'center',
+    minWidth: 70,
+    maxWidth: 70,
   },
   entryName: {
-    fontSize: FONT_SIZE.md,
-    fontWeight: 'bold',
+    fontSize: 11,
+    fontWeight: '600',
+    marginTop: 4,
+    textAlign: 'center',
   },
   crownBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 2,
     marginTop: 2,
   },
   crownText: {
-    fontSize: FONT_SIZE.xs,
+    fontSize: 9,
     fontWeight: '600',
   },
-  entryStats: {
+  statsRow: {
+    flexDirection: 'row',
     alignItems: 'center',
-    width: 60,
+    gap: SPACING.md,
+    flex: 1,
+    justifyContent: 'space-around',
+  },
+  statItem: {
+    alignItems: 'center',
+    gap: 2,
   },
   statValue: {
-    fontSize: FONT_SIZE.md,
+    fontSize: FONT_SIZE.sm,
     fontWeight: 'bold',
   },
   statUnit: {
-    fontSize: FONT_SIZE.xs,
+    fontSize: 10,
   },
   loadingContainer: {
     flex: 1,

@@ -77,12 +77,12 @@ export default function LoginScreen() {
 
           {/* Login Form */}
           <View style={styles.form}>
-            <View style={styles.inputContainer}>
-              <MaterialCommunityIcons name="email-outline" size={20} color={COLORS.textSecondary} />
+            <View style={[styles.inputContainer, { backgroundColor: colors.card, borderColor: colors.border }]}>
+              <MaterialCommunityIcons name="email-outline" size={20} color={colors.textSecondary} />
               <TextInput
-                style={styles.input}
+                style={[styles.input, { color: colors.text }]}
                 placeholder="Email"
-                placeholderTextColor={COLORS.textSecondary}
+                placeholderTextColor={colors.textSecondary}
                 value={email}
                 onChangeText={setEmail}
                 autoCapitalize="none"
@@ -91,12 +91,12 @@ export default function LoginScreen() {
               />
             </View>
 
-            <View style={styles.inputContainer}>
-              <MaterialCommunityIcons name="lock-outline" size={20} color={COLORS.textSecondary} />
+            <View style={[styles.inputContainer, { backgroundColor: colors.card, borderColor: colors.border }]}>
+              <MaterialCommunityIcons name="lock-outline" size={20} color={colors.textSecondary} />
               <TextInput
-                style={styles.input}
+                style={[styles.input, { color: colors.text }]}
                 placeholder="Password"
-                placeholderTextColor={COLORS.textSecondary}
+                placeholderTextColor={colors.textSecondary}
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry={!showPassword}
@@ -107,32 +107,15 @@ export default function LoginScreen() {
                 <MaterialCommunityIcons
                   name={showPassword ? 'eye-off-outline' : 'eye-outline'}
                   size={20}
-                  color={COLORS.textSecondary}
+                  color={colors.textSecondary}
                 />
               </TouchableOpacity>
             </View>
 
-            {/* Remember Me & Forgot Password */}
-            <View style={styles.optionsRow}>
-              <TouchableOpacity
-                style={styles.rememberMe}
-                onPress={async () => {
-                  await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  setRememberMe(!rememberMe);
-                }}
-              >
-                <View style={[styles.checkbox, rememberMe && { backgroundColor: accentColor }]}>
-                  {rememberMe && (
-                    <MaterialCommunityIcons name="check" size={16} color={COLORS.text} />
-                  )}
-                </View>
-                <Text style={styles.rememberText}>Remember Me</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity onPress={handleForgotPassword}>
-                <Text style={[styles.linkText, { color: accentColor }]}>Forgot Password?</Text>
-              </TouchableOpacity>
-            </View>
+            {/* Forgot Password Link */}
+            <TouchableOpacity onPress={handleForgotPassword} style={styles.forgotPassword}>
+              <Text style={[styles.linkText, { color: accentColor }]}>Forgot Password?</Text>
+            </TouchableOpacity>
 
             {/* Login Button */}
             <TouchableOpacity
@@ -142,12 +125,36 @@ export default function LoginScreen() {
               activeOpacity={0.8}
             >
               <LinearGradient
-                colors={[accentColor, COLORS.background]}
+                colors={[accentColor, colors.background]}
                 style={styles.buttonGradient}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
               >
                 {loading ? (
+                  <ActivityIndicator color={colors.text} />
+                ) : (
+                  <Text style={[styles.buttonText, { color: colors.text }]}>Sign In</Text>
+                )}
+              </LinearGradient>
+            </TouchableOpacity>
+
+            {/* Sign Up Link */}
+            <View style={styles.signupContainer}>
+              <Text style={[styles.signupText, { color: colors.textSecondary }]}>
+                Don't have an account?{' '}
+              </Text>
+              <TouchableOpacity onPress={handleSignUp}>
+                <Text style={[styles.linkText, { color: accentColor, fontWeight: 'bold' }]}>
+                  Sign Up
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </KeyboardAvoidingView>
+    </LinearGradient>
+  );
+}
                   <ActivityIndicator color={COLORS.text} />
                 ) : (
                   <>

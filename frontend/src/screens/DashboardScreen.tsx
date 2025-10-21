@@ -15,6 +15,7 @@ import { useBle } from '../contexts/BleContext';
 import { useLogs } from '../contexts/LogsContext';
 import { useSettings } from '../contexts/SettingsContext';
 import { useTheme } from '../contexts/ThemeContext';
+import { useAuth } from '../contexts/AuthContext';
 import Gauge from '../components/Gauge';
 import MetricCard from '../components/MetricCard';
 import ChartView from '../components/ChartView';
@@ -26,7 +27,9 @@ export default function DashboardScreen() {
   const { latestSession, isLoading, rescan } = useLogs();
   const { settings } = useSettings();
   const { colors, getCurrentAccent } = useTheme();
+  const { getActiveCar } = useAuth();
   const accentColor = getCurrentAccent();
+  const activeCar = getActiveCar();
   const [currentSpeed, setCurrentSpeed] = useState(0);
   const [currentGForce, setCurrentGForce] = useState(0);
   const [currentTemp, setCurrentTemp] = useState(65);

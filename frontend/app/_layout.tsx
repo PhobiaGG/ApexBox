@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { ThemeProvider, useTheme } from '../src/contexts/ThemeContext';
 import { AuthProvider, useAuth } from '../src/contexts/AuthContext';
 import { BleProvider } from '../src/contexts/BleContext';

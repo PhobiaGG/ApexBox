@@ -272,7 +272,7 @@ class LogService {
         time: timeStr,
         fileName,
         filePath: sessionKey,
-        stats: calculateStats({ samples: telemetryData, csvFilePath: sessionKey }),
+        stats: calculateStats(telemetryData),
       };
       
       // Update cache

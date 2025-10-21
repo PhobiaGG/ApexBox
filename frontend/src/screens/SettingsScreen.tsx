@@ -160,7 +160,7 @@ export default function SettingsScreen() {
         style: 'destructive',
         onPress: async () => {
           await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-          await logout();
+          await signOut();
           router.replace('/login');
         }
       }

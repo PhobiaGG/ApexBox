@@ -20,6 +20,7 @@ export interface Car {
   model: string;
   year: string;
   color: string;
+  upgrades?: string;
   isActive: boolean;
 }
 

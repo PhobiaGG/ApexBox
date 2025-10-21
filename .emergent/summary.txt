@@ -1,0 +1,157 @@
+<analysis>
+The AI engineer began by analyzing the provided app_description and confirming key requirements for the ApexBox Companion App — a mobile interface for an ESP32-based performance tracker. The user clarified that the app should interpret existing ApexBox CSV logs, simulate BLE connections, and later support real telemetry sync. After gathering user input, the engineer installed all dependencies, set up the Expo project with expo-router, created the folder structure, and generated mock log files. Core contexts, services, components, and screens (Dashboard, Logs, Groups, Settings, SessionDetail) were implemented.
+
+The app successfully bundled and rendered the Dashboard screen in Expo Go with the neon-dark theme, connection indicators, gauges, and metric cards visible. Debugging focused on victory-native and @shopify/react-native-skia compatibility. The charts were temporarily simplified for performance testing, and the app declared stable and functional at the UI layer.
+The next phase will focus on enabling interactive logic — connecting BLE simulation, restoring charts, populating logs and group data, and integrating persistent settings.
+</analysis>
+<product_requirements>
+The ApexBox Companion app serves as a dashboard and data viewer for an ESP32-powered performance tracking device.
+It must read and interpret /ApexBox_Logs/{Date}/{Time}.csv files, simulate BLE telemetry connections, display real-time data visualization, and manage user preferences.
+
+Core product goals:
+
+Mock BLE simulation: Connect/disconnect to devices named ApexBox-001, ApexBox-002, simulate telemetry (speed, G-force, temp, altitude), and mock commands for “Start Analysis” and “Sync Logs” with haptic feedback.
+
+Data Handling: Use Expo FileSystem to browse and load CSV sessions, compute key metrics (Peak Speed, Avg Speed, Peak G-Force, Temp Range, Altitude Change, Duration), and cache results with AsyncStorage.
+
+Navigation: Bottom tab navigator featuring:
+
+Dashboard: Live telemetry gauges and metric cards.
+
+Logs: Session browser grouped by date.
+
+Session Detail: Detailed summaries and charts.
+
+Groups: Local leaderboard and community mock data.
+
+Settings: Profile, Units, Theme, Connectivity, System Info.
+
+Design: Neon-dark theme with Orbitron/Rajdhani fonts, accent colors (Cyan, Magenta, Lime), rounded glossy cards, haptic-enhanced interactions.
+
+Compatibility: Fully functional in Expo Go and Android build targets.
+
+Stability: Graceful empty-state handling when no CSVs or BLE connections exist.
+</product_requirements>
+<key_technical_concepts>
+Expo React Native: Core framework for mobile app development.
+
+expo-router: File-based navigation handling.
+
+React Navigation: Tab and stack navigation management.
+
+Expo FileSystem: Reads and parses ApexBox CSV logs from local assets.
+
+AsyncStorage: Persists settings, mock data, and user state.
+
+Victory-native: For telemetry chart visualization (Speed, G, Temp, Alt vs Time).
+
+Expo Haptics: Provides tactile feedback for BLE and button interactions.
+
+Mock BLE: Simulated BLE logic for testing connectivity and telemetry updates.
+
+@shopify/react-native-skia: Peer dependency required for victory-native rendering.
+
+Expo Sharing: Enables CSV exports for sessions.
+</key_technical_concepts>
+<code_architecture>
+The project uses a modular Expo React Native structure emphasizing scalability and clean separation between UI, logic, and storage.
+
+/app
+├── backend/
+├── frontend/
+    ├── app/
+        ├── (tabs)/
+            ├── _layout.tsx
+            ├── dashboard.tsx
+            ├── logs.tsx
+            ├── groups.tsx
+            ├── settings.tsx
+        ├── logs/[date]/[file].tsx  (SessionDetailScreen)
+        ├── _layout.tsx
+    ├── src/
+        ├── components/
+            ├── ChartView.tsx
+            ├── Gauge.tsx
+            ├── GroupCard.tsx
+            ├── MetricCard.tsx
+            ├── SettingSection.tsx
+        ├── constants/
+            ├── theme.ts
+        ├── contexts/
+            ├── BleContext.tsx
+            ├── LogsContext.tsx
+            ├── SettingsContext.tsx
+        ├── services/
+            ├── BleService.ts
+            ├── MockBleService.ts
+            ├── LogService.ts
+            ├── GroupService.ts
+            ├── SettingsService.ts
+        ├── utils/
+            ├── csv.ts
+            ├── format.ts
+
+
+Dashboard: Displays telemetry gauges, BLE state, and quick stats.
+
+Logs: Lists sessions, grouped by date, linking to detail pages.
+
+SessionDetail: Displays parsed CSV data and charts.
+
+Groups: Shows local leaderboard data from AsyncStorage.
+
+Settings: Manages user profile, theme, units, and BLE preferences.
+</code_architecture>
+<pending_tasks>
+ BLE Simulation Logic: Implement scanning, connecting, and streaming mock telemetry (speed, g, temp, altitude) via MockBleService.
+
+ BLE Context Integration: Reflect real-time BLE state on Dashboard and Settings.
+
+ Victory-native Restoration: Re-enable and debug chart rendering for Speed, G, Temp, and Altitude data.
+
+ Logs & Analytics: Parse CSVs asynchronously, compute session stats, and save to AsyncStorage.
+
+ Groups: Display dynamic leaderboards and allow join/create mock functionality.
+
+ Settings Enhancements: Persist profile data, handle BLE auto-connect, implement reset and export options.
+
+ Haptics: Add tactile feedback for BLE actions, Start/Stop buttons, and navigation.
+
+ Error Handling: Gracefully handle missing CSVs, corrupted data, or BLE disconnections.
+
+ Developer Options: Add hidden settings for debugging mock BLE and logs.
+</pending_tasks>
+<current_work>
+The app currently builds and runs successfully in Expo Go, with all navigation routes functioning.
+The Dashboard is fully themed and renders gauges, connection indicators, and metrics correctly.
+Mock CSVs are accessible and partially parsed by LogService.
+The chart visualization (ChartView.tsx) was simplified during debugging but is planned for reactivation in the next iteration.
+
+Focus is now shifting to:
+
+Integrating BLE simulation and telemetry updates,
+
+Restoring full chart visualization,
+
+Populating the Logs, Groups, and Settings screens with live mock data,
+
+Adding haptics and persistent user configuration.
+
+The app’s visual design, theming, and navigation layer are confirmed to be stable and production-quality.
+</current_work>
+<optional_next_step>
+Once mock BLE and telemetry logic are stable:
+
+Replace simulated BLE with real BLE streaming using react-native-ble-plx and ApexBox’s advertised services (Speed, G, Temp, Alt characteristics).
+
+Add Firebase integration for user authentication, cloud log sync, and leaderboards.
+
+Introduce session replay animations and export options (CSV, JSON).
+
+Optionally add a Firmware Update via BLE (OTA) system for advanced users.
+
+In the short term, the next goal is to:
+
+Fully connect BLE simulation → Dashboard → Logs parsing → Victory charts
+producing a self-contained, interactive demo ready for real ApexBox hardware integration.
+</optional_next_step>

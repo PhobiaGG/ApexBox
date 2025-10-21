@@ -1,78 +1,89 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { Alert } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signOut,
-  sendPasswordResetEmail,
   onAuthStateChanged,
-  User as FirebaseUser,
-  deleteUser,
-  updateProfile as updateFirebaseProfile,
+  User,
+  updateProfile,
+  sendPasswordResetEmail,
 } from 'firebase/auth';
-import { doc, setDoc, getDoc, deleteDoc, collection, getDocs, addDoc, updateDoc, query, where } from 'firebase/firestore';
+import {
+  doc,
+  setDoc,
+  getDoc,
+  updateDoc,
+  collection,
+  query,
+  where,
+  getDocs,
+  arrayUnion,
+  arrayRemove,
+  deleteDoc,
+} from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { auth, db, storage } from '../config/firebase';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Haptics from 'expo-haptics';
 
-export interface Car {
+export interface CarData {
   id: string;
-  nickname: string;
   make: string;
   model: string;
   year: string;
-  color: string;
-  upgrades?: string;
+  nickname: string;
   isActive: boolean;
-}
-
-export interface UserProfile {
-  uid: string;
-  email: string;
-  displayName: string;
-  friendId: string; // Unique 8-digit numeric ID for friend sharing
-  carModel: string;
-  carYear: string;
-  avatarURI: string | null;
-  premium: boolean;
-  createdAt: number;
 }
 
 export interface CrewMember {
   uid: string;
   displayName: string;
-  avatarURI: string | null;
+  avatarURI?: string;
+  topSpeed: number;
+  totalSessions: number;
 }
 
 export interface Crew {
   id: string;
   name: string;
   description: string;
-  ownerId: string;
-  members: string[]; // Array of member UIDs
+  code: string;
+  adminId: string;
+  memberIds: string[];
   createdAt: number;
 }
 
+export interface UserProfile {
+  uid: string;
+  email: string;
+  displayName: string;
+  avatarURI?: string;
+  premium: boolean;
+  garage?: CarData[];
+  friendId?: string;
+  crewIds?: string[];
+}
+
 interface AuthContextType {
-  user: FirebaseUser | null;
+  user: User | null;
   profile: UserProfile | null;
-  garage: Car[];
   loading: boolean;
-  initializing: boolean;
-  signUp: (email: string, password: string, displayName: string) => Promise<void>;
-  signIn: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<void>;
+  signup: (email: string, password: string, displayName: string) => Promise<void>;
   logout: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
-  updateProfile: (updates: Partial<UserProfile>) => Promise<void>;
-  updateUsername: (newUsername: string) => Promise<void>;
-  deleteAccount: () => Promise<void>;
-  uploadAvatar: (uri: string) => Promise<string>;
-  addCar: (car: Omit<Car, 'id' | 'isActive'>) => Promise<void>;
-  setActiveCar: (carId: string) => Promise<void>;
+  updateUsername: (newName: string) => Promise<void>;
+  uploadAvatar: (uri: string) => Promise<void>;
+  addCar: (car: Omit<CarData, 'id' | 'isActive'>) => Promise<void>;
+  updateCar: (carId: string, updates: Partial<CarData>) => Promise<void>;
   deleteCar: (carId: string) => Promise<void>;
-  loadGarage: () => Promise<void>;
-  getActiveCar: () => Car | null;
-  upgradeToPremium: () => Promise<void>;
-  createCrew: (name: string, description: string) => Promise<void>;
+  setActiveCar: (carId: string) => Promise<void>;
+  getActiveCar: () => CarData | null;
+  createCrew: (name: string, description: string) => Promise<string>;
+  joinCrew: (crewCode: string) => Promise<void>;
+  leaveCrew: (crewId: string) => Promise<void>;
+  getUserCrews: () => Promise<Crew[]>;
   addMemberToCrew: (crewId: string, memberFriendId: string) => Promise<void>;
   removeMemberFromCrew: (crewId: string, memberUid: string) => Promise<void>;
 }
@@ -80,32 +91,19 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<FirebaseUser | null>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [garage, setGarage] = useState<Car[]>([]);
   const [loading, setLoading] = useState(true);
-  const [initializing, setInitializing] = useState(true);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      console.log('[Auth] Auth state changed:', firebaseUser?.uid || 'logged out');
       setUser(firebaseUser);
-      
       if (firebaseUser) {
-        try {
-          await loadUserProfile(firebaseUser.uid);
-          await loadGarageForUser(firebaseUser.uid);
-          console.log('[Auth] User data loaded successfully');
-        } catch (error) {
-          console.error('[Auth] Error loading user data:', error);
-        }
+        await loadUserProfile(firebaseUser.uid);
       } else {
         setProfile(null);
-        setGarage([]);
       }
-      
       setLoading(false);
-      setInitializing(false);
     });
 
     return unsubscribe;
@@ -114,117 +112,98 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const loadUserProfile = async (uid: string) => {
     try {
       console.log('[Auth] Loading profile for user:', uid);
-      const docRef = doc(db, 'users', uid);
-      const docSnap = await getDoc(docRef);
+      const userDoc = await getDoc(doc(db, 'users', uid));
       
-      if (docSnap.exists()) {
-        let userData = docSnap.data() as UserProfile;
+      if (userDoc.exists()) {
+        const data = userDoc.data();
+        console.log('[Auth] Profile loaded successfully');
         
-        // Generate friendId if it doesn't exist (for existing users)
-        if (!userData.friendId) {
-          const friendId = await generateFriendId();
-          userData = { ...userData, friendId };
-          await setDoc(doc(db, 'users', uid), userData, { merge: true });
-          console.log('[Auth] Generated friend ID for existing user:', friendId);
+        // Load garage
+        console.log('[Auth] Loading garage for user:', uid);
+        const garage = await loadGarage(uid);
+        console.log(`[Auth] Loaded ${garage.length} cars from garage`);
+        
+        // Ensure friendId exists
+        let friendId = data.friendId;
+        if (!friendId) {
+          friendId = generateFriendId();
+          await updateDoc(doc(db, 'users', uid), { friendId });
+          console.log('[Auth] Generated new friendId:', friendId);
         }
         
-        setProfile(userData);
-        console.log('[Auth] Profile loaded successfully');
-      } else {
-        console.warn('[Auth] No profile document found for user:', uid);
+        setProfile({
+          uid,
+          email: data.email,
+          displayName: data.displayName,
+          avatarURI: data.avatarURI,
+          premium: data.premium || false,
+          garage,
+          friendId,
+          crewIds: data.crewIds || [],
+        });
+        console.log('[Auth] User data loaded successfully');
       }
-    } catch (error: any) {
-      console.error('[Auth] Error loading profile:', error);
-      if (error.code === 'permission-denied') {
-        console.error('[Auth] Permission denied - check Firestore rules');
-      } else if (error.code === 'unavailable') {
-        console.error('[Auth] Network error - Firebase unavailable');
-      }
-      throw error;
+    } catch (error) {
+      console.error('[Auth] Error loading user profile:', error);
     }
   };
 
-  const loadGarageForUser = async (uid: string) => {
+  const loadGarage = async (uid: string): Promise<CarData[]> => {
     try {
-      console.log('[Auth] Loading garage for user:', uid);
       const garageRef = collection(db, 'users', uid, 'garage');
-      const snapshot = await getDocs(garageRef);
-      const cars: Car[] = [];
-      
-      snapshot.forEach(doc => {
-        cars.push({ id: doc.id, ...doc.data() } as Car);
-      });
-      
-      // Force a new array reference to trigger React re-render
-      setGarage([...cars]);
-      console.log(`[Auth] Loaded ${cars.length} cars from garage`);
+      const garageSnap = await getDocs(garageRef);
+      return garageSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as CarData));
     } catch (error) {
       console.error('[Auth] Error loading garage:', error);
-      throw error;
+      return [];
     }
   };
 
-  const loadGarage = async () => {
-    if (!user) {
-      console.warn('[Auth] Cannot load garage: no user logged in');
-      return;
+  const generateFriendId = (): string => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let result = '';
+    for (let i = 0; i < 8; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
     }
-    await loadGarageForUser(user.uid);
+    return result;
   };
 
-  // Generate unique 8-digit friend ID
-  const generateFriendId = async (): Promise<string> => {
-    while (true) {
-      // Generate random 8-digit number (10000000 to 99999999)
-      const friendId = Math.floor(10000000 + Math.random() * 90000000).toString();
-      
-      // Check if it already exists in Firestore
-      const q = query(collection(db, 'users'), where('friendId', '==', friendId));
-      const snapshot = await getDocs(q);
-      
-      if (snapshot.empty) {
-        return friendId;
-      }
-      // If exists, loop continues to generate a new one
+  const generateCrewCode = (): string => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let result = '';
+    for (let i = 0; i < 11; i++) {
+      if (i === 5) result += '-';
+      else result += chars.charAt(Math.floor(Math.random() * chars.length));
     }
+    return result;
   };
 
-  const signUp = async (email: string, password: string, displayName: string) => {
+  const login = async (email: string, password: string) => {
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const { uid } = userCredential.user;
-
-      // Generate unique friend ID
-      const friendId = await generateFriendId();
-
-      const newProfile: UserProfile = {
-        uid,
-        email,
-        displayName,
-        friendId,
-        carModel: '',
-        carYear: '',
-        avatarURI: null,
-        premium: false,
-        createdAt: Date.now(),
-      };
-
-      await setDoc(doc(db, 'users', uid), newProfile);
-      setProfile(newProfile);
-      
-      console.log('[Auth] User created:', uid, 'Friend ID:', friendId);
+      await signInWithEmailAndPassword(auth, email, password);
     } catch (error: any) {
-      console.error('[Auth] Sign up error:', error);
+      console.error('[Auth] Login error:', error);
       throw new Error(error.message);
     }
   };
 
-  const signIn = async (email: string, password: string) => {
+  const signup = async (email: string, password: string, displayName: string) => {
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      console.log('[Auth] User signed in');
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      await updateProfile(userCredential.user, { displayName });
+      
+      const friendId = generateFriendId();
+      
+      await setDoc(doc(db, 'users', userCredential.user.uid), {
+        email,
+        displayName,
+        premium: false,
+        createdAt: Date.now(),
+        friendId,
+        crewIds: [],
+      });
     } catch (error: any) {
-      console.error('[Auth] Sign in error:', error);
+      console.error('[Auth] Signup error:', error);
       throw new Error(error.message);
     }
   };
@@ -232,215 +211,346 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = async () => {
     try {
       await signOut(auth);
-      await AsyncStorage.multiRemove(['@apexbox_auth', '@apexbox_profile']);
       setProfile(null);
-      setGarage([]);
-      console.log('[Auth] User logged out');
-    } catch (error) {
+    } catch (error: any) {
       console.error('[Auth] Logout error:', error);
-      throw error;
+      throw new Error(error.message);
     }
   };
 
   const resetPassword = async (email: string) => {
     try {
       await sendPasswordResetEmail(auth, email);
-      console.log('[Auth] Password reset email sent');
     } catch (error: any) {
       console.error('[Auth] Reset password error:', error);
       throw new Error(error.message);
     }
   };
 
-  const updateProfile = async (updates: Partial<UserProfile>) => {
-    if (!user || !profile) {
-      throw new Error('No user logged in');
-    }
-
+  const updateUsername = async (newName: string) => {
+    if (!user) throw new Error('No user logged in');
+    
     try {
-      const updatedProfile = { ...profile, ...updates };
-      await setDoc(doc(db, 'users', user.uid), updatedProfile, { merge: true });
-      setProfile(updatedProfile);
-      console.log('[Auth] Profile updated');
-    } catch (error) {
-      console.error('[Auth] Update profile error:', error);
-      throw error;
-    }
-  };
-
-  const updateUsername = async (newUsername: string) => {
-    if (!user || !profile) {
-      throw new Error('No user logged in');
-    }
-
-    try {
-      // Update Firebase Auth displayName
-      await updateFirebaseProfile(user, { displayName: newUsername });
-
-      // Update Firestore profile
-      const updatedProfile = { ...profile, displayName: newUsername };
-      await setDoc(doc(db, 'users', user.uid), updatedProfile, { merge: true });
+      await updateProfile(user, { displayName: newName });
+      await updateDoc(doc(db, 'users', user.uid), { displayName: newName });
       
-      // Update local state immediately
-      setProfile(updatedProfile);
-      
-      console.log('[Auth] Username updated:', newUsername);
-    } catch (error) {
+      if (profile) {
+        setProfile({ ...profile, displayName: newName });
+      }
+    } catch (error: any) {
       console.error('[Auth] Update username error:', error);
-      throw error;
+      throw new Error(error.message);
     }
   };
 
-  const uploadAvatar = async (uri: string): Promise<string> => {
-    if (!user) {
-      throw new Error('No user logged in');
-    }
-
+  const uploadAvatar = async (uri: string) => {
+    if (!user) throw new Error('No user logged in');
+    
     try {
-      // Convert URI to blob
       const response = await fetch(uri);
       const blob = await response.blob();
-
-      // Upload to Firebase Storage
       const storageRef = ref(storage, `avatars/${user.uid}`);
       await uploadBytes(storageRef, blob);
-
-      // Get download URL
       const downloadURL = await getDownloadURL(storageRef);
-      console.log('[Auth] Avatar uploaded:', downloadURL);
       
-      return downloadURL;
-    } catch (error) {
-      console.error('[Auth] Upload avatar error:', error);
-      throw error;
-    }
-  };
-
-  const addCar = async (car: Omit<Car, 'id' | 'isActive'>) => {
-    if (!user) {
-      throw new Error('No user logged in');
-    }
-
-    try {
-      // If this is the first car, make it active
-      const isActive = garage.length === 0;
-
-      const garageRef = collection(db, 'users', user.uid, 'garage');
-      const newCar = { ...car, isActive };
+      await updateDoc(doc(db, 'users', user.uid), { avatarURI: downloadURL });
       
-      await addDoc(garageRef, newCar);
-      await loadGarage();
-      
-      console.log('[Auth] Car added to garage');
-    } catch (error) {
-      console.error('[Auth] Add car error:', error);
-      throw error;
-    }
-  };
-
-  const setActiveCar = async (carId: string) => {
-    if (!user) {
-      throw new Error('No user logged in');
-    }
-
-    try {
-      // Optimistically update local state first for immediate UI feedback
-      const updatedGarage = garage.map(car => ({
-        ...car,
-        isActive: car.id === carId,
-      }));
-      setGarage([...updatedGarage]);
-
-      // Then update Firestore
-      // Deactivate all cars
-      for (const car of garage) {
-        const carRef = doc(db, 'users', user.uid, 'garage', car.id);
-        await updateDoc(carRef, { isActive: false });
+      if (profile) {
+        setProfile({ ...profile, avatarURI: downloadURL });
       }
+    } catch (error: any) {
+      console.error('[Auth] Upload avatar error:', error);
+      throw new Error(error.message);
+    }
+  };
 
-      // Activate selected car
-      const carRef = doc(db, 'users', user.uid, 'garage', carId);
-      await updateDoc(carRef, { isActive: true });
+  const addCar = async (car: Omit<CarData, 'id' | 'isActive'>) => {
+    if (!user) throw new Error('No user logged in');
+    
+    try {
+      const garageRef = collection(db, 'users', user.uid, 'garage');
+      const garageSnap = await getDocs(garageRef);
+      const isFirstCar = garageSnap.empty;
+      
+      const newCarRef = doc(garageRef);
+      await setDoc(newCarRef, {
+        ...car,
+        isActive: isFirstCar,
+        createdAt: Date.now(),
+      });
+      
+      if (profile) {
+        const updatedGarage = await loadGarage(user.uid);
+        setProfile({ ...profile, garage: updatedGarage });
+      }
+    } catch (error: any) {
+      console.error('[Auth] Add car error:', error);
+      throw new Error(error.message);
+    }
+  };
 
-      await loadGarage();
-      console.log('[Auth] Active car switched');
-    } catch (error) {
-      console.error('[Auth] Set active car error:', error);
-      // Rollback on error
-      await loadGarage();
-      throw error;
+  const updateCar = async (carId: string, updates: Partial<CarData>) => {
+    if (!user) throw new Error('No user logged in');
+    
+    try {
+      await updateDoc(doc(db, 'users', user.uid, 'garage', carId), updates);
+      
+      if (profile) {
+        const updatedGarage = await loadGarage(user.uid);
+        setProfile({ ...profile, garage: updatedGarage });
+      }
+    } catch (error: any) {
+      console.error('[Auth] Update car error:', error);
+      throw new Error(error.message);
     }
   };
 
   const deleteCar = async (carId: string) => {
-    if (!user) {
-      throw new Error('No user logged in');
-    }
-
+    if (!user) throw new Error('No user logged in');
+    
     try {
-      // Optimistically remove from local state first for immediate UI feedback
-      const updatedGarage = garage.filter(car => car.id !== carId);
-      setGarage([...updatedGarage]);
-
-      // Then delete from Firestore
-      const carRef = doc(db, 'users', user.uid, 'garage', carId);
-      await deleteDoc(carRef);
+      await deleteDoc(doc(db, 'users', user.uid, 'garage', carId));
       
-      await loadGarage();
-      console.log('[Auth] Car deleted from garage');
-    } catch (error) {
-      console.error('[Auth] Delete car error:', error);
-      // Rollback on error
-      await loadGarage();
-      throw error;
-    }
-  };
-
-  const getActiveCar = (): Car | null => {
-    return garage.find(car => car.isActive) || null;
-  };
-
-  const deleteAccount = async () => {
-    if (!user) {
-      throw new Error('No user logged in');
-    }
-
-    try {
-      // Delete garage
-      const garageRef = collection(db, 'users', user.uid, 'garage');
-      const snapshot = await getDocs(garageRef);
-      for (const doc of snapshot.docs) {
-        await deleteDoc(doc.ref);
+      if (profile) {
+        const updatedGarage = await loadGarage(user.uid);
+        setProfile({ ...profile, garage: updatedGarage });
       }
+    } catch (error: any) {
+      console.error('[Auth] Delete car error:', error);
+      throw new Error(error.message);
+    }
+  };
 
-      // Delete Firestore document
-      await deleteDoc(doc(db, 'users', user.uid));
+  const setActiveCar = async (carId: string) => {
+    if (!user) throw new Error('No user logged in');
+    
+    try {
+      const garageRef = collection(db, 'users', user.uid, 'garage');
+      const garageSnap = await getDocs(garageRef);
       
-      // Delete auth account
-      await deleteUser(user);
+      const batch = [];
+      for (const carDoc of garageSnap.docs) {
+        batch.push(
+          updateDoc(carDoc.ref, { isActive: carDoc.id === carId })
+        );
+      }
       
-      // Clear local storage
-      await AsyncStorage.multiRemove(['@apexbox_auth', '@apexbox_profile']);
+      await Promise.all(batch);
       
-      console.log('[Auth] Account deleted');
-    } catch (error) {
-      console.error('[Auth] Delete account error:', error);
+      if (profile) {
+        const updatedGarage = await loadGarage(user.uid);
+        setProfile({ ...profile, garage: updatedGarage });
+      }
+    } catch (error: any) {
+      console.error('[Auth] Set active car error:', error);
+      throw new Error(error.message);
+    }
+  };
+
+  const getActiveCar = (): CarData | null => {
+    if (!profile?.garage) return null;
+    return profile.garage.find(car => car.isActive) || null;
+  };
+
+  // CREW FUNCTIONS
+  const createCrew = async (name: string, description: string): Promise<string> => {
+    if (!user) throw new Error('No user logged in');
+    
+    try {
+      const crewCode = generateCrewCode();
+      const crewRef = doc(collection(db, 'crews'));
+      
+      await setDoc(crewRef, {
+        name,
+        description,
+        code: crewCode,
+        adminId: user.uid,
+        memberIds: [user.uid],
+        createdAt: Date.now(),
+      });
+      
+      // Add crew to user's crewIds
+      await updateDoc(doc(db, 'users', user.uid), {
+        crewIds: arrayUnion(crewRef.id),
+      });
+      
+      if (profile) {
+        setProfile({
+          ...profile,
+          crewIds: [...(profile.crewIds || []), crewRef.id],
+        });
+      }
+      
+      return crewCode;
+    } catch (error: any) {
+      console.error('[Auth] Create crew error:', error);
+      throw new Error('Failed to create crew');
+    }
+  };
+
+  const joinCrew = async (crewCode: string) => {
+    if (!user) throw new Error('No user logged in');
+    
+    try {
+      // Find crew by code
+      const crewsQuery = query(collection(db, 'crews'), where('code', '==', crewCode.toUpperCase()));
+      const crewsSnap = await getDocs(crewsQuery);
+      
+      if (crewsSnap.empty) {
+        throw new Error('Crew not found. Please check the code and try again.');
+      }
+      
+      const crewDoc = crewsSnap.docs[0];
+      const crewData = crewDoc.data();
+      
+      // Check if already a member
+      if (crewData.memberIds.includes(user.uid)) {
+        throw new Error('You are already a member of this crew.');
+      }
+      
+      // Add user to crew
+      await updateDoc(crewDoc.ref, {
+        memberIds: arrayUnion(user.uid),
+      });
+      
+      // Add crew to user's crewIds
+      await updateDoc(doc(db, 'users', user.uid), {
+        crewIds: arrayUnion(crewDoc.id),
+      });
+      
+      if (profile) {
+        setProfile({
+          ...profile,
+          crewIds: [...(profile.crewIds || []), crewDoc.id],
+        });
+      }
+    } catch (error: any) {
+      console.error('[Auth] Join crew error:', error);
       throw error;
     }
   };
 
-  const upgradeToPremium = async () => {
-    if (!user || !profile) {
-      throw new Error('No user logged in');
-    }
-
+  const leaveCrew = async (crewId: string) => {
+    if (!user) throw new Error('No user logged in');
+    
     try {
-      const updatedProfile = { ...profile, premium: true };
-      await setDoc(doc(db, 'users', user.uid), updatedProfile, { merge: true });
-      setProfile(updatedProfile);
-      console.log('[Auth] User upgraded to premium');
-    } catch (error) {
-      console.error('[Auth] Upgrade to premium error:', error);
+      const crewRef = doc(db, 'crews', crewId);
+      const crewDoc = await getDoc(crewRef);
+      
+      if (!crewDoc.exists()) {
+        throw new Error('Crew not found');
+      }
+      
+      const crewData = crewDoc.data();
+      
+      // If user is admin and there are other members, transfer admin or delete crew
+      if (crewData.adminId === user.uid) {
+        const otherMembers = crewData.memberIds.filter((id: string) => id !== user.uid);
+        
+        if (otherMembers.length > 0) {
+          // Transfer admin to first member
+          await updateDoc(crewRef, {
+            adminId: otherMembers[0],
+            memberIds: arrayRemove(user.uid),
+          });
+        } else {
+          // Delete crew if no other members
+          await deleteDoc(crewRef);
+        }
+      } else {
+        // Just remove user from crew
+        await updateDoc(crewRef, {
+          memberIds: arrayRemove(user.uid),
+        });
+      }
+      
+      // Remove crew from user's crewIds
+      await updateDoc(doc(db, 'users', user.uid), {
+        crewIds: arrayRemove(crewId),
+      });
+      
+      if (profile) {
+        setProfile({
+          ...profile,
+          crewIds: (profile.crewIds || []).filter(id => id !== crewId),
+        });
+      }
+    } catch (error: any) {
+      console.error('[Auth] Leave crew error:', error);
+      throw new Error('Failed to leave crew');
+    }
+  };
+
+  const getUserCrews = async (): Promise<Crew[]> => {
+    if (!user) return [];
+    
+    try {
+      if (!profile?.crewIds || profile.crewIds.length === 0) {
+        return [];
+      }
+      
+      const crews: Crew[] = [];
+      
+      for (const crewId of profile.crewIds) {
+        const crewDoc = await getDoc(doc(db, 'crews', crewId));
+        if (crewDoc.exists()) {
+          crews.push({
+            id: crewDoc.id,
+            ...crewDoc.data(),
+          } as Crew);
+        }
+      }
+      
+      return crews;
+    } catch (error: any) {
+      console.error('[Auth] Get user crews error:', error);
+      return [];
+    }
+  };
+
+  const addMemberToCrew = async (crewId: string, memberFriendId: string) => {
+    if (!user) throw new Error('No user logged in');
+    
+    try {
+      // Find user by friendId
+      const usersQuery = query(collection(db, 'users'), where('friendId', '==', memberFriendId));
+      const usersSnap = await getDocs(usersQuery);
+      
+      if (usersSnap.empty) {
+        throw new Error('User not found');
+      }
+      
+      const memberDoc = usersSnap.docs[0];
+      const memberId = memberDoc.id;
+      
+      // Add to crew
+      await updateDoc(doc(db, 'crews', crewId), {
+        memberIds: arrayUnion(memberId),
+      });
+      
+      // Add crew to member's crewIds
+      await updateDoc(doc(db, 'users', memberId), {
+        crewIds: arrayUnion(crewId),
+      });
+    } catch (error: any) {
+      console.error('[Auth] Add member to crew error:', error);
+      throw error;
+    }
+  };
+
+  const removeMemberFromCrew = async (crewId: string, memberUid: string) => {
+    if (!user) throw new Error('No user logged in');
+    
+    try {
+      await updateDoc(doc(db, 'crews', crewId), {
+        memberIds: arrayRemove(memberUid),
+      });
+      
+      await updateDoc(doc(db, 'users', memberUid), {
+        crewIds: arrayRemove(crewId),
+      });
+    } catch (error: any) {
+      console.error('[Auth] Remove member from crew error:', error);
       throw error;
     }
   };
@@ -450,23 +560,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       value={{
         user,
         profile,
-        garage,
         loading,
-        initializing,
-        signUp,
-        signIn,
+        login,
+        signup,
         logout,
         resetPassword,
-        updateProfile,
         updateUsername,
-        deleteAccount,
         uploadAvatar,
         addCar,
-        setActiveCar,
+        updateCar,
         deleteCar,
-        loadGarage,
+        setActiveCar,
         getActiveCar,
-        upgradeToPremium,
+        createCrew,
+        joinCrew,
+        leaveCrew,
+        getUserCrews,
+        addMemberToCrew,
+        removeMemberFromCrew,
       }}
     >
       {children}
@@ -476,8 +587,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 export function useAuth() {
   const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within AuthProvider');
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
 }

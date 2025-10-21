@@ -4,7 +4,7 @@ import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { ThemeProvider, useTheme } from '../src/contexts/ThemeContext';
 import { AuthProvider, useAuth } from '../src/contexts/AuthContext';
 import { BleProvider } from '../src/contexts/BleContext';
-import { SettingsProvider } from '../src/contexts/SettingsProvider';
+import { SettingsProvider } from '../src/contexts/SettingsContext';
 import { LogsProvider } from '../src/contexts/LogsContext';
 import OnboardingModal from '../src/components/OnboardingModal';
 import { COLORS, FONT_SIZE } from '../src/constants/theme';

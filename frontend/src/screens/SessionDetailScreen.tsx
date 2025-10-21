@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Alert,
   ActivityIndicator,
+  Modal,
 } from 'react-native';
 import { COLORS, SPACING, FONT_SIZE, BORDER_RADIUS } from '../constants/theme';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -14,10 +15,15 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import LogService from '../services/LogService';
 import { useSettings } from '../contexts/SettingsContext';
+import { useTheme } from '../contexts/ThemeContext';
+import { useAuth } from '../contexts/AuthContext';
 import { TelemetrySample, calculateStats, SessionStats } from '../utils/csv';
 import { formatSpeed, formatGForce, formatTemp, formatAltitude, formatDuration } from '../utils/format';
 import ChartView from '../components/ChartView';
+import SessionShareCard from '../components/SessionShareCard';
 import * as Sharing from 'expo-sharing';
+import * as Haptics from 'expo-haptics';
+import { captureRef } from 'react-native-view-shot';
 
 export default function SessionDetailScreen() {
   const { date, fileName } = useLocalSearchParams<{ date: string; fileName: string }>();

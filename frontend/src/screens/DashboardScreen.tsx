@@ -19,8 +19,10 @@ import { useAuth } from '../contexts/AuthContext';
 import Gauge from '../components/Gauge';
 import MetricCard from '../components/MetricCard';
 import ChartView from '../components/ChartView';
+import BleConnectionModal from '../components/BleConnectionModal';
 import { formatTemp, formatAltitude, formatHumidity } from '../utils/format';
 import { calculateStats } from '../utils/csv';
+import * as Haptics from 'expo-haptics';
 
 export default function DashboardScreen() {
   const { status, scan, connect, disconnect, devices, sendCommand, telemetry } = useBle();

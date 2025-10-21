@@ -304,6 +304,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     try {
+      // Optimistically remove from local state first for immediate UI feedback
+      const updatedGarage = garage.filter(car => car.id !== carId);
+      setGarage([...updatedGarage]);
+
+      // Then delete from Firestore
       const carRef = doc(db, 'users', user.uid, 'garage', carId);
       await deleteDoc(carRef);
       
@@ -311,6 +316,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log('[Auth] Car deleted from garage');
     } catch (error) {
       console.error('[Auth] Delete car error:', error);
+      // Rollback on error
+      await loadGarage();
       throw error;
     }
   };

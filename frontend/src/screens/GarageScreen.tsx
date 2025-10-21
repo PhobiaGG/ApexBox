@@ -220,7 +220,7 @@ export default function GarageScreen() {
         ) : (
           garage.map((car) => (
             <Swipeable
-              key={car.id}
+              key={car.uniqueKey}
               ref={(ref) => {
                 if (ref) swipeableRefs.current.set(car.id, ref);
               }}

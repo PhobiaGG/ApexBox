@@ -1,11 +1,14 @@
 import React from 'react';
 import { Tabs } from 'expo-router';
+import { Platform } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme } from '../../src/contexts/ThemeContext';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function TabsLayout() {
   const { colors, getCurrentAccent } = useTheme();
   const accentColor = getCurrentAccent();
+  const insets = useSafeAreaInsets();
 
   return (
     <Tabs

@@ -311,6 +311,20 @@ const styles = StyleSheet.create({
     letterSpacing: 4,
     marginTop: 4,
   },
+  proBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: SPACING.sm,
+    paddingVertical: 6,
+    borderRadius: 12,
+    gap: 4,
+    marginTop: SPACING.sm,
+  },
+  proBadgeText: {
+    fontSize: FONT_SIZE.xs,
+    fontWeight: 'bold',
+    letterSpacing: 1,
+  },
   activeCarContainer: {
     flexDirection: 'row',
     alignItems: 'center',

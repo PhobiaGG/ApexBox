@@ -93,7 +93,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const docSnap = await getDoc(docRef);
       
       if (docSnap.exists()) {
-        setProfile(docSnap.data() as UserProfile);
+        let userData = docSnap.data() as UserProfile;
+        
+        // Generate friendId if it doesn't exist (for existing users)
+        if (!userData.friendId) {
+          const friendId = await generateFriendId();
+          userData = { ...userData, friendId };
+          await setDoc(doc(db, 'users', uid), userData, { merge: true });
+          console.log('[Auth] Generated friend ID for existing user:', friendId);
+        }
+        
+        setProfile(userData);
       }
     } catch (error) {
       console.error('[Auth] Error loading profile:', error);

@@ -305,9 +305,10 @@ export default function GroupsScreen() {
                   </Text>
                 </View>
                 <UserAvatar
-                  uri={entry.avatarURI}
-                  displayName={entry.displayName}
+                  uri={entry.avatarURI || null}
+                  name={entry.displayName || 'Driver'}
                   size={48}
+                  borderColor={accentColor}
                 />
                 <View style={styles.entryInfo}>
                   <Text style={[styles.entryName, { color: colors.text }]}>{entry.displayName}</Text>

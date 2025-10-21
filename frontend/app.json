@@ -80,11 +80,6 @@
     ],
     "experiments": {
       "typedRoutes": true
-    },
-    "extra": {
-      "eas": {
-        "projectId": "your-project-id-here"
-      }
     }
   }
 }

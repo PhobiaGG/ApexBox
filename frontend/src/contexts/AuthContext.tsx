@@ -37,6 +37,21 @@ export interface UserProfile {
   createdAt: number;
 }
 
+export interface CrewMember {
+  uid: string;
+  displayName: string;
+  avatarURI: string | null;
+}
+
+export interface Crew {
+  id: string;
+  name: string;
+  description: string;
+  ownerId: string;
+  members: string[]; // Array of member UIDs
+  createdAt: number;
+}
+
 interface AuthContextType {
   user: FirebaseUser | null;
   profile: UserProfile | null;
@@ -57,6 +72,9 @@ interface AuthContextType {
   loadGarage: () => Promise<void>;
   getActiveCar: () => Car | null;
   upgradeToPremium: () => Promise<void>;
+  createCrew: (name: string, description: string) => Promise<void>;
+  addMemberToCrew: (crewId: string, memberFriendId: string) => Promise<void>;
+  removeMemberFromCrew: (crewId: string, memberUid: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);

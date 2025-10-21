@@ -1,104 +1,168 @@
-diff --git a/frontend/src/components/Gauge.tsx b/frontend/src/components/Gauge.tsx
-index 1cf1b8e..69b0147 100644
---- a/frontend/src/components/Gauge.tsx
-+++ b/frontend/src/components/Gauge.tsx
-@@ -1,8 +1,16 @@
--import React from 'react';
-+import React, { useEffect } from 'react';
- import { View, Text, StyleSheet } from 'react-native';
- import { COLORS, SPACING, FONT_SIZE, BORDER_RADIUS } from '../constants/theme';
- import { LinearGradient } from 'expo-linear-gradient';
- import Svg, { Circle } from 'react-native-svg';
-+import Animated, {
-+  useSharedValue,
-+  useAnimatedStyle,
-+  useAnimatedProps,
-+  withSpring,
-+  withTiming,
-+  Easing,
-+} from 'react-native-reanimated';
- 
- interface GaugeProps {
-   value: number;
-@@ -13,15 +21,48 @@ interface GaugeProps {
-   size?: number;
- }
- 
-+// Create animated Circle component
-+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
-+
- export default function Gauge({ value, maxValue, label, unit, color, size = 140 }: GaugeProps) {
--  const percentage = Math.min((value / maxValue) * 100, 100);
-+  const progress = useSharedValue(0);
-+  const scale = useSharedValue(0.95);
-+  const opacity = useSharedValue(0);
-+
-   const strokeWidth = 12;
-   const radius = (size - strokeWidth) / 2;
-   const circumference = 2 * Math.PI * radius;
--  const strokeDashoffset = circumference - (percentage / 100) * circumference;
-+
-+  useEffect(() => {
-+    // Entry animation
-+    opacity.value = withTiming(1, { duration: 300 });
-+    scale.value = withSpring(1, { damping: 15, stiffness: 150 });
-+
-+    // Update progress with smooth spring
-+    const targetProgress = Math.min((value / maxValue) * 100, 100);
-+    progress.value = withSpring(targetProgress, {
-+      damping: 20,
-+      stiffness: 90,
-+      mass: 1,
-+    });
-+  }, [value, maxValue]);
-+
-+  const animatedProps = useAnimatedProps(() => {
-+    const strokeDashoffset = circumference - (progress.value / 100) * circumference;
-+    return {
-+      strokeDashoffset,
-+    };
-+  });
-+
-+  const animatedContainerStyle = useAnimatedStyle(() => ({
-+    transform: [{ scale: scale.value }],
-+    opacity: opacity.value,
-+  }));
-+
-+  const percentage = Math.min((value / maxValue) * 100, 100);
- 
-   return (
--    <View style={[styles.container, { width: size + 20, height: size + 60 }]}>
-+    <Animated.View style={[styles.container, { width: size + 20, height: size + 60 }, animatedContainerStyle]}>
-       <View style={styles.gaugeContainer}>
-         <Svg width={size} height={size}>
-           <Circle
-@@ -32,7 +73,7 @@ export default function Gauge({ value, maxValue, label, unit, color, size = 140
-             strokeWidth={strokeWidth}
-             fill="none"
-           />
--          <Circle
-+          <AnimatedCircle
-             cx={size / 2}
-             cy={size / 2}
-             r={radius}
-@@ -40,10 +81,10 @@ export default function Gauge({ value, maxValue, label, unit, color, size = 140
-             strokeWidth={strokeWidth}
-             fill="none"
-             strokeDasharray={circumference}
--            strokeDashoffset={strokeDashoffset}
-             strokeLinecap="round"
-             rotation="-90"
-             origin={`${size / 2}, ${size / 2}`}
-+            animatedProps={animatedProps}
-           />
-         </Svg>
-         <View style={styles.valueContainer}>
-@@ -52,7 +93,7 @@ export default function Gauge({ value, maxValue, label, unit, color, size = 140
-         </View>
-       </View>
-       <Text style={styles.label}>{label}</Text>
--    </View>
-+    </Animated.View>
-   );
- }
- 
+diff --git a/frontend/src/screens/LogsScreen.tsx b/frontend/src/screens/LogsScreen.tsx
+index 0c00a18..c4f084c 100644
+--- a/frontend/src/screens/LogsScreen.tsx
++++ b/frontend/src/screens/LogsScreen.tsx
+@@ -312,11 +312,53 @@ const styles = StyleSheet.create({
+     borderColor: COLORS.border,
+   },
+   sessionGradient: {
++    flexDirection: 'column',
++    paddingHorizontal: SPACING.md,
++    paddingVertical: SPACING.md,
++    borderRadius: BORDER_RADIUS.md,
++    gap: SPACING.sm,
++  },
++  sessionHeader: {
++    flexDirection: 'row',
++    alignItems: 'center',
++    justifyContent: 'space-between',
++  },
++  sessionLeft: {
+     flexDirection: 'row',
+     alignItems: 'center',
+-    padding: SPACING.md,
+     gap: SPACING.sm,
+   },
++  sessionStats: {
++    flexDirection: 'row',
++    gap: SPACING.xs,
++  },
++  statChip: {
++    flexDirection: 'row',
++    alignItems: 'center',
++    gap: 4,
++    paddingHorizontal: SPACING.sm,
++    paddingVertical: 4,
++    backgroundColor: COLORS.background,
++    borderRadius: 12,
++  },
++  statChipText: {
++    fontSize: FONT_SIZE.xs,
++    fontWeight: '600',
++  },
++  sparklineContainer: {
++    marginVertical: SPACING.xs,
++    borderRadius: 8,
++    overflow: 'hidden',
++  },
++  sessionFooter: {
++    flexDirection: 'row',
++    alignItems: 'center',
++    justifyContent: 'space-between',
++  },
++  sessionHint: {
++    fontSize: FONT_SIZE.xs,
++    color: COLORS.textTertiary,
++  },
+   sessionTime: {
+     flex: 1,
+     fontSize: FONT_SIZE.md,
+diff --git a/model.patch b/model.patch
+index 5e16e3c..e69de29 100644
+--- a/model.patch
++++ b/model.patch
+@@ -1,104 +0,0 @@
+-diff --git a/frontend/src/components/Gauge.tsx b/frontend/src/components/Gauge.tsx
+-index 1cf1b8e..69b0147 100644
+---- a/frontend/src/components/Gauge.tsx
+-+++ b/frontend/src/components/Gauge.tsx
+-@@ -1,8 +1,16 @@
+--import React from 'react';
+-+import React, { useEffect } from 'react';
+- import { View, Text, StyleSheet } from 'react-native';
+- import { COLORS, SPACING, FONT_SIZE, BORDER_RADIUS } from '../constants/theme';
+- import { LinearGradient } from 'expo-linear-gradient';
+- import Svg, { Circle } from 'react-native-svg';
+-+import Animated, {
+-+  useSharedValue,
+-+  useAnimatedStyle,
+-+  useAnimatedProps,
+-+  withSpring,
+-+  withTiming,
+-+  Easing,
+-+} from 'react-native-reanimated';
+- 
+- interface GaugeProps {
+-   value: number;
+-@@ -13,15 +21,48 @@ interface GaugeProps {
+-   size?: number;
+- }
+- 
+-+// Create animated Circle component
+-+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
+-+
+- export default function Gauge({ value, maxValue, label, unit, color, size = 140 }: GaugeProps) {
+--  const percentage = Math.min((value / maxValue) * 100, 100);
+-+  const progress = useSharedValue(0);
+-+  const scale = useSharedValue(0.95);
+-+  const opacity = useSharedValue(0);
+-+
+-   const strokeWidth = 12;
+-   const radius = (size - strokeWidth) / 2;
+-   const circumference = 2 * Math.PI * radius;
+--  const strokeDashoffset = circumference - (percentage / 100) * circumference;
+-+
+-+  useEffect(() => {
+-+    // Entry animation
+-+    opacity.value = withTiming(1, { duration: 300 });
+-+    scale.value = withSpring(1, { damping: 15, stiffness: 150 });
+-+
+-+    // Update progress with smooth spring
+-+    const targetProgress = Math.min((value / maxValue) * 100, 100);
+-+    progress.value = withSpring(targetProgress, {
+-+      damping: 20,
+-+      stiffness: 90,
+-+      mass: 1,
+-+    });
+-+  }, [value, maxValue]);
+-+
+-+  const animatedProps = useAnimatedProps(() => {
+-+    const strokeDashoffset = circumference - (progress.value / 100) * circumference;
+-+    return {
+-+      strokeDashoffset,
+-+    };
+-+  });
+-+
+-+  const animatedContainerStyle = useAnimatedStyle(() => ({
+-+    transform: [{ scale: scale.value }],
+-+    opacity: opacity.value,
+-+  }));
+-+
+-+  const percentage = Math.min((value / maxValue) * 100, 100);
+- 
+-   return (
+--    <View style={[styles.container, { width: size + 20, height: size + 60 }]}>
+-+    <Animated.View style={[styles.container, { width: size + 20, height: size + 60 }, animatedContainerStyle]}>
+-       <View style={styles.gaugeContainer}>
+-         <Svg width={size} height={size}>
+-           <Circle
+-@@ -32,7 +73,7 @@ export default function Gauge({ value, maxValue, label, unit, color, size = 140
+-             strokeWidth={strokeWidth}
+-             fill="none"
+-           />
+--          <Circle
+-+          <AnimatedCircle
+-             cx={size / 2}
+-             cy={size / 2}
+-             r={radius}
+-@@ -40,10 +81,10 @@ export default function Gauge({ value, maxValue, label, unit, color, size = 140
+-             strokeWidth={strokeWidth}
+-             fill="none"
+-             strokeDasharray={circumference}
+--            strokeDashoffset={strokeDashoffset}
+-             strokeLinecap="round"
+-             rotation="-90"
+-             origin={`${size / 2}, ${size / 2}`}
+-+            animatedProps={animatedProps}
+-           />
+-         </Svg>
+-         <View style={styles.valueContainer}>
+-@@ -52,7 +93,7 @@ export default function Gauge({ value, maxValue, label, unit, color, size = 140
+-         </View>
+-       </View>
+-       <Text style={styles.label}>{label}</Text>
+--    </View>
+-+    </Animated.View>
+-   );
+- }
+- 

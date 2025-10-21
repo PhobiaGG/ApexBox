@@ -20,14 +20,14 @@ export default function TabsLayout() {
           backgroundColor: colors.card,
           borderTopColor: colors.border,
           borderTopWidth: 1,
-          height: 65,
-          paddingBottom: 8,
+          height: Platform.OS === 'ios' ? 85 : 70,
+          paddingBottom: Platform.OS === 'ios' ? insets.bottom : 10,
           paddingTop: 8,
         },
         tabBarLabelStyle: {
-          fontSize: 11,
+          fontSize: 10,
           fontWeight: '600',
-          marginTop: 4,
+          marginBottom: Platform.OS === 'ios' ? 2 : 4,
         },
         tabBarIconStyle: {
           marginTop: 4,

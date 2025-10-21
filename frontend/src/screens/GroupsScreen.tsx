@@ -40,29 +40,24 @@ interface Crew {
 }
 
 // Mock data generator
-const generateMockCrews = (): Crew[] => [
-  {
-    id: 'crew1',
-    name: 'Speed Demons',
-    description: 'Elite racing crew',
-    code: 'SPEED-12345',
-    adminId: 'user1',
-    members: [
-      { uid: 'user1', displayName: 'Alex Driver', topSpeed: 245, totalSessions: 47 },
-      { uid: 'user2', displayName: 'Max Velocity', topSpeed: 238, totalSessions: 52 },
-      { uid: 'user3', displayName: 'Turbo Tim', topSpeed: 232, totalSessions: 39 },
-    ],
-    createdAt: Date.now() - 7 * 24 * 60 * 60 * 1000,
-  },
-];
+const generateMockCrews = (): Crew[] => [];
 
-const generateMockGlobalLeaderboard = (): CrewMember[] => [
-  { uid: 'g1', displayName: 'Lightning McQueen', topSpeed: 285, totalSessions: 124 },
-  { uid: 'g2', displayName: 'Speed Racer', topSpeed: 278, totalSessions: 98 },
-  { uid: 'g3', displayName: 'Nitro Nick', topSpeed: 271, totalSessions: 115 },
-  { uid: 'g4', displayName: 'Turbo Tom', topSpeed: 265, totalSessions: 87 },
-  { uid: 'g5', displayName: 'Flash Gordon', topSpeed: 258, totalSessions: 92 },
-];
+const generateMockGlobalLeaderboard = () => ({
+  topSpeed: [
+    { uid: 'g1', displayName: 'Lightning McQueen', topSpeed: 285, totalSessions: 124 },
+    { uid: 'g2', displayName: 'Speed Racer', topSpeed: 278, totalSessions: 98 },
+    { uid: 'g3', displayName: 'Nitro Nick', topSpeed: 271, totalSessions: 115 },
+    { uid: 'g4', displayName: 'Turbo Tom', topSpeed: 265, totalSessions: 87 },
+    { uid: 'g5', displayName: 'Flash Gordon', topSpeed: 258, totalSessions: 92 },
+  ],
+  topGForce: [
+    { uid: 'gf1', displayName: 'G-Force King', topGForce: 2.8, totalSessions: 89 },
+    { uid: 'gf2', displayName: 'Corner Crusher', topGForce: 2.6, totalSessions: 101 },
+    { uid: 'gf3', displayName: 'Apex Hunter', topGForce: 2.5, totalSessions: 76 },
+    { uid: 'gf4', displayName: 'Drift Master', topGForce: 2.4, totalSessions: 94 },
+    { uid: 'gf5', displayName: 'Grip God', topGForce: 2.3, totalSessions: 68 },
+  ],
+});
 
 export default function GroupsScreen() {
   const router = useRouter();

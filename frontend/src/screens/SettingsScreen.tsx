@@ -615,6 +615,22 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZE.sm,
     fontWeight: '600',
   },
+  changeUsernameButton: {
+    borderRadius: BORDER_RADIUS.md,
+    overflow: 'hidden',
+    marginTop: SPACING.md,
+  },
+  changeUsernameGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: SPACING.sm,
+    gap: SPACING.xs,
+  },
+  changeUsernameText: {
+    fontSize: FONT_SIZE.sm,
+    fontWeight: '600',
+  },
   emptyGarage: {
     alignItems: 'center',
     paddingVertical: SPACING.xl,

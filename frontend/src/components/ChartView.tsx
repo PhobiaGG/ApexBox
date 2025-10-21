@@ -224,6 +224,29 @@ const styles = StyleSheet.create({
     height: 220,
     paddingHorizontal: SPACING.sm,
   },
+  webChartContainer: {
+    position: 'relative',
+    width: '100%',
+  },
+  gridLine: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    height: 1,
+    backgroundColor: COLORS.border,
+  },
+  lineContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  lineSegment: {
+    position: 'absolute',
+    height: 2.5,
+    transformOrigin: 'left center',
+  },
   statsRow: {
     flexDirection: 'row',
     justifyContent: 'space-around',

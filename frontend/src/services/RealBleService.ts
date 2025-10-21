@@ -61,6 +61,13 @@ class RealBleService {
   // Scan for ApexBox devices
   async scan(): Promise<BleDevice[]> {
     try {
+      // If BLE not available or already in mock mode, return mock devices
+      if (!this.manager || this.useMockMode) {
+        console.log('[RealBleService] Using mock mode for scan');
+        this.useMockMode = true;
+        return this.getMockDevices();
+      }
+
       const hasPermission = await this.requestPermissions();
       if (!hasPermission) {
         console.warn('[RealBleService] BLE permissions not granted, using mock mode');
@@ -76,7 +83,7 @@ class RealBleService {
 
       return new Promise((resolve) => {
         // Scan for 5 seconds
-        this.manager.startDeviceScan(null, null, (error, device) => {
+        this.manager!.startDeviceScan(null, null, (error, device) => {
           if (error) {
             console.error('[RealBleService] Scan error:', error);
             this.status.error = error.message;
@@ -98,7 +105,7 @@ class RealBleService {
         });
 
         setTimeout(() => {
-          this.manager.stopDeviceScan();
+          this.manager!.stopDeviceScan();
           this.status.isScanning = false;
 
           if (devices.length === 0) {

@@ -120,15 +120,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Generate unique 8-digit friend ID
+  const generateFriendId = async (): Promise<string> => {
+    while (true) {
+      // Generate random 8-digit number (10000000 to 99999999)
+      const friendId = Math.floor(10000000 + Math.random() * 90000000).toString();
+      
+      // Check if it already exists in Firestore
+      const q = query(collection(db, 'users'), where('friendId', '==', friendId));
+      const snapshot = await getDocs(q);
+      
+      if (snapshot.empty) {
+        return friendId;
+      }
+      // If exists, loop continues to generate a new one
+    }
+  };
+
   const signUp = async (email: string, password: string, displayName: string) => {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const { uid } = userCredential.user;
 
+      // Generate unique friend ID
+      const friendId = await generateFriendId();
+
       const newProfile: UserProfile = {
         uid,
         email,
         displayName,
+        friendId,
         carModel: '',
         carYear: '',
         avatarURI: null,
@@ -139,7 +160,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await setDoc(doc(db, 'users', uid), newProfile);
       setProfile(newProfile);
       
-      console.log('[Auth] User created:', uid);
+      console.log('[Auth] User created:', uid, 'Friend ID:', friendId);
     } catch (error: any) {
       console.error('[Auth] Sign up error:', error);
       throw new Error(error.message);

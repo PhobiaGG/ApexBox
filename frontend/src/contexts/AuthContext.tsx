@@ -422,34 +422,58 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!user) throw new Error('No user logged in');
     
     try {
-      const crewCode = generateCrewCode();
-      const crewRef = doc(collection(db, 'crews'));
+      console.log('[Auth] ======= CREATING CREW =======');
+      console.log('[Auth] Name:', name);
+      console.log('[Auth] Description:', description);
+      console.log('[Auth] User ID:', user.uid);
       
-      await setDoc(crewRef, {
+      // Generate unique crew code
+      const crewCode = generateCrewCode();
+      console.log('[Auth] Generated crew code:', crewCode);
+      
+      // Create crew document with auto-generated ID
+      const crewRef = doc(collection(db, 'crews'));
+      console.log('[Auth] Crew ID:', crewRef.id);
+      
+      const crewData = {
         name,
         description,
         code: crewCode,
         adminId: user.uid,
         memberIds: [user.uid],
         createdAt: Date.now(),
-      });
+      };
       
-      // Add crew to user's crewIds
+      console.log('[Auth] Saving crew to Firebase...');
+      await setDoc(crewRef, crewData);
+      console.log('[Auth] ✅ Crew saved to Firebase');
+      
+      // Add crew ID to user's crewIds array
+      console.log('[Auth] Updating user crewIds...');
       await updateDoc(doc(db, 'users', user.uid), {
         crewIds: arrayUnion(crewRef.id),
       });
+      console.log('[Auth] ✅ User crewIds updated');
       
+      // Update local profile
       if (profile) {
+        const updatedCrewIds = [...(profile.crewIds || []), crewRef.id];
         setProfile({
           ...profile,
-          crewIds: [...(profile.crewIds || []), crewRef.id],
+          crewIds: updatedCrewIds,
         });
+        console.log('[Auth] ✅ Profile updated with new crew');
       }
+      
+      console.log('[Auth] ======= CREW CREATED SUCCESSFULLY =======');
+      console.log('[Auth] Crew Code:', crewCode);
       
       return crewCode;
     } catch (error: any) {
-      console.error('[Auth] Create crew error:', error);
-      throw new Error('Failed to create crew');
+      console.error('[Auth] ❌ Create crew error:', error);
+      console.error('[Auth] Error code:', error.code);
+      console.error('[Auth] Error message:', error.message);
+      throw new Error(error.message || 'Failed to create crew');
     }
   };
 

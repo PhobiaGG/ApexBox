@@ -294,14 +294,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!user) throw new Error('No user logged in');
     
     try {
+      // Optimistic update - update UI immediately
+      if (profile) {
+        const updatedGarage = profile.garage?.map(car => 
+          car.id === carId ? { ...car, ...updates } : car
+        ) || [];
+        setProfile({ ...profile, garage: updatedGarage });
+      }
+      
+      // Then update Firebase
       await updateDoc(doc(db, 'users', user.uid, 'garage', carId), updates);
       
+      // Reload to ensure consistency
       if (profile) {
-        const updatedGarage = await loadGarage(user.uid);
-        setProfile({ ...profile, garage: updatedGarage });
+        const freshGarage = await loadGarage(user.uid);
+        setProfile({ ...profile, garage: freshGarage });
       }
     } catch (error: any) {
       console.error('[Auth] Update car error:', error);
+      // Rollback on error
+      if (profile) {
+        const freshGarage = await loadGarage(user.uid);
+        setProfile({ ...profile, garage: freshGarage });
+      }
       throw new Error(error.message);
     }
   };

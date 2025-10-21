@@ -128,7 +128,9 @@ export default function SettingsScreen() {
             <Text style={styles.sectionTitle}>Units & Display</Text>
             <View style={styles.card}>
               <View style={styles.settingRow}>
-                <Text style={styles.settingLabel}>Metric System (km/h)</Text>
+                <Text style={styles.settingLabel}>
+                  {settings.units.isMetric ? 'Metric System (km/h)' : 'Imperial System (mph)'}
+                </Text>
                 <Switch
                   value={settings.units.isMetric}
                   onValueChange={async (value) => {
@@ -141,7 +143,9 @@ export default function SettingsScreen() {
               </View>
 
               <View style={styles.settingRow}>
-                <Text style={styles.settingLabel}>Temperature (Celsius)</Text>
+                <Text style={styles.settingLabel}>
+                  {settings.units.tempCelsius ? 'Temperature (Celsius)' : 'Temperature (Fahrenheit)'}
+                </Text>
                 <Switch
                   value={settings.units.tempCelsius}
                   onValueChange={async (value) => {
@@ -154,7 +158,9 @@ export default function SettingsScreen() {
               </View>
 
               <View style={styles.settingRow}>
-                <Text style={styles.settingLabel}>Altitude (Meters)</Text>
+                <Text style={styles.settingLabel}>
+                  {settings.units.altitudeMetric ? 'Altitude (Meters)' : 'Altitude (Feet)'}
+                </Text>
                 <Switch
                   value={settings.units.altitudeMetric}
                   onValueChange={async (value) => {

@@ -111,7 +111,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         cars.push({ id: doc.id, ...doc.data() } as Car);
       });
       
-      setGarage(cars);
+      // Force a new array reference to trigger React re-render
+      setGarage([...cars]);
       console.log(`[Auth] Loaded ${cars.length} cars from garage`);
     } catch (error) {
       console.error('[Auth] Error loading garage:', error);

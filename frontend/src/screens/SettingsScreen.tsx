@@ -93,6 +93,14 @@ export default function SettingsScreen() {
     }
   };
 
+  const handleChangeUsername = async (newUsername: string) => {
+    try {
+      await updateUsername(newUsername);
+    } catch (error: any) {
+      throw new Error(error.message || 'Failed to update username');
+    }
+  };
+
   const handleSaveCar = async (carData: CarData) => {
     await addCar(carData);
   };

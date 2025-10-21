@@ -314,24 +314,33 @@ export default function DashboardScreen() {
           {/* Action Buttons */}
           <View style={styles.actionsContainer}>
             <TouchableOpacity
-              style={[styles.actionButton, !status.isConnected && styles.actionButtonDisabled]}
-              onPress={handleStartAnalysis}
-              disabled={!status.isConnected || isAnalyzing}
+              style={[styles.actionButton, !status.isConnected && !isAnalyzing && styles.actionButtonDisabled]}
+              onPress={isAnalyzing ? handleStopAnalysis : handleStartAnalysis}
+              disabled={!status.isConnected && !isAnalyzing}
               activeOpacity={0.8}
             >
               <LinearGradient
-                colors={status.isConnected ? [accentColor, colors.background] : [colors.border, colors.border]}
+                colors={
+                  isAnalyzing
+                    ? [colors.magenta, colors.background]
+                    : status.isConnected
+                    ? [accentColor, colors.background]
+                    : [colors.border, colors.border]
+                }
                 style={styles.buttonGradient}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
               >
-                {isAnalyzing ? (
-                  <ActivityIndicator color={colors.text} />
-                ) : (
-                  <>
-                    <MaterialCommunityIcons name="play-circle" size={24} color={colors.text} />
-                    <Text style={[styles.actionButtonText, { color: colors.text }]}>Start Analysis</Text>
-                  </>
+                <MaterialCommunityIcons
+                  name={isAnalyzing ? 'stop-circle' : 'play-circle'}
+                  size={24}
+                  color={colors.text}
+                />
+                <Text style={[styles.actionButtonText, { color: colors.text }]}>
+                  {isAnalyzing ? 'Stop Analysis' : 'Start Analysis'}
+                </Text>
+                {isTrackingGPS && (
+                  <MaterialCommunityIcons name="map-marker" size={16} color={colors.lime} />
                 )}
               </LinearGradient>
             </TouchableOpacity>

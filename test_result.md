@@ -103,13 +103,14 @@
 #====================================================================================================
 
 user_problem_statement: |
-  STABILITY VERIFICATION after react-native-reanimated removal:
-  - Verify Gauge.tsx renders correctly with native Animated API
-  - Verify ChartView.tsx displays data properly with react-native-svg
-  - Verify GroupsScreen.tsx animations work without reanimated
-  - Verify GPS tracking and session saving functionality
-  - Ensure no module resolution errors or blank screens
-  - Test complete app flow: login -> dashboard -> logs -> groups -> settings
+  FINAL FEATURE INTEGRATION & TESTING:
+  1. ✅ Session Sharing - Integrated into SessionDetailScreen, needs testing
+  2. ✅ Track Replay - Skia canvas implementation working (maps version ready for device testing) 
+  3. ⚠️ Crew Management - Integrate CreateCrewModal and JoinCrewModal into GroupsScreen
+  4. ⚠️ Global Leaderboard - Add global tab to Groups screen
+  5. ✅ Light/Dark Mode Toggle - FIXED
+  
+  Test all features and complete crew/leaderboard integration.
 
 backend:
   - task: "Firebase Backend Services"

@@ -1,12 +1,13 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
+  Dimensions,
   Alert,
-  Platform,
 } from 'react-native';
+import { Canvas, Path, Circle as SkiaCircle, vec, Skia, LinearGradient as SkiaGradient } from '@shopify/react-native-skia';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -15,23 +16,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import { SPACING, FONT_SIZE, BORDER_RADIUS } from '../constants/theme';
 import * as Haptics from 'expo-haptics';
 
-// Conditional import for react-native-maps (not available on web)
-let MapView: any = null;
-let Polyline: any = null;
-let Marker: any = null;
-let PROVIDER_GOOGLE: any = null;
-
-if (Platform.OS !== 'web') {
-  try {
-    const Maps = require('react-native-maps');
-    MapView = Maps.default;
-    Polyline = Maps.Polyline;
-    Marker = Maps.Marker;
-    PROVIDER_GOOGLE = Maps.PROVIDER_GOOGLE;
-  } catch (e) {
-    console.log('Maps not available:', e);
-  }
-}
+const { width, height } = Dimensions.get('window');
 
 interface GPSPoint {
   lat: number;
@@ -41,10 +26,10 @@ interface GPSPoint {
   timestamp: number;
 }
 
-// Mock GPS data for demonstration (will be replaced with real session data)
+// Mock GPS data for demonstration
 const generateMockGPSData = (): GPSPoint[] => {
   const points: GPSPoint[] = [];
-  const centerLat = 37.7749; // San Francisco
+  const centerLat = 37.7749;
   const centerLon = -122.4194;
   const numPoints = 50;
 
@@ -69,36 +54,28 @@ export default function TrackReplayScreen() {
   const { profile } = useAuth();
   const { colors, getCurrentAccent } = useTheme();
   const accentColor = getCurrentAccent();
-  const mapRef = useRef<MapView>(null);
+  const params = useLocalSearchParams();
 
   const [gpsData, setGpsData] = useState<GPSPoint[]>([]);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [playbackSpeed, setPlaybackSpeed] = useState(1); // 1x, 2x, 4x
+  const [mapBounds, setMapBounds] = useState({ minLat: 0, maxLat: 0, minLon: 0, maxLon: 0 });
 
   useEffect(() => {
-    // Load GPS data (will be from LogService in production)
+    // Load GPS data (mock for now)
     const data = generateMockGPSData();
     setGpsData(data);
 
-    // Center map on track
+    // Calculate bounds
     if (data.length > 0) {
       const lats = data.map(p => p.lat);
       const lons = data.map(p => p.lon);
-      const minLat = Math.min(...lats);
-      const maxLat = Math.max(...lats);
-      const minLon = Math.min(...lons);
-      const maxLon = Math.max(...lons);
-
-      setTimeout(() => {
-        mapRef.current?.fitToCoordinates(
-          data.map(p => ({ latitude: p.lat, longitude: p.lon })),
-          {
-            edgePadding: { top: 50, right: 50, bottom: 50, left: 50 },
-            animated: true,
-          }
-        );
-      }, 100);
+      setMapBounds({
+        minLat: Math.min(...lats),
+        maxLat: Math.max(...lats),
+        minLon: Math.min(...lons),
+        maxLon: Math.max(...lons),
+      });
     }
   }, []);
 
@@ -106,30 +83,31 @@ export default function TrackReplayScreen() {
     if (!isPlaying || currentIndex >= gpsData.length - 1) {
       if (currentIndex >= gpsData.length - 1) {
         setIsPlaying(false);
+        setCurrentIndex(0);
       }
       return;
     }
 
-    const interval = 100 / playbackSpeed;
     const timer = setTimeout(() => {
       setCurrentIndex(prev => prev + 1);
-      
-      // Center map on current position
-      if (gpsData[currentIndex + 1]) {
-        mapRef.current?.animateCamera({
-          center: {
-            latitude: gpsData[currentIndex + 1].lat,
-            longitude: gpsData[currentIndex + 1].lon,
-          },
-          zoom: 15,
-        }, { duration: interval });
-      }
-    }, interval);
+    }, 100);
 
     return () => clearTimeout(timer);
-  }, [isPlaying, currentIndex, gpsData, playbackSpeed]);
+  }, [isPlaying, currentIndex, gpsData.length]);
+
+  const convertToCanvasCoords = (lat: number, lon: number) => {
+    const padding = 40;
+    const canvasWidth = width - padding * 2;
+    const canvasHeight = 400;
+
+    const x = padding + ((lon - mapBounds.minLon) / (mapBounds.maxLon - mapBounds.minLon)) * canvasWidth;
+    const y = padding + ((mapBounds.maxLat - lat) / (mapBounds.maxLat - mapBounds.minLat)) * canvasHeight;
+
+    return { x, y };
+  };
 
   const getColorForGForce = (gForce: number): string => {
+    // Blue (low) → Cyan → Green → Yellow → Red (high)
     if (gForce < 0.5) return '#0080FF';
     if (gForce < 1.0) return '#00D4FF';
     if (gForce < 1.5) return '#00FF88';
@@ -149,25 +127,6 @@ export default function TrackReplayScreen() {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setIsPlaying(false);
     setCurrentIndex(0);
-    
-    if (gpsData.length > 0) {
-      mapRef.current?.fitToCoordinates(
-        gpsData.map(p => ({ latitude: p.lat, longitude: p.lon })),
-        {
-          edgePadding: { top: 50, right: 50, bottom: 50, left: 50 },
-          animated: true,
-        }
-      );
-    }
-  };
-
-  const handleSpeedToggle = async () => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setPlaybackSpeed(prev => {
-      if (prev === 1) return 2;
-      if (prev === 2) return 4;
-      return 1;
-    });
   };
 
   const handleBack = async () => {
@@ -214,169 +173,95 @@ export default function TrackReplayScreen() {
     );
   }
 
-  // Web/unsupported platform fallback
-  if (Platform.OS === 'web' || !MapView) {
-    return (
-      <View style={[styles.container, { backgroundColor: colors.background }]}>
-        <TouchableOpacity style={styles.backButton} onPress={handleBack}>
-          <MaterialCommunityIcons name="arrow-left" size={28} color={colors.text} />
-        </TouchableOpacity>
-
-        <View style={styles.lockedContainer}>
-          <View style={[styles.lockIconContainer, { backgroundColor: colors.card }]}>
-            <MaterialCommunityIcons name="map-marker-off" size={64} color={colors.textSecondary} />
-          </View>
-          <Text style={[styles.lockedTitle, { color: colors.text }]}>Device Only</Text>
-          <Text style={[styles.lockedSubtitle, { color: colors.textSecondary }]}>
-            Track Replay requires native maps and is only available on iOS/Android devices. 
-            Please test on a physical device or emulator.
-          </Text>
-        </View>
-      </View>
-    );
-  }
+  const pathString = gpsData
+    .slice(0, currentIndex + 1)
+    .map((point, i) => {
+      const { x, y } = convertToCanvasCoords(point.lat, point.lon);
+      return i === 0 ? `M ${x} ${y}` : `L ${x} ${y}`;
+    })
+    .join(' ');
 
   const currentPoint = gpsData[currentIndex];
-  const completedPath = gpsData.slice(0, currentIndex + 1).map(p => ({
-    latitude: p.lat,
-    longitude: p.lon,
-  }));
-
-  const remainingPath = gpsData.slice(currentIndex).map(p => ({
-    latitude: p.lat,
-    longitude: p.lon,
-  }));
+  const currentCoords = currentPoint ? convertToCanvasCoords(currentPoint.lat, currentPoint.lon) : { x: 0, y: 0 };
 
   return (
-    <View style={styles.container}>
-      <MapView
-        ref={mapRef}
-        provider={Platform.OS === 'android' ? PROVIDER_GOOGLE : undefined}
-        style={styles.map}
-        initialRegion={{
-          latitude: gpsData[0]?.lat || 37.7749,
-          longitude: gpsData[0]?.lon || -122.4194,
-          latitudeDelta: 0.03,
-          longitudeDelta: 0.03,
-        }}
-        customMapStyle={colors.background === '#0A0A0A' ? darkMapStyle : []}
-      >
-        {/* Remaining path (gray/faded) */}
-        {remainingPath.length > 1 && (
-          <Polyline
-            coordinates={remainingPath}
-            strokeColor={colors.border}
-            strokeWidth={4}
-            lineDashPattern={[5, 5]}
-          />
-        )}
-
-        {/* Completed path (accent color) */}
-        {completedPath.length > 1 && (
-          <Polyline
-            coordinates={completedPath}
-            strokeColor={accentColor}
-            strokeWidth={5}
-          />
-        )}
-
-        {/* Start marker */}
-        {gpsData.length > 0 && (
-          <Marker
-            coordinate={{ latitude: gpsData[0].lat, longitude: gpsData[0].lon }}
-            anchor={{ x: 0.5, y: 0.5 }}
-          >
-            <View style={[styles.startMarker, { backgroundColor: colors.lime }]}>
-              <MaterialCommunityIcons name="flag-checkered" size={16} color={colors.text} />
-            </View>
-          </Marker>
-        )}
-
-        {/* Finish marker */}
-        {gpsData.length > 0 && (
-          <Marker
-            coordinate={{
-              latitude: gpsData[gpsData.length - 1].lat,
-              longitude: gpsData[gpsData.length - 1].lon,
-            }}
-            anchor={{ x: 0.5, y: 0.5 }}
-          >
-            <View style={[styles.finishMarker, { backgroundColor: colors.magenta }]}>
-              <MaterialCommunityIcons name="flag" size={16} color={colors.text} />
-            </View>
-          </Marker>
-        )}
-
-        {/* Current position marker */}
-        {currentPoint && (
-          <Marker
-            coordinate={{ latitude: currentPoint.lat, longitude: currentPoint.lon }}
-            anchor={{ x: 0.5, y: 0.5 }}
-          >
-            <View style={styles.currentMarkerOuter}>
-              <View
-                style={[
-                  styles.currentMarker,
-                  { backgroundColor: getColorForGForce(currentPoint.gForce) },
-                ]}
-              >
-                <MaterialCommunityIcons name="car-sports" size={16} color={colors.text} />
-              </View>
-            </View>
-          </Marker>
-        )}
-      </MapView>
-
-      {/* Back button */}
-      <TouchableOpacity style={[styles.backButton, { backgroundColor: colors.card }]} onPress={handleBack}>
-        <MaterialCommunityIcons name="arrow-left" size={24} color={colors.text} />
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <TouchableOpacity style={styles.backButton} onPress={handleBack}>
+        <MaterialCommunityIcons name="arrow-left" size={28} color={colors.text} />
       </TouchableOpacity>
 
-      {/* Stats overlay */}
+      <View style={styles.header}>
+        <Text style={[styles.title, { color: colors.text }]}>Track Replay</Text>
+        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>GPS Path Visualization</Text>
+      </View>
+
+      <View style={[styles.canvasContainer, { backgroundColor: colors.card, borderColor: colors.border }]}>
+        <Canvas style={styles.canvas}>
+          {pathString && (
+            <Path
+              path={pathString}
+              style="stroke"
+              strokeWidth={3}
+              color={accentColor}
+            />
+          )}
+
+          {currentPoint && (
+            <>
+              <SkiaCircle
+                cx={currentCoords.x}
+                cy={currentCoords.y}
+                r={8}
+                color={getColorForGForce(currentPoint.gForce)}
+              />
+              <SkiaCircle
+                cx={currentCoords.x}
+                cy={currentCoords.y}
+                r={12}
+                style="stroke"
+                strokeWidth={2}
+                color={colors.text}
+              />
+            </>
+          )}
+        </Canvas>
+      </View>
+
       {currentPoint && (
-        <View style={[styles.statsOverlay, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          <View style={styles.statColumn}>
+        <View style={[styles.statsContainer, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <View style={styles.statItem}>
             <MaterialCommunityIcons name="speedometer" size={24} color={accentColor} />
             <Text style={[styles.statValue, { color: colors.text }]}>
-              {currentPoint.speed.toFixed(0)}
+              {currentPoint.speed.toFixed(0)} km/h
             </Text>
-            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>km/h</Text>
+            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Speed</Text>
           </View>
 
-          <View style={[styles.divider, { backgroundColor: colors.border }]} />
-
-          <View style={styles.statColumn}>
-            <MaterialCommunityIcons
-              name="arrow-up-bold"
-              size={24}
-              color={getColorForGForce(currentPoint.gForce)}
-            />
+          <View style={styles.statItem}>
+            <MaterialCommunityIcons name="arrow-up-bold" size={24} color={getColorForGForce(currentPoint.gForce)} />
             <Text style={[styles.statValue, { color: colors.text }]}>
-              {currentPoint.gForce.toFixed(2)}
+              {currentPoint.gForce.toFixed(2)}g
             </Text>
-            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>g-force</Text>
+            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>G-Force</Text>
           </View>
 
-          <View style={[styles.divider, { backgroundColor: colors.border }]} />
-
-          <View style={styles.statColumn}>
-            <MaterialCommunityIcons name="map-marker-path" size={24} color={accentColor} />
+          <View style={styles.statItem}>
+            <MaterialCommunityIcons name="map-marker" size={24} color={accentColor} />
             <Text style={[styles.statValue, { color: colors.text }]}>
-              {((currentIndex / gpsData.length) * 100).toFixed(0)}%
+              {currentIndex + 1}/{gpsData.length}
             </Text>
-            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>complete</Text>
+            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Position</Text>
           </View>
         </View>
       )}
 
-      {/* Controls */}
-      <View style={[styles.controls, { backgroundColor: colors.card, borderColor: colors.border }]}>
+      <View style={styles.controls}>
         <TouchableOpacity
-          style={[styles.controlButton, { backgroundColor: colors.background }]}
+          style={[styles.controlButton, { backgroundColor: colors.card, borderColor: colors.border }]}
           onPress={handleReset}
           activeOpacity={0.8}
         >
-          <MaterialCommunityIcons name="restart" size={24} color={colors.text} />
+          <MaterialCommunityIcons name="restart" size={28} color={colors.text} />
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -392,149 +277,114 @@ export default function TrackReplayScreen() {
           >
             <MaterialCommunityIcons
               name={isPlaying ? 'pause' : 'play'}
-              size={32}
+              size={36}
               color={colors.text}
             />
           </LinearGradient>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[styles.controlButton, { backgroundColor: colors.background }]}
-          onPress={handleSpeedToggle}
-          activeOpacity={0.8}
-        >
-          <Text style={[styles.speedText, { color: colors.text }]}>{playbackSpeed}x</Text>
-        </TouchableOpacity>
+        <View style={[styles.controlButton, { backgroundColor: 'transparent', borderColor: 'transparent' }]} />
       </View>
 
-      {/* Progress bar */}
-      <View style={[styles.progressContainer, { backgroundColor: colors.card, borderColor: colors.border }]}>
-        <View style={[styles.progressBar, { backgroundColor: colors.border }]}>
-          <View
-            style={[
-              styles.progressFill,
-              {
-                backgroundColor: accentColor,
-                width: `${(currentIndex / Math.max(gpsData.length - 1, 1)) * 100}%`,
-              },
-            ]}
-          />
+      <View style={styles.legendContainer}>
+        <Text style={[styles.legendTitle, { color: colors.textSecondary }]}>G-Force Scale</Text>
+        <View style={styles.legendItems}>
+          {[
+            { label: '< 0.5g', color: '#0080FF' },
+            { label: '< 1.0g', color: '#00D4FF' },
+            { label: '< 1.5g', color: '#00FF88' },
+            { label: '< 2.0g', color: '#FFAA00' },
+            { label: '> 2.0g', color: '#FF0055' },
+          ].map((item, index) => (
+            <View key={index} style={styles.legendItem}>
+              <View style={[styles.legendColor, { backgroundColor: item.color }]} />
+              <Text style={[styles.legendLabel, { color: colors.textSecondary }]}>{item.label}</Text>
+            </View>
+          ))}
         </View>
-        <Text style={[styles.progressText, { color: colors.textSecondary }]}>
-          {currentIndex + 1} / {gpsData.length} points
-        </Text>
       </View>
     </View>
   );
 }
 
-// Dark map style for better visibility
-const darkMapStyle = [
-  {
-    elementType: 'geometry',
-    stylers: [{ color: '#1A1A1A' }],
-  },
-  {
-    elementType: 'labels.text.fill',
-    stylers: [{ color: '#888888' }],
-  },
-  {
-    elementType: 'labels.text.stroke',
-    stylers: [{ color: '#1A1A1A' }],
-  },
-  {
-    featureType: 'road',
-    elementType: 'geometry',
-    stylers: [{ color: '#333333' }],
-  },
-  {
-    featureType: 'water',
-    elementType: 'geometry',
-    stylers: [{ color: '#0A2A3A' }],
-  },
-];
-
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-  },
-  map: {
     flex: 1,
   },
   backButton: {
     position: 'absolute',
     top: 60,
     left: SPACING.lg,
+    zIndex: 10,
     width: 44,
     height: 44,
-    borderRadius: 22,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 5,
   },
-  statsOverlay: {
-    position: 'absolute',
-    top: 60,
-    right: SPACING.lg,
-    flexDirection: 'row',
+  header: {
+    paddingTop: 80,
+    paddingHorizontal: SPACING.lg,
+    paddingBottom: SPACING.md,
+    alignItems: 'center',
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: 'bold',
+  },
+  subtitle: {
+    fontSize: FONT_SIZE.md,
+    marginTop: SPACING.xs,
+  },
+  canvasContainer: {
+    marginHorizontal: SPACING.lg,
     borderRadius: BORDER_RADIUS.lg,
     borderWidth: 1,
-    padding: SPACING.sm,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 5,
+    overflow: 'hidden',
+    height: 480,
   },
-  statColumn: {
+  canvas: {
+    flex: 1,
+  },
+  statsContainer: {
+    flexDirection: 'row',
+    marginHorizontal: SPACING.lg,
+    marginTop: SPACING.lg,
+    padding: SPACING.lg,
+    borderRadius: BORDER_RADIUS.lg,
+    borderWidth: 1,
+    justifyContent: 'space-around',
+  },
+  statItem: {
     alignItems: 'center',
-    paddingHorizontal: SPACING.sm,
   },
   statValue: {
     fontSize: FONT_SIZE.lg,
     fontWeight: 'bold',
-    marginTop: 4,
+    marginTop: SPACING.xs,
   },
   statLabel: {
     fontSize: FONT_SIZE.xs,
-    marginTop: 2,
-  },
-  divider: {
-    width: 1,
-    marginHorizontal: SPACING.xs,
+    marginTop: 4,
   },
   controls: {
-    position: 'absolute',
-    bottom: 120,
-    left: SPACING.lg,
-    right: SPACING.lg,
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
-    padding: SPACING.md,
-    borderRadius: BORDER_RADIUS.lg,
-    borderWidth: 1,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 5,
+    marginHorizontal: SPACING.lg,
+    marginTop: SPACING.lg,
   },
   controlButton: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    borderWidth: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
   playButton: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
     overflow: 'hidden',
   },
   playGradient: {
@@ -542,81 +392,34 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  speedText: {
-    fontSize: FONT_SIZE.md,
-    fontWeight: 'bold',
+  legendContainer: {
+    marginHorizontal: SPACING.lg,
+    marginTop: SPACING.lg,
+    marginBottom: SPACING.xl,
   },
-  progressContainer: {
-    position: 'absolute',
-    bottom: 40,
-    left: SPACING.lg,
-    right: SPACING.lg,
-    padding: SPACING.md,
-    borderRadius: BORDER_RADIUS.lg,
-    borderWidth: 1,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  progressBar: {
-    height: 6,
-    borderRadius: 3,
-    overflow: 'hidden',
-    marginBottom: SPACING.xs,
-  },
-  progressFill: {
-    height: '100%',
-    borderRadius: 3,
-  },
-  progressText: {
+  legendTitle: {
     fontSize: FONT_SIZE.xs,
-    textAlign: 'center',
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    marginBottom: SPACING.sm,
   },
-  startMarker: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 5,
+  legendItems: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: SPACING.sm,
   },
-  finishMarker: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    justifyContent: 'center',
+  legendItem: {
+    flexDirection: 'row',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 5,
+    gap: SPACING.xs,
   },
-  currentMarkerOuter: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-    justifyContent: 'center',
-    alignItems: 'center',
+  legendColor: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
   },
-  currentMarker: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.5,
-    shadowRadius: 4,
-    elevation: 8,
+  legendLabel: {
+    fontSize: FONT_SIZE.xs,
   },
   lockedContainer: {
     flex: 1,

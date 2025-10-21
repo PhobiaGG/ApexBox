@@ -7,6 +7,7 @@ import {
   onAuthStateChanged,
   User as FirebaseUser,
   deleteUser,
+  updateProfile as updateFirebaseProfile,
 } from 'firebase/auth';
 import { doc, setDoc, getDoc, deleteDoc, collection, getDocs, addDoc, updateDoc, query, where } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';

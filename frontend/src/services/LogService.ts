@@ -11,19 +11,7 @@ export interface SessionMetadata {
   stats?: SessionStats;
 }
 
-// Mock data for when files aren't available
-const MOCK_SESSIONS = {
-  '19Oct2025': [
-    { date: '19Oct2025', time: '12.55pm', fileName: '12.55pm.csv', filePath: '' },
-    { date: '19Oct2025', time: '1.12pm', fileName: '1.12pm.csv', filePath: '' },
-  ],
-  '20Oct2025': [
-    { date: '20Oct2025', time: '9.04am', fileName: '9.04am.csv', filePath: '' },
-  ],
-  '21Oct2025': [
-    { date: '21Oct2025', time: '3.22pm', fileName: '3.22pm.csv', filePath: '' },
-  ],
-};
+// No mock data - all sessions from user's real data
 
 const MOCK_CSV_DATA: Record<string, string> = {
   '19Oct2025/12.55pm.csv': `timestamp_ms,speed,g_force,temp,humidity,lux,altitude

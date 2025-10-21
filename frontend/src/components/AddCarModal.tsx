@@ -152,6 +152,9 @@ export default function AddCarModal({ visible, onClose, onSave, accentColor, edi
               <View style={styles.header}>
                 <MaterialCommunityIcons name="car-sports" size={40} color={accentColor} />
                 <Text style={styles.title}>{editCar ? 'Edit Car' : 'Add New Car'}</Text>
+                <Text style={styles.subtitle}>
+                  {editCar ? 'Update your vehicle details' : 'Add a vehicle to your garage'}
+                </Text>
                 <TouchableOpacity style={styles.closeButton} onPress={handleCancel}>
                   <MaterialCommunityIcons name="close" size={28} color={COLORS.textSecondary} />
                 </TouchableOpacity>

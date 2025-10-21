@@ -121,20 +121,20 @@ export default function DashboardScreen() {
         const logService = LogService;
         
         // Create mock telemetry samples based on duration
-        const mockSamples = [];
+        const mockSamples: any[] = [];
         for (let i = 0; i < duration; i++) {
           mockSamples.push({
             timestamp_ms: i * 1000,
             speed: currentSpeed + Math.random() * 10 - 5,
             g_force: currentGForce + Math.random() * 0.5 - 0.25,
-            temperature: currentTemp,
+            temp: currentTemp,
             humidity: 45,
             lux: 800,
             altitude: currentAltitude,
           });
         }
         
-        const sessionKey = await logService.saveSession(mockSamples, coordinates, duration);
+        const sessionKey = await logService.saveSession(mockSamples, recordedPath, duration);
         console.log('[Dashboard] Session saved:', sessionKey);
         
         // Rescan to update logs list

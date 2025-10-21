@@ -355,12 +355,18 @@ export default function GroupsScreen() {
               key={entry.uid}
               style={[
                 styles.leaderboardEntry,
-                { backgroundColor: colors.card, borderColor: colors.border },
-                index === 0 && { borderColor: accentColor, borderWidth: 2 },
+                { 
+                  backgroundColor: colors.card, 
+                  borderColor: index === 0 ? accentColor : colors.border,
+                  borderWidth: index === 0 ? 2 : 1,
+                },
               ]}
             >
               <View style={styles.entryLeft}>
-                <View style={[styles.rankBadge, index === 0 && { backgroundColor: accentColor }]}>
+                <View style={[
+                  styles.rankBadge, 
+                  { backgroundColor: index === 0 ? accentColor : colors.background }
+                ]}>
                   <Text
                     style={[
                       styles.rankText,
@@ -374,13 +380,13 @@ export default function GroupsScreen() {
                   uri={entry.avatarURI || null}
                   name={entry.displayName || 'Driver'}
                   size={48}
-                  borderColor={accentColor}
+                  borderColor={index === 0 ? accentColor : colors.border}
                 />
                 <View style={styles.entryInfo}>
                   <Text style={[styles.entryName, { color: colors.text }]}>{entry.displayName}</Text>
                   {index === 0 && (
                     <View style={styles.crownBadge}>
-                      <MaterialCommunityIcons name="crown" size={14} color={accentColor} />
+                      <AnimatedCrown color={accentColor} size={14} />
                       <Text style={[styles.crownText, { color: accentColor }]}>Leader</Text>
                     </View>
                   )}

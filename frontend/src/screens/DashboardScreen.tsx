@@ -140,6 +140,35 @@ export default function DashboardScreen() {
           </View>
         )}
 
+        {/* BLE Status Banner */}
+        <TouchableOpacity
+          style={[
+            styles.bleStatusBanner,
+            { 
+              backgroundColor: status.isConnected ? accentColor + '15' : colors.card + '80',
+              borderColor: status.isConnected ? accentColor : colors.border,
+            },
+          ]}
+          onPress={handleBlePress}
+          activeOpacity={0.8}
+        >
+          <View style={styles.bleStatusLeft}>
+            <MaterialCommunityIcons
+              name={status.isConnected ? 'bluetooth-connect' : 'bluetooth-off'}
+              size={20}
+              color={status.isConnected ? accentColor : colors.textSecondary}
+            />
+            <View style={styles.bleStatusTextContainer}>
+              <Text style={[styles.bleStatusText, { color: status.isConnected ? accentColor : colors.textSecondary }]}>
+                {status.isConnected 
+                  ? `🟢 Connected to ${status.connectedDevice?.name}` 
+                  : '🟠 Simulation Mode (Offline)'}
+              </Text>
+            </View>
+          </View>
+          <MaterialCommunityIcons name="cog" size={20} color={status.isConnected ? accentColor : colors.textSecondary} />
+        </TouchableOpacity>
+
         <ScrollView
           style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}

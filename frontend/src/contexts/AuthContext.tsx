@@ -208,7 +208,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const signOut = async () => {
+  const signOutUser = async () => {
     try {
       await signOut(auth);
       setProfile(null);

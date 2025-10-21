@@ -10,7 +10,13 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.apexbox.companion"
+      "bundleIdentifier": "com.apexbox.companion",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "ApexBox tracks your location during performance sessions to create track replays",
+        "NSBluetoothAlwaysUsageDescription": "ApexBox uses Bluetooth to connect to your performance tracker device",
+        "NSCameraUsageDescription": "ApexBox needs camera access to take profile pictures",
+        "NSPhotoLibraryUsageDescription": "ApexBox needs photo access to set your profile picture"
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -20,8 +26,14 @@
       "package": "com.apexbox.companion",
       "permissions": [
         "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
         "BLUETOOTH",
-        "BLUETOOTH_ADMIN"
+        "BLUETOOTH_ADMIN",
+        "BLUETOOTH_CONNECT",
+        "BLUETOOTH_SCAN",
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
       ],
       "edgeToEdgeEnabled": true
     },

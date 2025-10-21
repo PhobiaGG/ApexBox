@@ -88,7 +88,7 @@ export default function Gauge({ value, maxValue, label, unit, color, size = 140 
           />
         </Svg>
         <View style={styles.valueContainer}>
-          <Text style={[styles.value, { color }]}>{value.toFixed(1)}</Text>
+          <Text style={[styles.value, { color }]}>{(value || 0).toFixed(1)}</Text>
           <Text style={styles.unit}>{unit}</Text>
         </View>
       </View>

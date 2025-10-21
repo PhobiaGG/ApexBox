@@ -128,10 +128,13 @@ export default function SettingsScreen() {
             <Text style={styles.sectionTitle}>Units & Display</Text>
             <View style={styles.card}>
               <View style={styles.settingRow}>
-                <Text style={styles.settingLabel}>Metric System</Text>
+                <Text style={styles.settingLabel}>Metric System (km/h)</Text>
                 <Switch
                   value={settings.units.isMetric}
-                  onValueChange={value => updateUnits({ isMetric: value })}
+                  onValueChange={async (value) => {
+                    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    await updateUnits({ isMetric: value });
+                  }}
                   trackColor={{ false: COLORS.border, true: COLORS.cyan }}
                   thumbColor={COLORS.text}
                 />
@@ -141,7 +144,23 @@ export default function SettingsScreen() {
                 <Text style={styles.settingLabel}>Temperature (Celsius)</Text>
                 <Switch
                   value={settings.units.tempCelsius}
-                  onValueChange={value => updateUnits({ tempCelsius: value })}
+                  onValueChange={async (value) => {
+                    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    await updateUnits({ tempCelsius: value });
+                  }}
+                  trackColor={{ false: COLORS.border, true: COLORS.cyan }}
+                  thumbColor={COLORS.text}
+                />
+              </View>
+
+              <View style={styles.settingRow}>
+                <Text style={styles.settingLabel}>Altitude (Meters)</Text>
+                <Switch
+                  value={settings.units.altitudeMetric}
+                  onValueChange={async (value) => {
+                    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    await updateUnits({ altitudeMetric: value });
+                  }}
                   trackColor={{ false: COLORS.border, true: COLORS.cyan }}
                   thumbColor={COLORS.text}
                 />
@@ -151,7 +170,10 @@ export default function SettingsScreen() {
                 <Text style={styles.settingLabel}>24-Hour Time</Text>
                 <Switch
                   value={settings.units.time24Hour}
-                  onValueChange={value => updateUnits({ time24Hour: value })}
+                  onValueChange={async (value) => {
+                    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    await updateUnits({ time24Hour: value });
+                  }}
                   trackColor={{ false: COLORS.border, true: COLORS.cyan }}
                   thumbColor={COLORS.text}
                 />

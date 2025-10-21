@@ -343,12 +343,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         logout,
         resetPassword,
         updateProfile,
+        updateUsername,
         deleteAccount,
         uploadAvatar,
         addCar,
         setActiveCar,
         deleteCar,
         loadGarage,
+        getActiveCar,
       }}
     >
       {children}

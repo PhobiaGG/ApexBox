@@ -326,6 +326,14 @@ export default function GroupsScreen() {
           style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={accentColor}
+              colors={[accentColor]}
+            />
+          }
         >
           <View style={[styles.statsHeader, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <View style={styles.statColumn}>

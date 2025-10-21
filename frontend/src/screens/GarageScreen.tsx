@@ -408,6 +408,17 @@ const styles = StyleSheet.create({
   carInfo: {
     flex: 1,
   },
+  actionButtons: {
+    flexDirection: 'row',
+    gap: SPACING.xs,
+  },
+  iconButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   carNickname: {
     fontSize: FONT_SIZE.lg,
     fontWeight: 'bold',

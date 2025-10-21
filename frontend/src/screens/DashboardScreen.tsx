@@ -306,6 +306,31 @@ const styles = StyleSheet.create({
     letterSpacing: 4,
     marginTop: 4,
   },
+  activeCarContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: SPACING.lg,
+    marginBottom: SPACING.md,
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.md,
+    borderRadius: BORDER_RADIUS.md,
+    borderWidth: 2,
+    gap: SPACING.sm,
+  },
+  activeCarInfo: {
+    flex: 1,
+  },
+  activeCarLabel: {
+    fontSize: FONT_SIZE.xs,
+    textTransform: 'uppercase',
+    fontWeight: '600',
+    letterSpacing: 1,
+  },
+  activeCarName: {
+    fontSize: FONT_SIZE.md,
+    fontWeight: 'bold',
+    marginTop: 2,
+  },
   scrollView: {
     flex: 1,
   },

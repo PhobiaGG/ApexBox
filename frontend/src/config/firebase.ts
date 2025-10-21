@@ -4,14 +4,14 @@ import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
 // Firebase configuration
-// Replace with your actual Firebase project config
 const firebaseConfig = {
-  apiKey: "AIzaSyDEMOKEY-REPLACE-WITH-YOUR-KEY",
-  authDomain: "apexbox-demo.firebaseapp.com",
-  projectId: "apexbox-demo",
-  storageBucket: "apexbox-demo.appspot.com",
-  messagingSenderId: "123456789012",
-  appId: "1:123456789012:web:abcdef1234567890"
+  apiKey: "AIzaSyAJ4MYzOakpthRU17DrTDwqcOVLSaqp_wU",
+  authDomain: "apexbox-32ad0.firebaseapp.com",
+  projectId: "apexbox-32ad0",
+  storageBucket: "apexbox-32ad0.firebasestorage.app",
+  messagingSenderId: "417300033703",
+  appId: "1:417300033703:web:c913f9d0819989eff06b82",
+  measurementId: "G-FCMQFY2GSK"
 };
 
 // Initialize Firebase

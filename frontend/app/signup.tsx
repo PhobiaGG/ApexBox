@@ -56,7 +56,12 @@ export default function SignUpScreen() {
   };
 
   const handleSignUp = async () => {
+    console.log('[SignUp] Starting signup process...');
+    console.log('[SignUp] Display Name:', displayName);
+    console.log('[SignUp] Email:', email);
+    
     if (!validateInputs()) {
+      console.log('[SignUp] Validation failed');
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       return;
     }
@@ -65,8 +70,10 @@ export default function SignUpScreen() {
       setLoading(true);
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       
+      console.log('[SignUp] Calling signUp function...');
       await signUp(email, password, displayName);
       
+      console.log('[SignUp] Signup successful!');
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       Alert.alert(
         'Account Created!',
@@ -74,6 +81,7 @@ export default function SignUpScreen() {
         [{ text: 'Continue', onPress: () => router.replace('/(tabs)') }]
       );
     } catch (error: any) {
+      console.error('[SignUp] Error:', error);
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       Alert.alert('Sign Up Failed', error.message || 'Unable to create account');
     } finally {

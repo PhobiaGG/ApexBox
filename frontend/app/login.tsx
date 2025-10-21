@@ -13,20 +13,20 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { COLORS, SPACING, FONT_SIZE, BORDER_RADIUS } from '../src/constants/theme';
+import { SPACING, FONT_SIZE, BORDER_RADIUS } from '../src/constants/theme';
 import { useAuth } from '../src/contexts/AuthContext';
-import { useAccentColor } from '../src/hooks/useAccentColor';
+import { useTheme } from '../src/contexts/ThemeContext';
 import * as Haptics from 'expo-haptics';
 
 export default function LoginScreen() {
   const router = useRouter();
   const { signIn } = useAuth();
-  const accentColor = useAccentColor();
+  const { colors, getCurrentAccent } = useTheme();
+  const accentColor = getCurrentAccent();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [rememberMe, setRememberMe] = useState(true);
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -42,7 +42,7 @@ export default function LoginScreen() {
       await signIn(email, password);
       
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      router.replace('/(tabs)');
+      // No need to manually navigate - AuthWrapper will handle it
     } catch (error: any) {
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       Alert.alert('Login Failed', error.message || 'Invalid credentials');
@@ -62,7 +62,7 @@ export default function LoginScreen() {
   };
 
   return (
-    <LinearGradient colors={[COLORS.background, '#0F0F0F']} style={styles.container}>
+    <LinearGradient colors={[colors.background, colors.card]} style={styles.container}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
@@ -70,9 +70,9 @@ export default function LoginScreen() {
         <View style={styles.content}>
           {/* Logo/Title */}
           <View style={styles.header}>
-            <MaterialCommunityIcons name="car-speed-limiter" size={80} color={accentColor} />
-            <Text style={styles.title}>ApexBox</Text>
-            <Text style={styles.subtitle}>Performance Tracking Companion</Text>
+            <MaterialCommunityIcons name="car-sports" size={80} color={accentColor} />
+            <Text style={[styles.title, { color: colors.text }]}>ApexBox</Text>
+            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Performance Tracking Companion</Text>
           </View>
 
           {/* Login Form */}

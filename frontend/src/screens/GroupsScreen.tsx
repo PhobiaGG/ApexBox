@@ -300,7 +300,7 @@ export default function GroupsScreen() {
           >
             <MaterialCommunityIcons
               name="shield-account"
-              size={24}
+              size={18}
               color={selectedCrew?.id === crew.id ? accentColor : colors.textSecondary}
             />
             <Text

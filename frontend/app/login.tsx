@@ -155,29 +155,6 @@ export default function LoginScreen() {
     </LinearGradient>
   );
 }
-                  <ActivityIndicator color={COLORS.text} />
-                ) : (
-                  <>
-                    <MaterialCommunityIcons name="login" size={24} color={COLORS.text} />
-                    <Text style={styles.buttonText}>Sign In</Text>
-                  </>
-                )}
-              </LinearGradient>
-            </TouchableOpacity>
-
-            {/* Sign Up Link */}
-            <View style={styles.signUpContainer}>
-              <Text style={styles.signUpText}>Don't have an account? </Text>
-              <TouchableOpacity onPress={handleSignUp}>
-                <Text style={[styles.signUpLink, { color: accentColor }]}>Sign Up</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </KeyboardAvoidingView>
-    </LinearGradient>
-  );
-}
 
 const styles = StyleSheet.create({
   container: {

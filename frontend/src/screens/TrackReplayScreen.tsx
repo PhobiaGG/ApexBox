@@ -94,14 +94,71 @@ export default function TrackReplayScreen() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [mapBounds, setMapBounds] = useState({ minLat: 0, maxLat: 0, minLon: 0, maxLon: 0 });
+  const [scale, setScale] = useState(1);
+  const [translateX, setTranslateX] = useState(0);
+  const [translateY, setTranslateY] = useState(0);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Load GPS data (mock for now)
-    const data = generateMockGPSData();
-    setGpsData(data);
+    loadGPSData();
+  }, [params]);
 
-    // Calculate bounds
-    if (data.length > 0) {
+  const loadGPSData = async () => {
+    try {
+      setLoading(true);
+      
+      // Try to load GPS data from saved session if sessionKey is provided
+      const sessionKey = params.sessionKey as string;
+      let data: GPSPoint[] = [];
+      
+      if (sessionKey) {
+        console.log('[TrackReplay] Loading GPS data for session:', sessionKey);
+        const gpsDataStr = await AsyncStorage.getItem(`gps_${sessionKey}`);
+        
+        if (gpsDataStr) {
+          const gpsCoords = JSON.parse(gpsDataStr);
+          // Convert GPSCoordinate[] to GPSPoint[]
+          data = gpsCoords.map((coord: any, index: number) => ({
+            lat: coord.latitude,
+            lon: coord.longitude,
+            speed: coord.speed || 0,
+            gForce: 0, // Calculate from speed changes if available
+            timestamp: coord.timestamp,
+          }));
+          
+          console.log('[TrackReplay] Loaded', data.length, 'GPS points from session');
+        }
+      }
+      
+      // Fallback to mock data if no GPS data found
+      if (data.length === 0) {
+        console.log('[TrackReplay] Using mock GPS data');
+        data = generateMockGPSData();
+      }
+      
+      // Performance optimization: downsample if too many points
+      const displayData = downsamplePoints(data, 200);
+      setGpsData(displayData);
+
+      // Calculate bounds with padding
+      if (displayData.length > 0) {
+        const lats = displayData.map(p => p.lat);
+        const lons = displayData.map(p => p.lon);
+        const padding = 0.0005; // Add 10% padding
+        
+        setMapBounds({
+          minLat: Math.min(...lats) - padding,
+          maxLat: Math.max(...lats) + padding,
+          minLon: Math.min(...lons) - padding,
+          maxLon: Math.max(...lons) + padding,
+        });
+      }
+    } catch (error) {
+      console.error('[TrackReplay] Error loading GPS data:', error);
+      // Fallback to mock data
+      const data = generateMockGPSData();
+      setGpsData(data);
+      
       const lats = data.map(p => p.lat);
       const lons = data.map(p => p.lon);
       setMapBounds({
@@ -110,8 +167,10 @@ export default function TrackReplayScreen() {
         minLon: Math.min(...lons),
         maxLon: Math.max(...lons),
       });
+    } finally {
+      setLoading(false);
     }
-  }, []);
+  };
 
   useEffect(() => {
     if (!isPlaying || currentIndex >= gpsData.length - 1) {

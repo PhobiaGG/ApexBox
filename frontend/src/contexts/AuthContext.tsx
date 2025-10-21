@@ -378,7 +378,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setProfile({ ...profile, garage: updatedGarage });
       }
       
-      // Then update Firebase
+      // Update Firebase
       const garageRef = collection(db, 'users', user.uid, 'garage');
       const garageSnap = await getDocs(garageRef);
       
@@ -391,11 +391,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       await Promise.all(batch);
       
-      // Reload to ensure consistency
-      if (profile) {
-        const freshGarage = await loadGarage(user.uid);
-        setProfile({ ...profile, garage: freshGarage });
-      }
+      // Don't reload on success - optimistic update is correct
+      
     } catch (error: any) {
       console.error('[Auth] Set active car error:', error);
       // Rollback on error

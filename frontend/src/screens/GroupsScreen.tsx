@@ -163,6 +163,7 @@ export default function GroupsScreen() {
   const [crews, setCrews] = useState<Crew[]>([]);
   const [selectedCrew, setSelectedCrew] = useState<Crew | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [showAddFriendModal, setShowAddFriendModal] = useState(false);
   const [friendUID, setFriendUID] = useState('');
 
@@ -181,6 +182,17 @@ export default function GroupsScreen() {
       }
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const onRefresh = async () => {
+    try {
+      setRefreshing(true);
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      await loadCrews();
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } finally {
+      setRefreshing(false);
     }
   };
 

@@ -8,13 +8,13 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
-import { COLORS, SPACING, FONT_SIZE, BORDER_RADIUS } from '../constants/theme';
+import { SPACING, FONT_SIZE, BORDER_RADIUS } from '../constants/theme';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useBle } from '../contexts/BleContext';
 import { useLogs } from '../contexts/LogsContext';
 import { useSettings } from '../contexts/SettingsContext';
-import { useAccentColor } from '../hooks/useAccentColor';
+import { useTheme } from '../contexts/ThemeContext';
 import Gauge from '../components/Gauge';
 import MetricCard from '../components/MetricCard';
 import ChartView from '../components/ChartView';
@@ -25,7 +25,8 @@ export default function DashboardScreen() {
   const { status, scan, connect, disconnect, devices, sendCommand, telemetry } = useBle();
   const { latestSession, isLoading, rescan } = useLogs();
   const { settings } = useSettings();
-  const accentColor = useAccentColor();
+  const { colors, getCurrentAccent } = useTheme();
+  const accentColor = getCurrentAccent();
   const [currentSpeed, setCurrentSpeed] = useState(0);
   const [currentGForce, setCurrentGForce] = useState(0);
   const [currentTemp, setCurrentTemp] = useState(65);

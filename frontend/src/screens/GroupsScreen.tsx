@@ -347,55 +347,68 @@ export default function GroupsScreen() {
                 },
               ]}
             >
-              <View style={styles.entryLeft}>
-                <View style={[
-                  styles.rankBadge, 
-                  { backgroundColor: index === 0 ? accentColor : colors.background }
-                ]}>
-                  <Text
-                    style={[
-                      styles.rankText,
-                      { color: index === 0 ? colors.background : colors.textSecondary },
-                    ]}
-                  >
-                    #{index + 1}
-                  </Text>
-                </View>
+              {/* Rank Badge */}
+              <View style={[
+                styles.rankBadge, 
+                { backgroundColor: index === 0 ? accentColor : colors.background }
+              ]}>
+                <Text
+                  style={[
+                    styles.rankText,
+                    { color: index === 0 ? colors.background : colors.textSecondary },
+                  ]}
+                >
+                  #{index + 1}
+                </Text>
+              </View>
+
+              {/* Avatar + Name Column */}
+              <View style={styles.avatarColumn}>
                 <UserAvatar
                   uri={entry.avatarURI || null}
                   name={entry.displayName || 'Driver'}
-                  size={48}
+                  size={40}
                   borderColor={index === 0 ? accentColor : colors.border}
                 />
-                <View style={styles.entryInfo}>
-                  <Text style={[styles.entryName, { color: colors.text }]}>{entry.displayName}</Text>
-                  {index === 0 && (
-                    <View style={styles.crownBadge}>
-                      <AnimatedCrown color={accentColor} size={14} />
-                      <Text style={[styles.crownText, { color: accentColor }]}>Leader</Text>
-                    </View>
-                  )}
+                <Text 
+                  style={[styles.entryName, { color: colors.text }]} 
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                >
+                  {entry.displayName}
+                </Text>
+                {index === 0 && (
+                  <View style={styles.crownBadge}>
+                    <AnimatedCrown color={accentColor} size={12} />
+                    <Text style={[styles.crownText, { color: accentColor }]}>Leader</Text>
+                  </View>
+                )}
+              </View>
+
+              {/* Stats */}
+              <View style={styles.statsRow}>
+                <View style={styles.statItem}>
+                  <MaterialCommunityIcons name="speedometer" size={16} color={accentColor} />
+                  <Text style={[styles.statValue, { color: colors.text }]}>
+                    {entry.fastestSpeed}
+                  </Text>
+                  <Text style={[styles.statUnit, { color: colors.textSecondary }]}>km/h</Text>
                 </View>
-              </View>
 
-              <View style={styles.entryStats}>
-                <Text style={[styles.statValue, { color: colors.text }]}>
-                  {entry.fastestSpeed}
-                </Text>
-                <Text style={[styles.statUnit, { color: colors.textSecondary }]}>km/h</Text>
-              </View>
+                <View style={styles.statItem}>
+                  <MaterialCommunityIcons name="arrow-up-bold" size={16} color={colors.magenta} />
+                  <Text style={[styles.statValue, { color: colors.text }]}>
+                    {entry.avgGForce.toFixed(1)}
+                  </Text>
+                  <Text style={[styles.statUnit, { color: colors.textSecondary }]}>g</Text>
+                </View>
 
-              <View style={styles.entryStats}>
-                <Text style={[styles.statValue, { color: colors.text }]}>
-                  {entry.avgGForce.toFixed(1)}
-                </Text>
-                <Text style={[styles.statUnit, { color: colors.textSecondary }]}>g</Text>
-              </View>
-
-              <View style={styles.entryStats}>
-                <Text style={[styles.statValue, { color: colors.text }]}>
-                  {entry.totalSessions}
-                </Text>
+                <View style={styles.statItem}>
+                  <MaterialCommunityIcons name="chart-line" size={16} color={colors.lime} />
+                  <Text style={[styles.statValue, { color: colors.text }]}>
+                    {entry.totalSessions}
+                  </Text>
+                </View>
               </View>
             </View>
           ))}

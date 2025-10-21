@@ -195,3 +195,10 @@ export class TelemetrySimulator {
     this.phaseStartTime = Date.now();
   }
 }
+
+// Helper function for quick telemetry generation
+const simulator = new TelemetrySimulator();
+
+export function generateRealisticTelemetry(): TelemetryData {
+  return simulator.generateSample();
+}

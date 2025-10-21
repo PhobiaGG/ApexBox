@@ -196,35 +196,16 @@ export default function TrackReplayScreen() {
       </View>
 
       <View style={[styles.canvasContainer, { backgroundColor: colors.card, borderColor: colors.border }]}>
-        <Canvas style={styles.canvas}>
-          {pathString && (
-            <Path
-              path={pathString}
-              style="stroke"
-              strokeWidth={3}
-              color={accentColor}
-            />
-          )}
-
-          {currentPoint && (
-            <>
-              <SkiaCircle
-                cx={currentCoords.x}
-                cy={currentCoords.y}
-                r={8}
-                color={getColorForGForce(currentPoint.gForce)}
-              />
-              <SkiaCircle
-                cx={currentCoords.x}
-                cy={currentCoords.y}
-                r={12}
-                style="stroke"
-                strokeWidth={2}
-                color={colors.text}
-              />
-            </>
-          )}
-        </Canvas>
+        <View style={styles.placeholderContainer}>
+          <MaterialCommunityIcons name="map-marker-path" size={80} color={accentColor} />
+          <Text style={[styles.placeholderTitle, { color: colors.text }]}>Track Visualization</Text>
+          <Text style={[styles.placeholderText, { color: colors.textSecondary }]}>
+            GPS track replay available on physical devices
+          </Text>
+          <Text style={[styles.placeholderSubtext, { color: colors.textTertiary }]}>
+            {gpsData.length} GPS points recorded
+          </Text>
+        </View>
       </View>
 
       {currentPoint && (

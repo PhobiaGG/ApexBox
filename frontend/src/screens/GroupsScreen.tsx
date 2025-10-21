@@ -434,19 +434,41 @@ export default function GroupsScreen() {
               </View>
 
               <View style={styles.modalContent}>
-                <Text style={[styles.modalLabel, { color: colors.textSecondary }]}>FRIEND ID (UID)</Text>
+                <Text style={[styles.modalLabel, { color: colors.textSecondary }]}>YOUR FRIEND ID</Text>
+                <View style={[styles.friendIdDisplay, { backgroundColor: accentColor + '20', borderColor: accentColor }]}>
+                  <MaterialCommunityIcons name="identifier" size={20} color={accentColor} />
+                  <Text style={[styles.friendIdText, { color: accentColor }]}>
+                    {profile?.friendId || 'Loading...'}
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() => {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                      Alert.alert('Friend ID', `Share your ID with friends:\n\n${profile?.friendId}`);
+                    }}
+                  >
+                    <MaterialCommunityIcons name="content-copy" size={18} color={accentColor} />
+                  </TouchableOpacity>
+                </View>
+
+                <Text style={[styles.modalLabel, { color: colors.textSecondary, marginTop: SPACING.lg }]}>
+                  FRIEND'S ID
+                </Text>
                 <View style={[styles.modalInput, { backgroundColor: colors.background, borderColor: colors.border }]}>
-                  <MaterialCommunityIcons name="identifier" size={20} color={colors.textSecondary} />
+                  <MaterialCommunityIcons name="account-search" size={20} color={colors.textSecondary} />
                   <TextInput
                     style={[styles.input, { color: colors.text }]}
-                    placeholder="Enter friend's ApexBox ID"
+                    placeholder="Enter 8-digit ID (e.g. 12345678)"
                     placeholderTextColor={colors.textSecondary}
                     value={friendUID}
                     onChangeText={setFriendUID}
-                    autoCapitalize="none"
+                    keyboardType="numeric"
+                    maxLength={8}
                     autoFocus
                   />
                 </View>
+                <Text style={[styles.modalHint, { color: colors.textTertiary }]}>
+                  Ask your friend for their unique Friend ID
+                </Text>
               </View>
 
               <View style={styles.modalButtons}>

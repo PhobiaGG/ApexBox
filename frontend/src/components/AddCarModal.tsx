@@ -31,6 +31,7 @@ export interface CarData {
   model: string;
   year: string;
   color: string;
+  upgrades?: string;
 }
 
 export default function AddCarModal({ visible, onClose, onSave, accentColor, editCar }: AddCarModalProps) {

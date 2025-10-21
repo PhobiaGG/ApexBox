@@ -51,6 +51,10 @@ class MockBleService {
         this.status.isConnected = true;
         this.status.connectedDevice = device;
         console.log('[BLE] Connected to:', device.name);
+        
+        // Start telemetry streaming
+        this.startTelemetryStream();
+        
         resolve(true);
       }, 1000);
     });

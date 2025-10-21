@@ -14,12 +14,16 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useLogs } from '../contexts/LogsContext';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
+import Sparkline from '../components/Sparkline';
+
+type SortMode = 'date' | 'peakSpeed' | 'duration';
 
 export default function LogsScreen() {
   const { sessionsByDate, isLoading, rescan } = useLogs();
   const router = useRouter();
   const [expandedDates, setExpandedDates] = useState<Set<string>>(new Set());
   const [refreshing, setRefreshing] = useState(false);
+  const [sortMode, setSortMode] = useState<SortMode>('date');
 
   const dates = Object.keys(sessionsByDate).sort().reverse();
 

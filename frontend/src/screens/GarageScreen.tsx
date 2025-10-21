@@ -244,7 +244,7 @@ export default function GarageScreen() {
                     </TouchableOpacity>
                     <TouchableOpacity
                       style={[styles.iconButton, { backgroundColor: colors.background }]}
-                      onPress={() => handleDeleteCar(car.id)}
+                      onPress={() => handleDelete(car.id, car.nickname)}
                     >
                       <MaterialCommunityIcons name="delete" size={18} color={colors.magenta} />
                     </TouchableOpacity>

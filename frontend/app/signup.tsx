@@ -16,13 +16,14 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { COLORS, SPACING, FONT_SIZE, BORDER_RADIUS } from '../src/constants/theme';
 import { useAuth } from '../src/contexts/AuthContext';
-import { useAccentColor } from '../src/hooks/useAccentColor';
+import { useTheme } from '../src/contexts/ThemeContext';
 import * as Haptics from 'expo-haptics';
 
 export default function SignUpScreen() {
   const router = useRouter();
   const { signUp } = useAuth();
-  const accentColor = useAccentColor();
+  const { colors, getCurrentAccent } = useTheme();
+  const accentColor = getCurrentAccent();
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

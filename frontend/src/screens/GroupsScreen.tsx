@@ -72,6 +72,14 @@ export default function GroupsScreen() {
     loadData();
   }, []);
 
+  // Reload data when screen comes into focus (e.g., after leaving a crew)
+  useFocusEffect(
+    useCallback(() => {
+      console.log('[GroupsScreen] Screen focused, reloading data...');
+      loadData();
+    }, [])
+  );
+
   const loadData = async () => {
     try {
       setIsLoading(true);

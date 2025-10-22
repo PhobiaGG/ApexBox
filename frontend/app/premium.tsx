@@ -48,29 +48,42 @@ export default function PremiumScreen() {
   const handlePurchase = async () => {
     try {
       setPurchasing(true);
-      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-
-      // Simulate payment processing (2-3 seconds)
-      await new Promise(resolve => setTimeout(resolve, 2500));
-
-      // Upgrade user to premium
-      await upgradeToPremium();
-
-      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       
-      Alert.alert(
-        '✅ ApexBox Pro Unlocked!',
-        'You now have access to Track Replay and Crew Leaderboards.',
-        [
-          {
-            text: 'Awesome!',
-            onPress: () => router.back(),
-          },
-        ]
-      );
+      // Use real RevenueCat if available
+      if (offerings && offerings.availablePackages && offerings.availablePackages.length > 0) {
+        console.log('[Premium] Initiating real purchase...');
+        const result = await RevenueCatService.purchasePackage(offerings.availablePackages[0]);
+        
+        if (result.success) {
+          // Upgrade user to premium in Firebase
+          await upgradeToPremium();
+          
+          await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          Alert.alert(
+            'Welcome to Pro!',
+            'Your premium features are now unlocked!',
+            [{ text: 'Awesome!', onPress: () => router.back() }]
+          );
+        } else {
+          throw new Error(result.error || 'Purchase failed');
+        }
+      } else {
+        // Fallback to mock purchase if RevenueCat not available
+        console.log('[Premium] Using mock purchase (RevenueCat not available)');
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        await upgradeToPremium();
+        
+        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        Alert.alert(
+          'Welcome to Pro! (Mock)',
+          'Your premium features are now unlocked! Note: This is a mock purchase for testing.',
+          [{ text: 'OK', onPress: () => router.back() }]
+        );
+      }
     } catch (error: any) {
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      Alert.alert('Purchase Failed', error.message || 'Please try again');
+      Alert.alert('Purchase Failed', error.message || 'An error occurred');
     } finally {
       setPurchasing(false);
     }

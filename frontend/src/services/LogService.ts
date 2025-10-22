@@ -209,6 +209,51 @@ class LogService {
       return [];
     }
   }
+
+  /**
+   * Delete a session (removes from local storage and optionally from ApexBox SD card)
+   */
+  async deleteSession(session: SessionMetadata): Promise<void> {
+    try {
+      console.log('[LogService] Deleting session:', session.filePath);
+      
+      // Delete CSV data from AsyncStorage
+      const sessionKey = `session_${session.filePath}`;
+      await AsyncStorage.removeItem(sessionKey);
+      console.log('[LogService] Deleted session data:', sessionKey);
+      
+      // Delete GPS data if exists
+      const gpsKey = `gps_${session.filePath}`;
+      await AsyncStorage.removeItem(gpsKey);
+      console.log('[LogService] Deleted GPS data:', gpsKey);
+      
+      // Clear cache to force refresh
+      await this.clearCache();
+      
+      console.log('[LogService] Session deleted successfully');
+    } catch (error) {
+      console.error('[LogService] Error deleting session:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Send command to ApexBox to delete file from SD card
+   */
+  async deleteFromApexBox(session: SessionMetadata, sendCommand: (cmd: string) => Promise<void>): Promise<void> {
+    try {
+      console.log('[LogService] Sending delete command to ApexBox for:', session.filePath);
+      
+      // Send delete command to ApexBox (format: DELETE:DATE/FILENAME.csv)
+      const deleteCmd = `DELETE:${session.filePath}`;
+      await sendCommand(deleteCmd);
+      
+      console.log('[LogService] Delete command sent to ApexBox');
+    } catch (error) {
+      console.error('[LogService] Error sending delete command to ApexBox:', error);
+      throw error;
+    }
+  }
 }
 
 export default new LogService();

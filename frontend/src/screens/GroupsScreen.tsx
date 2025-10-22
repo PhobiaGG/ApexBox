@@ -581,6 +581,22 @@ export default function GroupsScreen() {
             </TouchableOpacity>
           </View>
 
+          {/* State Filter */}
+          <TouchableOpacity
+            style={[styles.stateFilter, { backgroundColor: colors.card, borderColor: colors.border }]}
+            onPress={() => {
+              setShowStatePicker(true);
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            }}
+            activeOpacity={0.8}
+          >
+            <MaterialCommunityIcons name="map-marker" size={20} color={accentColor} />
+            <Text style={[styles.stateFilterText, { color: colors.text }]}>
+              {selectedState === 'ALL' ? 'All States' : LeaderboardService.getUSStates().find(s => s.code === selectedState)?.name || selectedState}
+            </Text>
+            <MaterialCommunityIcons name="chevron-down" size={20} color={colors.textSecondary} />
+          </TouchableOpacity>
+
           <ScrollView
             style={styles.scrollView}
             contentContainerStyle={styles.scrollContent}

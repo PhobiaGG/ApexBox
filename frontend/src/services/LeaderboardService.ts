@@ -171,6 +171,123 @@ class LeaderboardService {
       return null;
     }
   }
+
+  /**
+   * Get top speed leaderboard filtered by state
+   */
+  async getTopSpeedLeaderboardByState(state: string, limitCount: number = 50): Promise<LeaderboardEntry[]> {
+    try {
+      console.log('[Leaderboard] Fetching top speed leaderboard for state:', state);
+      
+      const leaderboardQuery = query(
+        collection(db, 'leaderboard'),
+        where('state', '==', state),
+        orderBy('topSpeed', 'desc'),
+        limit(limitCount)
+      );
+      
+      const snapshot = await getDocs(leaderboardQuery);
+      const entries: LeaderboardEntry[] = [];
+      
+      snapshot.forEach((doc) => {
+        entries.push(doc.data() as LeaderboardEntry);
+      });
+      
+      console.log('[Leaderboard] ✅ Fetched', entries.length, 'state-filtered top speed entries');
+      return entries;
+    } catch (error) {
+      console.error('[Leaderboard] Error fetching state-filtered top speed leaderboard:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Get max G-force leaderboard filtered by state
+   */
+  async getMaxGForceLeaderboardByState(state: string, limitCount: number = 50): Promise<LeaderboardEntry[]> {
+    try {
+      console.log('[Leaderboard] Fetching max G-force leaderboard for state:', state);
+      
+      const leaderboardQuery = query(
+        collection(db, 'leaderboard'),
+        where('state', '==', state),
+        orderBy('maxGForce', 'desc'),
+        limit(limitCount)
+      );
+      
+      const snapshot = await getDocs(leaderboardQuery);
+      const entries: LeaderboardEntry[] = [];
+      
+      snapshot.forEach((doc) => {
+        entries.push(doc.data() as LeaderboardEntry);
+      });
+      
+      console.log('[Leaderboard] ✅ Fetched', entries.length, 'state-filtered max G-force entries');
+      return entries;
+    } catch (error) {
+      console.error('[Leaderboard] Error fetching state-filtered max G-force leaderboard:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Get list of US states
+   */
+  getUSStates(): Array<{ code: string; name: string }> {
+    return [
+      { code: 'ALL', name: 'All States' },
+      { code: 'AL', name: 'Alabama' },
+      { code: 'AK', name: 'Alaska' },
+      { code: 'AZ', name: 'Arizona' },
+      { code: 'AR', name: 'Arkansas' },
+      { code: 'CA', name: 'California' },
+      { code: 'CO', name: 'Colorado' },
+      { code: 'CT', name: 'Connecticut' },
+      { code: 'DE', name: 'Delaware' },
+      { code: 'FL', name: 'Florida' },
+      { code: 'GA', name: 'Georgia' },
+      { code: 'HI', name: 'Hawaii' },
+      { code: 'ID', name: 'Idaho' },
+      { code: 'IL', name: 'Illinois' },
+      { code: 'IN', name: 'Indiana' },
+      { code: 'IA', name: 'Iowa' },
+      { code: 'KS', name: 'Kansas' },
+      { code: 'KY', name: 'Kentucky' },
+      { code: 'LA', name: 'Louisiana' },
+      { code: 'ME', name: 'Maine' },
+      { code: 'MD', name: 'Maryland' },
+      { code: 'MA', name: 'Massachusetts' },
+      { code: 'MI', name: 'Michigan' },
+      { code: 'MN', name: 'Minnesota' },
+      { code: 'MS', name: 'Mississippi' },
+      { code: 'MO', name: 'Missouri' },
+      { code: 'MT', name: 'Montana' },
+      { code: 'NE', name: 'Nebraska' },
+      { code: 'NV', name: 'Nevada' },
+      { code: 'NH', name: 'New Hampshire' },
+      { code: 'NJ', name: 'New Jersey' },
+      { code: 'NM', name: 'New Mexico' },
+      { code: 'NY', name: 'New York' },
+      { code: 'NC', name: 'North Carolina' },
+      { code: 'ND', name: 'North Dakota' },
+      { code: 'OH', name: 'Ohio' },
+      { code: 'OK', name: 'Oklahoma' },
+      { code: 'OR', name: 'Oregon' },
+      { code: 'PA', name: 'Pennsylvania' },
+      { code: 'RI', name: 'Rhode Island' },
+      { code: 'SC', name: 'South Carolina' },
+      { code: 'SD', name: 'South Dakota' },
+      { code: 'TN', name: 'Tennessee' },
+      { code: 'TX', name: 'Texas' },
+      { code: 'UT', name: 'Utah' },
+      { code: 'VT', name: 'Vermont' },
+      { code: 'VA', name: 'Virginia' },
+      { code: 'WA', name: 'Washington' },
+      { code: 'WV', name: 'West Virginia' },
+      { code: 'WI', name: 'Wisconsin' },
+      { code: 'WY', name: 'Wyoming' },
+    ];
+  }
 }
 
 export default new LeaderboardService();

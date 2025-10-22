@@ -103,12 +103,16 @@ export default function GroupsScreen() {
     try {
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       const crewCode = await createCrew(name, description);
+      
+      // Wait for profile to update, then reload
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      await loadData();
+      
       Alert.alert(
         'Crew Created!',
         `Your crew "${name}" has been created!\n\nShare this code with friends to invite them:\n\n${crewCode}`,
         [{ text: 'OK' }]
       );
-      await loadData();
     } catch (error: any) {
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       throw error;

@@ -1,96 +1,68 @@
 <analysis>
-The AI engineer's work involved two main threads: feature implementation and critical bug fixing. Initially, the engineer focused on integrating the Track Replay button into  and updating  to handle GPS data, along with refining the  for data retrieval. This was successfully completed. Subsequently, the engineer tackled the Global Leaderboard integration in , including state filtering and using  for real data, also completing this.
+The AI engineer's work began by addressing initial feature implementations like Track Replay and Global Leaderboard, alongside critical bug fixes for Expo Go crashes related to BLE native modules and a lingering CORS issue from a forked environment. The focus then shifted to resolving Unexpected text node UI errors and preparing the app for App Store deployment, which involved  updates and an  component.
 
-Throughout this process, two major bugs surfaced, leading to multiple  invocations:
-1.  **Expo Go crash (blue screen)**: Initially attributed to 's native module incompatibility. The engineer conditionally imported and safely wrapped  initialization.
-2.  **Persistent Expo Go issues / failed to download remote update**: This evolved into a  identified by the troubleshoot agent, stemming from a  and  misconfiguration (despite instructions not to modify it, which was eventually reverted). This platform-level issue remains unresolved, with the user deciding to proceed with other tasks while monitoring it.
-
-The current focus is resolving Unexpected text node errors identified in user-provided logs, which are causing crashes on mobile. The engineer has reverted the  change and is now targeting these UI-related errors.
+After resolving a syntax error in  and gaining user confirmation, new issues emerged. These included a maximum update depth exceeded error in track replay (fixed with  in ), toFixed errors (addressed by adding null/NaN checks in ), and significant UI/UX improvements for the Groups screen (crew selection, dedicated crew leaderboards, improved state filtering display, global leaderboard styling with rankings and pagination). A major challenge with state-filtered leaderboards due to Firebase indexing limitations was circumvented by client-side filtering in . The latest fixes involved correcting property name mismatches in  for displaying stats and ensuring the user's state is consistently updated in leaderboard entries in , with additional debugging logs implemented for state filtering.
 </analysis>
 
 <product_requirements>
-The ApexBox Companion app is designed to function as a performance tracker dashboard for an ESP32 device, displaying simulated BLE telemetry data (speed, G-force, temperature, altitude) with haptic feedback. It processes CSV logs, calculates metrics, and caches results. The app's core navigation includes Dashboard, Logs, Session Detail, Groups (leaderboard), and Settings (profile, units, theme, BLE). It features a dark theme with specific fonts and accent colors (Cyan, Magenta, Lime), rounded UI cards, and haptics, compatible with Expo Go/Android.
-
-Key functionalities already implemented include:
--   User authentication via Firebase Auth, profile management (avatars, display name).
--   A garage system for adding, editing, setting active, and deleting cars, with optimistic UI updates.
--   Dynamic theming and global unit conversion.
--   Settings for profile, appearance, units, and connectivity.
--   Infrastructure for ApexBox Pro Pack premium features with a dedicated screen and mock purchase flow (later integrated with RevenueCat).
--   UI gating for Track Map Replay and Crew Leaderboards.
--    service with a mock fallback for BLE communication.
--   Firebase Storage/Firestore for initial session syncing.
--   User friend ID generation.
--   GPS tracking service ().
--   Session sharing component ().
-
-Recent additions include the integration of a Track Replay button in the Session Detail screen, and the Global Leaderboard in the Groups screen now includes state filtering and fetches real data.
+The ApexBox Companion app serves as a performance tracker dashboard for an ESP32 device, displaying simulated BLE telemetry data (speed, G-force, temperature, altitude) with haptic feedback. It processes CSV logs, calculates metrics, and caches results. The app features core navigation including Dashboard, Logs, Session Detail, Groups (leaderboard), and Settings, with a dark theme, specific fonts, and accent colors. Authentication is via Firebase, profile management is in place, and a garage system manages cars with optimistic UI. Dynamic theming, global unit conversion, and premium features (ApexBox Pro Pack, RevenueCat integration) are also implemented. GPS tracking, session sharing, and  (with mock fallback) are functional. Recent additions include a Track Replay button in  and a Global Leaderboard with state filtering in  fetching real data. The user has explicitly requested to keep existing icons and to make the app ready for App Store deployment while maintaining Expo Go compatibility. Further requests include improving the Groups page with a crew selection dropdown, displaying crew-specific leaderboards, allowing users to leave groups, navigating to a full screen for group details instead of a popup, fixing maximum update depth exceeded error on track replay, adjusting the APEXBOX COMPANION text in the session sharing popup, ensuring state filtering works correctly in global leaderboards, rounding leaderboard numbers, improving leaderboard card styling (bold numbers, ranking, pagination), and resolving invalid number formatting character errors.
 </product_requirements>
 
 <key_technical_concepts>
--   **Expo React Native:** Cross-platform mobile app development framework.
--   ** & React Navigation:** File-based and tab/stack navigation for routing.
+-   **Expo React Native:** Cross-platform mobile app development.
+-   ** & React Navigation:** File-based and tab/stack navigation.
 -   **Firebase (Auth, Firestore, Storage):** Backend for user authentication, database, and cloud storage.
--   **:** Library for Bluetooth Low Energy communication (handled with mock fallback for Expo Go).
--   **RevenueCat:** Service for in-app purchases and subscription management.
--   **Context API:** React's built-in state management for global data (Auth, Ble, Logs, Settings, Theme).
--   **:** For rendering vector graphics, used in charting and track replay.
--   **:** Used for GPS data capture.
+-   **:** Bluetooth Low Energy communication (with mock fallback).
+-   **RevenueCat:** In-app purchases and subscription management.
+-   **Context API:** React's built-in state management for global data.
+-   **:** Rendering vector graphics for charts and track replay.
+-   **:** GPS data capture.
 </key_technical_concepts>
 
 <code_architecture>
 
--   : Configures bottom tab navigator. Changes: Adjusted  height/padding, added  for Android.
--   : Root app layout. Changes: Wrapped content with .
--   : Login screen. Changes: Uses 's .
--   : Premium features screen. Changes: Integrated .
--   : Entry for track replay. Changes: Points to Skia-free .
--   : Expo configuration. Changes: Added  permissions, updated iOS , adjusted icons/splash screen.
--   : (New File) EAS build configuration.
--   , , : (New Files) Legal documents.
--   : BLE connection modal. Changes: Improved scan visual feedback.
--   : Data charts. Changes: Replaced  with .
--   : (New File) Modal for creating crews.
--   : Telemetry gauge. Changes: Migrated animations to native , added null/undefined guards.
--   : (New File) Modal for joining crews.
--   : (New File) Component for session snapshots. Changes: Adjusted footer margin to fix text overlap.
--   : User avatars. Changes: Added safe fallbacks for  prop.
--   : Manages user auth, profile, garage, premium, and crews. Changes: Enhanced car/crew management, updated , added , implemented optimistic UI updates, added .
--   : Manages BLE state. Changes: Uses  for auto-connect and device persistence.
--   : Manages theme. Changes: Ensured  is exposed.
--   : (New File) Manages remembered BLE devices.
--   : (New File) Service for GPS data capture.
--   : Handles session logging. Changes: Added , fixed  and  signature. Removed mock CSV, updated ,  to use real data. Added  method.
--   : Existing file, used for crew operations.
--   : (New File) RevenueCat purchase logic. Initialized with API keys.
--   : (New File) Handles global leaderboard data. Changes: Implemented methods for state-filtered leaderboards. Integrated into  to fetch real data.
--   : **Changes**: Conditional import and safe wrapping of  constructor to prevent crashes in Expo Go, falling back to mock.
--   : Live telemetry dashboard. Changes: Fixed  instantiation,  reference, integrated  and GPS tracking.
--   : Car management screen. Changes: Fixed data access, updated , added explicit edit/delete buttons, resolved JSX errors.
--   : Crews and leaderboards screen. Changes: UI redesign, dropdown for crews, integrated /, implemented Global Leaderboard with state filtering using .
--   : Application settings. Changes: Added Connectivity section,  usage,  access, logout. Integrated state selection modal.
--   : Session details. Changes: Integrated , including a modal and styles. **Added Track Replay button and handler to navigate to TrackReplayScreen with session Wed Oct 22 03:54:55 UTC 2025 and .**
--   : Track replay. Changes: Removed , replaced with  for visualization. **Modified to accept Wed Oct 22 03:54:55 UTC 2025 and  params instead of  to load GPS data.**
--   : (New File) Temporary map-based track replay screen. Not in active use.
+-   : Configures bottom tab navigator. No recent changes.
+-   : Root app layout. **Changes**: Wrapped content with  for graceful error handling.
+-   : **New file** created as a route for the .
+-   : Expo configuration. **Changes**: Updated with App Store metadata and configurations (e.g., build number, display name, scheme, iOS/Android specific settings).
+-   : **New file** for a React Error Boundary component to catch UI errors gracefully and display a fallback UI.
+-   : Component for session snapshots. **Changes**: Adjusted footer margin (likely  style) to prevent text overlap.
+-   : **New file** created to display details and a specific leaderboard for a chosen crew.
+-   : Crews and leaderboards screen. **Changes**: Significantly refactored to:
+    -   Navigate to  instead of showing a modal for crew details.
+    -   Remove old leave crew functionality.
+    -   Re-introduce crew selection dropdown and display crew-specific leaderboards.
+    -   Improve state picker modal styling for better visibility and scrollability by adding missing styles (e.g., , ).
+    -   Update global leaderboard cards to display rounded numbers, rankings (#1, #2, etc., up to 50), larger bold numbers for values, and a Load More button for pagination.
+    -   Remove various unused state variables, functions, and styles related to old crew selection/picker logic.
+    -   Fixed a syntax error ().
+-   : Session details. **Changes**: Fixed maximum update depth exceeded error by using  to ensure GPS data fetching () is called only once. Also, corrected the display of session statistics by changing  to  and  to  to match the properties returned by .
+-   : Handles leaderboard data. **Changes**:
+    -   Implemented a client-side filtering workaround for state-filtered leaderboards in  and  due to Firebase indexing limitations.
+    -   Modified  to ensure the user's  field is always updated, not just on new entries, to correctly reflect state-filtered leaderboards.
+    -   Added debugging logs for state filtering.
+-   : Utility for formatting numbers. **Changes**: Added  and / checks to , , , , , and  to prevent toFixed of undefined and invalid number formatting character errors.
+-   : **New file** providing guidance for App Store submission assets.
+-   : **New file** outlining deployment steps.
+-   : **New file** created for summarizing fixes.
+-   : **New file** summarizing the production readiness work.
 </code_architecture>
 
 <pending_tasks>
--   Refine and finalize Track Replay UI/UX, ensuring clear GPS data visibility.
--   Implement dedicated custom leaderboards for individual crews within the , including UI refinement.
--   Complete performance optimizations for large telemetry datasets.
--   Conduct comprehensive end-to-end testing of the RevenueCat premium purchase flow on a physical device.
--   Resolve the persistent Expo Go crash related to Unexpected text node errors.
+- Investigate Firebase indexing requirements for efficient state filtering in leaderboards (cannot be fixed directly by agent).
+- Comprehensive end-to-end testing of RevenueCat premium purchase flow on a physical device.
+- Further performance optimizations for large telemetry datasets.
 </pending_tasks>
 
 <current_work>
-Immediately prior to this summary, the AI engineer was dealing with a persistent Expo Go crash. Initially, this was thought to be a  incompatibility, leading to modifications in  to conditionally import and safely initialize . This fix enabled mock BLE mode but didn't resolve the overall crash.
-
-Further troubleshooting with the  revealed a CORS/domain mismatch error related to the tunnel URL () and the  configuration, leading to an attempt to update  in . However, this was identified as a protected variable, and the change was reverted upon user feedback.
-
-The most recent development is the identification of a large number of Unexpected text node errors in the Expo Go logs, which are causing crashes on mobile devices. The engineer has acknowledged these errors as the primary current issue and has started searching for patterns to fix them. The  file modification has been explicitly reverted.
+Immediately before this summary, the AI engineer was addressing two critical issues reported by the user:
+1.  **invalid number formatting error** when opening logs, which was re-emerging. This was traced to a mismatch in property names between  and the  function in .  was expecting  and , while  returns  and . The AI engineer corrected  to use the  and  properties.
+    
+2.  **State filtering issue** where the user's profile was not appearing on the global leaderboard when filtering by their specific state (e.g., Washington). The investigation revealed that the  method in  was only setting the  field on *new* leaderboard entries, not updating it for *existing* entries. The AI engineer modified this service to ensure the  field is always updated.
+    
+Additionally, debugging logs were added to both  and  to aid in further troubleshooting of the state filtering mechanism. The frontend application was restarted after these changes.
 </current_work>
 
 <optional_next_step>
-Address the Unexpected text node errors causing the Expo Go app to crash.
+Review the application logs to verify the state filtering and number formatting fixes.
 </optional_next_step>
-

@@ -67,6 +67,70 @@ export default function LogsScreen() {
     setRefreshing(false);
   };
 
+  const handleDeleteSession = (session: SessionMetadata) => {
+    const isConnected = status === 'connected';
+    
+    const message = isConnected
+      ? `Delete this session?\n\nThis will remove:\n• Local app data\n• Files from ApexBox SD card\n\nThis action cannot be undone.`
+      : `Delete this session?\n\n⚠️ ApexBox is not connected.\n\nThis will only remove the local app data. The file will remain on the ApexBox SD card until you connect and delete it manually.\n\nContinue?`;
+
+    Alert.alert(
+      'Delete Session',
+      message,
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+          onPress: () => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light),
+        },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            await performDelete(session, isConnected);
+          },
+        },
+      ]
+    );
+  };
+
+  const performDelete = async (session: SessionMetadata, isConnected: boolean) => {
+    try {
+      setDeletingSession(session.fileName);
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
+      // Delete from local storage
+      await LogService.deleteSession(session);
+
+      // If connected to ApexBox, also delete from SD card
+      if (isConnected) {
+        try {
+          await LogService.deleteFromApexBox(session, sendCommand);
+        } catch (error) {
+          console.error('[LogsScreen] Error deleting from ApexBox:', error);
+          // Continue even if ApexBox deletion fails
+        }
+      }
+
+      // Refresh the logs list
+      await rescan();
+
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      
+      const successMessage = isConnected
+        ? 'Session deleted from app and ApexBox'
+        : 'Session deleted from app (ApexBox not connected)';
+      
+      Alert.alert('Success', successMessage);
+    } catch (error) {
+      console.error('[LogsScreen] Error deleting session:', error);
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      Alert.alert('Error', 'Failed to delete session. Please try again.');
+    } finally {
+      setDeletingSession(null);
+    }
+  };
+
   if (dates.length === 0) {
     return (
       <View style={styles.container}>

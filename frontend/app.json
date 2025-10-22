@@ -19,12 +19,15 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.apexbox.companion",
       "buildNumber": "1",
+      "appStoreUrl": "https://apps.apple.com/app/apexbox-companion/idXXXXXXXXXX",
+      "requireFullScreen": false,
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "ApexBox tracks your location during performance sessions to create track replays and analyze your driving data.",
         "NSBluetoothAlwaysUsageDescription": "ApexBox uses Bluetooth to connect to your OBD-II performance tracker device for real-time telemetry.",
         "NSCameraUsageDescription": "ApexBox needs camera access to take profile pictures for your account.",
         "NSPhotoLibraryUsageDescription": "ApexBox needs photo access to set your profile picture and save session screenshots.",
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "UIBackgroundModes": ["location"]
       },
       "config": {
         "usesNonExemptEncryption": false

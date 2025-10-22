@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -15,6 +15,7 @@ import { useAuth } from '../src/contexts/AuthContext';
 import { useTheme } from '../src/contexts/ThemeContext';
 import { SPACING, FONT_SIZE, BORDER_RADIUS } from '../src/constants/theme';
 import * as Haptics from 'expo-haptics';
+import RevenueCatService from '../src/services/RevenueCatService';
 
 export default function PremiumScreen() {
   const router = useRouter();
@@ -22,6 +23,27 @@ export default function PremiumScreen() {
   const { colors, getCurrentAccent } = useTheme();
   const accentColor = getCurrentAccent();
   const [purchasing, setPurchasing] = useState(false);
+  const [offerings, setOfferings] = useState<any>(null);
+  const [loadingOfferings, setLoadingOfferings] = useState(true);
+
+  useEffect(() => {
+    loadOfferings();
+  }, []);
+
+  const loadOfferings = async () => {
+    try {
+      setLoadingOfferings(true);
+      await RevenueCatService.initialize(profile?.email);
+      const offering = await RevenueCatService.getOfferings();
+      setOfferings(offering);
+      console.log('[Premium] Loaded offerings:', offering);
+    } catch (error) {
+      console.error('[Premium] Error loading offerings:', error);
+      // Fallback to mock mode if RevenueCat not available
+    } finally {
+      setLoadingOfferings(false);
+    }
+  };
 
   const handlePurchase = async () => {
     try {

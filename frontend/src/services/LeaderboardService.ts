@@ -20,7 +20,8 @@ class LeaderboardService {
   async updateUserStats(
     uid: string,
     sessionTopSpeed: number,
-    sessionMaxGForce: number
+    sessionMaxGForce: number,
+    userState?: string
   ): Promise<void> {
     try {
       console.log('[Leaderboard] Updating stats for user:', uid);

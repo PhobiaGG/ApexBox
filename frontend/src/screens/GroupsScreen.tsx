@@ -110,8 +110,8 @@ export default function GroupsScreen() {
       
       console.log('[GroupsScreen] Loaded', crews.length, 'crews');
       
-      // Load global leaderboard
-      setGlobalLeaderboard(generateMockGlobalLeaderboard());
+      // Load global leaderboard with real data
+      await loadGlobalLeaderboard();
     } catch (error) {
       console.error('[GroupsScreen] Error loading data:', error);
       setUserCrews([]);

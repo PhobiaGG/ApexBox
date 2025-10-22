@@ -137,6 +137,31 @@ export default function DashboardScreen() {
         const sessionKey = await logService.saveSession(mockSamples, [], duration);
         console.log('[Dashboard] Session saved:', sessionKey);
         
+        // Update leaderboard with session stats
+        if (profile && profile.uid) {
+          try {
+            const LeaderboardService = (await import('../services/LeaderboardService')).default;
+            
+            // Calculate top speed and max G-force from session
+            const topSpeed = Math.max(...mockSamples.map(s => s.speed || 0));
+            const maxGForce = Math.max(...mockSamples.map(s => s.g_force || 0));
+            
+            console.log('[Dashboard] Updating leaderboard - Top Speed:', topSpeed, 'Max G-Force:', maxGForce);
+            
+            await LeaderboardService.updateUserStats(
+              profile.uid,
+              topSpeed,
+              maxGForce,
+              profile.state
+            );
+            
+            console.log('[Dashboard] ✅ Leaderboard updated successfully');
+          } catch (leaderboardError) {
+            console.error('[Dashboard] Error updating leaderboard:', leaderboardError);
+            // Don't fail the session save if leaderboard update fails
+          }
+        }
+        
         // Rescan to update logs list
         await rescan();
       } catch (saveError) {

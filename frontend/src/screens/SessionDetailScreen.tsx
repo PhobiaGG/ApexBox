@@ -225,10 +225,12 @@ export default function SessionDetailScreen() {
         <View style={[styles.chartCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <Text style={[styles.chartTitle, { color: colors.text }]}>Speed Over Time</Text>
           <ChartView
-            data={samples.map((s) => ({
-              x: s.timestamp,
-              y: settings.units === 'imperial' ? s.speed * 0.621371 : s.speed,
-            }))}
+            data={samples
+              .filter(s => !isNaN(s.speed) && !isNaN(s.timestamp_ms))
+              .map((s) => ({
+                x: s.timestamp_ms,
+                y: settings.units === 'imperial' ? s.speed * 0.621371 : s.speed,
+              }))}
             color={accentColor}
             yAxisLabel={settings.units === 'imperial' ? 'mph' : 'km/h'}
           />
@@ -237,7 +239,9 @@ export default function SessionDetailScreen() {
         <View style={[styles.chartCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <Text style={[styles.chartTitle, { color: colors.text }]}>G-Force Over Time</Text>
           <ChartView
-            data={samples.map((s) => ({ x: s.timestamp, y: s.gForce }))}
+            data={samples
+              .filter(s => !isNaN(s.g_force) && !isNaN(s.timestamp_ms))
+              .map((s) => ({ x: s.timestamp_ms, y: s.g_force }))}
             color={colors.magenta}
             yAxisLabel="g"
           />

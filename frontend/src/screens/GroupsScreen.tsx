@@ -402,26 +402,30 @@ export default function GroupsScreen() {
               }}
               activeOpacity={0.8}
             >
-              <View style={styles.crewSelectorLeft}>
-                <MaterialCommunityIcons name="shield-account" size={24} color={accentColor} />
-                <View>
-                  <Text style={[styles.crewSelectorLabel, { color: colors.textSecondary }]}>CREW</Text>
-                  <Text style={[styles.crewDropdownText, { color: colors.text }]}>
-                    {selectedCrew?.name || 'Select Crew'}
+              <View style={styles.crewCardLeft}>
+                <MaterialCommunityIcons name="shield-account" size={32} color={accentColor} />
+                <View style={styles.crewCardInfo}>
+                  <Text style={[styles.crewCardName, { color: colors.text }]}>
+                    {crew.name}
                   </Text>
+                  {crew.description ? (
+                    <Text style={[styles.crewCardDesc, { color: colors.textSecondary }]} numberOfLines={1}>
+                      {crew.description}
+                    </Text>
+                  ) : null}
                 </View>
               </View>
-              <View style={styles.crewSelectorRight}>
+              <View style={styles.crewCardRight}>
                 <View style={[styles.memberBadge, { backgroundColor: accentColor }]}>
                   <MaterialCommunityIcons name="account-group" size={12} color={colors.text} />
                   <Text style={[styles.memberBadgeText, { color: colors.text }]}>
-                    {selectedCrew?.memberIds?.length || 0}
+                    {crew.memberIds?.length || 0}
                   </Text>
                 </View>
-                <MaterialCommunityIcons name="chevron-down" size={24} color={colors.textSecondary} />
+                <MaterialCommunityIcons name="chevron-right" size={24} color={colors.textSecondary} />
               </View>
             </TouchableOpacity>
-          )}
+          ))}
 
           {/* Empty State */}
           {userCrews.length === 0 && (

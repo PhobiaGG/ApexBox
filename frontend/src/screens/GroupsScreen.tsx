@@ -396,7 +396,7 @@ export default function GroupsScreen() {
               </View>
 
               {/* Members List */}
-              {selectedCrew.members.sort((a, b) => b.topSpeed - a.topSpeed).map((member, index) => (
+              {selectedCrew.members?.sort((a, b) => b.topSpeed - a.topSpeed).map((member, index) => (
                 <View
                   key={member.uid}
                   style={[

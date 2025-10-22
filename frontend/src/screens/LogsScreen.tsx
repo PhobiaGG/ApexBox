@@ -12,18 +12,22 @@ import { COLORS, SPACING, FONT_SIZE, BORDER_RADIUS } from '../constants/theme';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLogs } from '../contexts/LogsContext';
+import { useBle } from '../contexts/BleContext';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import Sparkline from '../components/Sparkline';
+import LogService, { SessionMetadata } from '../services/LogService';
 
 type SortMode = 'date' | 'peakSpeed' | 'duration';
 
 export default function LogsScreen() {
   const { sessionsByDate, isLoading, rescan } = useLogs();
+  const { status, sendCommand } = useBle();
   const router = useRouter();
   const [expandedDates, setExpandedDates] = useState<Set<string>>(new Set());
   const [refreshing, setRefreshing] = useState(false);
   const [sortMode, setSortMode] = useState<SortMode>('date');
+  const [deletingSession, setDeletingSession] = useState<string | null>(null);
 
   const dates = Object.keys(sessionsByDate).sort().reverse();
 

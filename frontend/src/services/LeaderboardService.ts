@@ -10,6 +10,7 @@ export interface LeaderboardEntry {
   maxGForce: number;
   totalSessions: number;
   lastUpdated: number;
+  state?: string; // US state for filtering (e.g., "CA", "NY", "TX")
 }
 
 class LeaderboardService {

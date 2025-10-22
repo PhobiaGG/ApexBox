@@ -131,6 +131,56 @@ export default function GroupsScreen() {
     }
   };
 
+  const loadGlobalLeaderboard = async () => {
+    try {
+      console.log('[GroupsScreen] Loading global leaderboard...');
+      
+      let topSpeedData;
+      let topGForceData;
+      
+      if (selectedState === 'ALL') {
+        // Load all states
+        topSpeedData = await LeaderboardService.getTopSpeedLeaderboard(50);
+        topGForceData = await LeaderboardService.getMaxGForceLeaderboard(50);
+      } else {
+        // Load filtered by state
+        topSpeedData = await LeaderboardService.getTopSpeedLeaderboardByState(selectedState, 50);
+        topGForceData = await LeaderboardService.getMaxGForceLeaderboardByState(selectedState, 50);
+      }
+      
+      setGlobalLeaderboard({
+        topSpeed: topSpeedData.map(entry => ({
+          uid: entry.uid,
+          displayName: entry.displayName,
+          avatarURI: entry.avatarURI,
+          topSpeed: entry.topSpeed,
+          topGForce: entry.maxGForce,
+          totalSessions: entry.totalSessions,
+        })),
+        topGForce: topGForceData.map(entry => ({
+          uid: entry.uid,
+          displayName: entry.displayName,
+          avatarURI: entry.avatarURI,
+          topSpeed: entry.topSpeed,
+          topGForce: entry.maxGForce,
+          totalSessions: entry.totalSessions,
+        })),
+      });
+      
+      console.log('[GroupsScreen] ✅ Global leaderboard loaded');
+    } catch (error) {
+      console.error('[GroupsScreen] Error loading global leaderboard:', error);
+      setGlobalLeaderboard({ topSpeed: [], topGForce: [] });
+    }
+  };
+
+  // Reload leaderboard when state filter changes
+  useEffect(() => {
+    if (activeTab === 'global') {
+      loadGlobalLeaderboard();
+    }
+  }, [selectedState, activeTab]);
+
   const handleCreateCrew = async (name: string, description: string) => {
     try {
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);

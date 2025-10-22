@@ -80,6 +80,14 @@ export default function GroupsScreen() {
     }, [])
   );
 
+  // Reload data when profile.crewIds changes (after join/leave/create)
+  useEffect(() => {
+    if (profile?.crewIds) {
+      console.log('[GroupsScreen] Profile crewIds changed, reloading...');
+      loadData();
+    }
+  }, [profile?.crewIds]);
+
   const loadData = async () => {
     try {
       setIsLoading(true);

@@ -722,41 +722,37 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZE.md,
     fontWeight: 'bold',
   },
-  crewSelector: {
+  crewCard: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     marginHorizontal: SPACING.lg,
-    marginBottom: SPACING.lg,
+    marginBottom: SPACING.md,
     padding: SPACING.lg,
     borderRadius: BORDER_RADIUS.lg,
-    borderWidth: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 6,
+    borderWidth: 1,
   },
-  crewSelectorLeft: {
+  crewCardLeft: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: SPACING.md,
     flex: 1,
   },
-  crewSelectorLabel: {
-    fontSize: FONT_SIZE.xs,
-    fontWeight: '700',
-    letterSpacing: 1,
-    textTransform: 'uppercase',
+  crewCardInfo: {
+    flex: 1,
   },
-  crewSelectorRight: {
+  crewCardName: {
+    fontSize: FONT_SIZE.lg,
+    fontWeight: 'bold',
+    marginBottom: 2,
+  },
+  crewCardDesc: {
+    fontSize: FONT_SIZE.sm,
+  },
+  crewCardRight: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: SPACING.sm,
-  },
-  crewDropdownText: {
-    fontSize: FONT_SIZE.lg,
-    fontWeight: 'bold',
   },
   memberBadge: {
     flexDirection: 'row',

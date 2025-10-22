@@ -835,6 +835,22 @@ const styles = StyleSheet.create({
   categoryTabText: {
     fontSize: FONT_SIZE.sm,
   },
+  stateFilter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginHorizontal: SPACING.lg,
+    marginBottom: SPACING.lg,
+    padding: SPACING.md,
+    borderRadius: BORDER_RADIUS.md,
+    borderWidth: 1,
+  },
+  stateFilterText: {
+    fontSize: FONT_SIZE.md,
+    fontWeight: '600',
+    flex: 1,
+    marginLeft: SPACING.sm,
+  },
   actionButtons: {
     flexDirection: 'row',
     marginHorizontal: SPACING.lg,

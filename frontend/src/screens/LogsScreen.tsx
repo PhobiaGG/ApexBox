@@ -303,7 +303,7 @@ export default function LogsScreen() {
                             <MaterialCommunityIcons
                               name={isDeleting ? "loading" : "trash-can-outline"}
                               size={20}
-                              color={isDeleting ? COLORS.textSecondary : COLORS.error}
+                              color={isDeleting ? COLORS.textSecondary : COLORS.danger}
                             />
                           </TouchableOpacity>
                         </View>

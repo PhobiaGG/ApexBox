@@ -75,14 +75,18 @@ export default function GroupsScreen() {
       
       // Load user's crews from Firebase
       const crews = await getUserCrews();
-      setUserCrews(crews);
+      const validCrews = Array.isArray(crews) ? crews : [];
+      setUserCrews(validCrews);
       
-      if (crews.length > 0) {
-        setSelectedCrew(crews[0]);
+      if (validCrews.length > 0) {
+        setSelectedCrew(validCrews[0]);
       }
       
       // Load global leaderboard
       setGlobalLeaderboard(generateMockGlobalLeaderboard());
+    } catch (error) {
+      console.error('[GroupsScreen] Error loading data:', error);
+      setUserCrews([]);
     } finally {
       setIsLoading(false);
     }

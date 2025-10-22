@@ -38,6 +38,7 @@ export default function SessionDetailScreen() {
   const [isGeneratingShare, setIsGeneratingShare] = useState(false);
   const [hasGPS, setHasGPS] = useState(false);
   const shareCardRef = useRef<View>(null);
+  const hasLoadedGPS = useRef(false);
 
   const accentColor = getCurrentAccent();
 
@@ -46,6 +47,8 @@ export default function SessionDetailScreen() {
   }, [date, fileName]);
 
   const loadSession = async () => {
+    if (!date || !fileName) return;
+    
     try {
       setIsLoading(true);
       const sessionMeta = {
@@ -61,9 +64,18 @@ export default function SessionDetailScreen() {
       const calculatedStats = calculateStats(data);
       setStats(calculatedStats);
 
-      // Check if GPS data exists for this session
-      const gpsData = await LogService.getSessionGPS(sessionMeta);
-      setHasGPS(gpsData.length > 0);
+      // Check if GPS data exists for this session (only once)
+      if (!hasLoadedGPS.current) {
+        try {
+          const gpsData = await LogService.getSessionGPS(sessionMeta);
+          setHasGPS(gpsData.length > 0);
+          hasLoadedGPS.current = true;
+        } catch (error) {
+          console.log('[SessionDetail] No GPS data available');
+          setHasGPS(false);
+          hasLoadedGPS.current = true;
+        }
+      }
     } catch (error) {
       console.error('Error loading session:', error);
       Alert.alert('Error', 'Failed to load session data');
@@ -98,169 +110,138 @@ export default function SessionDetailScreen() {
       // Share the image
       const canShare = await Sharing.isAvailableAsync();
       if (canShare) {
-        await Sharing.shareAsync(uri, {
-          mimeType: 'image/png',
-          dialogTitle: 'Share Session',
-        });
-        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      } else {
-        Alert.alert('Sharing Not Available', 'Sharing is not available on this device');
+        await Sharing.shareAsync(uri);
       }
 
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       setShowShareModal(false);
     } catch (error) {
-      console.error('Error sharing session:', error);
+      console.error('Error sharing:', error);
       Alert.alert('Error', 'Failed to share session');
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     } finally {
       setIsGeneratingShare(false);
     }
   };
 
-  const handleTrackReplay = async () => {
-    try {
-      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-
-      // Check if user has premium
-      if (!profile?.premium) {
-        Alert.alert(
-          'Premium Feature',
-          'Track Replay is a premium feature. Upgrade to ApexBox Pro Pack to unlock!',
-          [
-            { text: 'Cancel', style: 'cancel' },
-            { text: 'Upgrade', onPress: () => router.push('/premium') },
-          ]
-        );
-        return;
-      }
-
-      // Check if session has GPS data
-      if (!hasGPS) {
-        Alert.alert(
-          'No GPS Data',
-          'This session does not have GPS data. GPS tracking must be enabled during the session to view track replay.'
-        );
-        return;
-      }
-
-      // Navigate to track replay with session info
-      router.push({
-        pathname: '/track-replay',
-        params: { date, fileName },
-      });
-    } catch (error) {
-      console.error('Error opening track replay:', error);
-      Alert.alert('Error', 'Failed to open track replay');
+  const handleTrackReplay = () => {
+    if (!profile?.premium) {
+      Alert.alert(
+        'Premium Feature',
+        'Track Replay is available with ApexBox Pro Pack.',
+        [
+          { text: 'Maybe Later', style: 'cancel' },
+          {
+            text: 'Upgrade',
+            onPress: () => router.push('/premium'),
+          },
+        ]
+      );
+      return;
     }
+
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    router.push({
+      pathname: '/track-replay',
+      params: { date, fileName },
+    });
   };
 
   if (isLoading) {
     return (
-      <View style={styles.container}>
-        <LinearGradient colors={[COLORS.background, '#0F0F0F']} style={styles.gradient}>
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={COLORS.cyan} />
-            <Text style={styles.loadingText}>Loading session...</Text>
-          </View>
-        </LinearGradient>
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={accentColor} style={styles.loader} />
       </View>
     );
   }
 
-  const speedData = samples
-    .filter((_, i) => i % 2 === 0)
-    .map(s => ({ x: s.timestamp_ms / 1000, y: s.speed }));
-
-  const gForceData = samples
-    .filter((_, i) => i % 2 === 0)
-    .map(s => ({ x: s.timestamp_ms / 1000, y: s.g_force }));
-
-  const tempData = samples
-    .filter((_, i) => i % 2 === 0)
-    .map(s => ({ x: s.timestamp_ms / 1000, y: s.temp }));
-
-  const altitudeData = samples
-    .filter((_, i) => i % 2 === 0)
-    .map(s => ({ x: s.timestamp_ms / 1000, y: s.altitude }));
+  if (!stats) {
+    return (
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <Text style={[styles.errorText, { color: colors.text }]}>No data available</Text>
+      </View>
+    );
+  }
 
   return (
-    <View style={styles.container}>
-      <LinearGradient colors={[COLORS.background, '#0F0F0F']} style={styles.gradient}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <MaterialCommunityIcons name="arrow-left" size={24} color={COLORS.text} />
-          </TouchableOpacity>
-          <View style={styles.headerText}>
-            <Text style={styles.title}>{date}</Text>
-            <Text style={styles.subtitle}>{fileName?.replace('.csv', '')}</Text>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <MaterialCommunityIcons name="arrow-left" size={24} color={colors.text} />
+        </TouchableOpacity>
+        <View style={styles.headerText}>
+          <Text style={[styles.title, { color: colors.text }]}>Session Details</Text>
+          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+            {date} • {fileName.replace('.csv', '')}
+          </Text>
+        </View>
+        <TouchableOpacity onPress={handleExport} style={styles.exportButton}>
+          <MaterialCommunityIcons name="share-variant" size={24} color={accentColor} />
+        </TouchableOpacity>
+      </View>
+
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Stats Cards */}
+        <View style={styles.statsGrid}>
+          <View style={[styles.statCard, { backgroundColor: colors.card, borderColor: accentColor }]}>
+            <MaterialCommunityIcons name="speedometer" size={24} color={accentColor} />
+            <Text style={[styles.statValue, { color: colors.text }]}>
+              {formatSpeed(stats.maxSpeed, settings.units)}
+            </Text>
+            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Top Speed</Text>
           </View>
-          <TouchableOpacity onPress={handleExport} style={styles.exportButton}>
-            <MaterialCommunityIcons name="share-variant" size={24} color={COLORS.cyan} />
-          </TouchableOpacity>
+
+          <View style={[styles.statCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <MaterialCommunityIcons name="car-brake-alert" size={24} color={accentColor} />
+            <Text style={[styles.statValue, { color: colors.text }]}>
+              {formatGForce(stats.maxGForce)}
+            </Text>
+            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Max G-Force</Text>
+          </View>
+
+          <View style={[styles.statCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <MaterialCommunityIcons name="thermometer" size={24} color={accentColor} />
+            <Text style={[styles.statValue, { color: colors.text }]}>
+              {formatTemp(stats.maxTemp, settings.units)}
+            </Text>
+            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Max Temp</Text>
+          </View>
+
+          <View style={[styles.statCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <MaterialCommunityIcons name="clock-outline" size={24} color={accentColor} />
+            <Text style={[styles.statValue, { color: colors.text }]}>
+              {formatDuration(stats.duration)}
+            </Text>
+            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Duration</Text>
+          </View>
         </View>
 
-        <ScrollView
-          style={styles.scrollView}
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-        >
-          {/* Summary Stats */}
-          {stats && (
-            <View style={styles.statsCard}>
-              <Text style={styles.sectionTitle}>Session Summary</Text>
-              <View style={styles.statsGrid}>
-                <View style={styles.statItem}>
-                  <MaterialCommunityIcons name="speedometer" size={32} color={COLORS.cyan} />
-                  <Text style={styles.statValue}>
-                    {formatSpeed(stats.peakSpeed, settings.units.isMetric)}
-                  </Text>
-                  <Text style={styles.statLabel}>Peak Speed</Text>
-                </View>
+        {/* Charts */}
+        <View style={[styles.chartCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <Text style={[styles.chartTitle, { color: colors.text }]}>Speed Over Time</Text>
+          <ChartView
+            data={samples.map((s) => ({
+              x: s.timestamp,
+              y: settings.units === 'imperial' ? s.speed * 0.621371 : s.speed,
+            }))}
+            color={accentColor}
+            yAxisLabel={settings.units === 'imperial' ? 'mph' : 'km/h'}
+          />
+        </View>
 
-                <View style={styles.statItem}>
-                  <MaterialCommunityIcons name="gauge" size={32} color={COLORS.magenta} />
-                  <Text style={styles.statValue}>{formatGForce(stats.peakG)}</Text>
-                  <Text style={styles.statLabel}>Peak G-Force</Text>
-                </View>
-
-                <View style={styles.statItem}>
-                  <MaterialCommunityIcons name="clock-outline" size={32} color={COLORS.lime} />
-                  <Text style={styles.statValue}>{formatDuration(stats.duration)}</Text>
-                  <Text style={styles.statLabel}>Duration</Text>
-                </View>
-
-                <View style={styles.statItem}>
-                  <MaterialCommunityIcons name="thermometer" size={32} color={COLORS.cyan} />
-                  <Text style={styles.statValue}>
-                    {formatTemp(stats.maxTemp, settings.units.tempCelsius)}
-                  </Text>
-                  <Text style={styles.statLabel}>Max Temperature</Text>
-                </View>
-              </View>
-
-              <View style={styles.additionalStats}>
-                <View style={styles.additionalStatRow}>
-                  <Text style={styles.additionalStatLabel}>Avg Speed:</Text>
-                  <Text style={styles.additionalStatValue}>
-                    {formatSpeed(stats.avgSpeed, settings.units.isMetric)}
-                  </Text>
-                </View>
-                <View style={styles.additionalStatRow}>
-                  <Text style={styles.additionalStatLabel}>Avg G-Force:</Text>
-                  <Text style={styles.additionalStatValue}>{formatGForce(stats.avgG)}</Text>
-                </View>
-                <View style={styles.additionalStatRow}>
-                  <Text style={styles.additionalStatLabel}>Altitude Change:</Text>
-                  <Text style={styles.additionalStatValue}>
-                    {formatAltitude(stats.maxAltitude - stats.minAltitude, settings.units.altitudeMetric)}
-                  </Text>
-                </View>
-                <View style={styles.additionalStatRow}>
-                  <Text style={styles.additionalStatLabel}>Total Samples:</Text>
-                  <Text style={styles.additionalStatValue}>{stats.sampleCount}</Text>
-                </View>
-              </View>
-            </View>
-          )}
+        <View style={[styles.chartCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <Text style={[styles.chartTitle, { color: colors.text }]}>G-Force Over Time</Text>
+          <ChartView
+            data={samples.map((s) => ({ x: s.timestamp, y: s.gForce }))}
+            color={colors.magenta}
+            yAxisLabel="g"
+          />
+        </View>
 
           {/* Track Replay Button */}
           {hasGPS ? (
@@ -268,131 +249,80 @@ export default function SessionDetailScreen() {
               style={[styles.trackReplayButton, { borderColor: accentColor }]}
               onPress={handleTrackReplay}
             >
-              <View style={[styles.trackReplayIconContainer, { backgroundColor: accentColor }]}>
-                <MaterialCommunityIcons name="map-marker-path" size={24} color={COLORS.text} />
-              </View>
-              <View style={styles.trackReplayContent}>
-                <Text style={styles.trackReplayTitle}>View Track Replay</Text>
-                <Text style={styles.trackReplaySubtitle}>
-                  {profile?.premium ? 'GPS data available' : 'Premium feature'}
-                </Text>
-              </View>
-              <MaterialCommunityIcons name="chevron-right" size={24} color={accentColor} />
+              <LinearGradient
+                colors={[accentColor + '20', accentColor + '10']}
+                style={styles.trackReplayGradient}
+              >
+                <View style={styles.trackReplayContent}>
+                  <MaterialCommunityIcons name="map-marker-path" size={32} color={accentColor} />
+                  <View style={styles.trackReplayText}>
+                    <Text style={[styles.trackReplayTitle, { color: colors.text }]}>
+                      View Track Replay
+                    </Text>
+                    <Text style={[styles.trackReplaySubtitle, { color: colors.textSecondary }]}>
+                      GPS data available
+                    </Text>
+                  </View>
+                  <MaterialCommunityIcons name="chevron-right" size={24} color={accentColor} />
+                </View>
+              </LinearGradient>
             </TouchableOpacity>
           ) : null}
+      </ScrollView>
 
-          {/* Charts */}
-          <View style={styles.chartsSection}>
-            <Text style={styles.sectionTitle}>Telemetry Analysis</Text>
-            
-            <ChartView
-              data={speedData}
-              title="Speed Over Time"
-              color={COLORS.cyan}
-              yLabel="Speed (km/h)"
-            />
-
-            <ChartView
-              data={gForceData}
-              title="G-Force Over Time"
-              color={COLORS.magenta}
-              yLabel="G-Force (g)"
-            />
-
-            <ChartView
-              data={tempData}
-              title="Temperature Over Time"
-              color={COLORS.lime}
-              yLabel={`Temp (${settings.units.tempCelsius ? '°C' : '°F'})`}
-            />
-
-            <ChartView
-              data={altitudeData}
-              title="Altitude Over Time"
-              color={COLORS.cyan}
-              yLabel={`Altitude (${settings.units.altitudeMetric ? 'm' : 'ft'})`}
-            />
-          </View>
-
-          {/* Diagnostics Section */}
-          <View style={styles.diagnosticsCard}>
-            <Text style={styles.sectionTitle}>Diagnostics</Text>
-            <View style={styles.diagnosticRow}>
-              <MaterialCommunityIcons name="lightbulb" size={20} color={COLORS.textSecondary} />
-              <Text style={styles.diagnosticText}>
-                Lux sensor data: {samples.length > 0 ? samples[0].lux.toFixed(0) : 'N/A'} lux
-              </Text>
+      {/* Share Modal */}
+      <Modal
+        visible={showShareModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowShareModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { backgroundColor: colors.card }]}>
+            <View ref={shareCardRef} collapsable={false}>
+              <SessionShareCard
+                date={date}
+                time={fileName.replace('.csv', '')}
+                stats={stats}
+                settings={settings}
+                profile={profile}
+                accentColor={accentColor}
+              />
             </View>
-            <View style={styles.diagnosticRow}>
-              <MaterialCommunityIcons name="chart-line" size={20} color={COLORS.textSecondary} />
-              <Text style={styles.diagnosticText}>Data integrity: 100%</Text>
-            </View>
-            <View style={styles.diagnosticRow}>
-              <MaterialCommunityIcons name="check-circle" size={20} color={COLORS.lime} />
-              <Text style={styles.diagnosticText}>Session completed successfully</Text>
+
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.modalButtonSecondary, { borderColor: colors.border }]}
+                onPress={() => setShowShareModal(false)}
+                disabled={isGeneratingShare}
+              >
+                <Text style={[styles.modalButtonText, { color: colors.text }]}>Cancel</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.modalButton, styles.modalButtonPrimary, { backgroundColor: accentColor }]}
+                onPress={handleShareSession}
+                disabled={isGeneratingShare}
+              >
+                {isGeneratingShare ? (
+                  <ActivityIndicator size="small" color={colors.text} />
+                ) : (
+                  <>
+                    <MaterialCommunityIcons name="share-variant" size={20} color={colors.text} />
+                    <Text style={[styles.modalButtonText, { color: colors.text }]}>Share</Text>
+                  </>
+                )}
+              </TouchableOpacity>
             </View>
           </View>
-        </ScrollView>
-
-        {/* Share Modal */}
-        <Modal
-          visible={showShareModal}
-          transparent={true}
-          animationType="fade"
-          onRequestClose={() => setShowShareModal(false)}
-        >
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <View ref={shareCardRef} collapsable={false}>
-                <SessionShareCard
-                  peakSpeed={parseFloat(formatSpeed(stats?.peakSpeed || 0, settings.units.isMetric).split(' ')[0])}
-                  avgSpeed={parseFloat(formatSpeed(stats?.avgSpeed || 0, settings.units.isMetric).split(' ')[0])}
-                  peakGForce={stats?.peakG || 0}
-                  duration={formatDuration(stats?.duration || 0)}
-                  carModel={profile?.garage?.find(car => car.isActive)?.nickname || 'My Car'}
-                  date={date as string}
-                  accentColor={accentColor}
-                />
-              </View>
-
-              <View style={styles.modalButtons}>
-                <TouchableOpacity
-                  style={[styles.modalButton, styles.cancelButton, { backgroundColor: colors.card, borderColor: colors.border }]}
-                  onPress={() => setShowShareModal(false)}
-                  disabled={isGeneratingShare}
-                >
-                  <Text style={[styles.modalButtonText, { color: colors.text }]}>Cancel</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[styles.modalButton, styles.shareButton, { backgroundColor: accentColor }]}
-                  onPress={handleShareSession}
-                  disabled={isGeneratingShare}
-                >
-                  {isGeneratingShare ? (
-                    <ActivityIndicator size="small" color={colors.text} />
-                  ) : (
-                    <>
-                      <MaterialCommunityIcons name="share-variant" size={20} color={colors.text} />
-                      <Text style={[styles.modalButtonText, { color: colors.text }]}>Share</Text>
-                    </>
-                  )}
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-        </Modal>
-      </LinearGradient>
+        </View>
+      </Modal>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-  },
-  gradient: {
     flex: 1,
   },
   header: {
@@ -410,14 +340,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   title: {
-    fontSize: FONT_SIZE.lg,
+    fontSize: 28,
     fontWeight: 'bold',
-    color: COLORS.text,
   },
   subtitle: {
     fontSize: FONT_SIZE.sm,
-    color: COLORS.textSecondary,
-    marginTop: 2,
+    marginTop: 4,
   },
   exportButton: {
     padding: SPACING.sm,
@@ -427,157 +355,108 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: SPACING.lg,
-    paddingBottom: 40,
-  },
-  loadingContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  loadingText: {
-    fontSize: FONT_SIZE.md,
-    color: COLORS.textSecondary,
-    marginTop: SPACING.md,
-  },
-  statsCard: {
-    backgroundColor: COLORS.card,
-    borderRadius: BORDER_RADIUS.md,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    padding: SPACING.md,
-    marginBottom: SPACING.lg,
-  },
-  sectionTitle: {
-    fontSize: FONT_SIZE.lg,
-    fontWeight: 'bold',
-    color: COLORS.text,
-    marginBottom: SPACING.md,
+    paddingBottom: 100,
   },
   statsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
+    marginBottom: SPACING.lg,
     gap: SPACING.md,
-    marginBottom: SPACING.md,
   },
-  statItem: {
+  statCard: {
     flex: 1,
     minWidth: '45%',
-    backgroundColor: COLORS.background,
-    borderRadius: BORDER_RADIUS.sm,
-    padding: SPACING.md,
+    padding: SPACING.lg,
+    borderRadius: BORDER_RADIUS.lg,
+    borderWidth: 1,
     alignItems: 'center',
   },
   statValue: {
-    fontSize: FONT_SIZE.xl,
+    fontSize: 24,
     fontWeight: 'bold',
-    color: COLORS.text,
-    marginTop: SPACING.xs,
+    marginTop: SPACING.sm,
   },
   statLabel: {
-    fontSize: FONT_SIZE.xs,
-    color: COLORS.textSecondary,
+    fontSize: FONT_SIZE.sm,
     marginTop: 4,
-    textAlign: 'center',
   },
-  additionalStats: {
-    gap: SPACING.xs,
-  },
-  additionalStatRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: SPACING.xs,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-  },
-  additionalStatLabel: {
-    fontSize: FONT_SIZE.sm,
-    color: COLORS.textSecondary,
-  },
-  additionalStatValue: {
-    fontSize: FONT_SIZE.sm,
-    color: COLORS.text,
-    fontWeight: '600',
-  },
-  trackReplayButton: {
-    backgroundColor: COLORS.card,
-    borderRadius: BORDER_RADIUS.md,
-    borderWidth: 2,
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: SPACING.md,
+  chartCard: {
+    padding: SPACING.lg,
+    borderRadius: BORDER_RADIUS.lg,
+    borderWidth: 1,
     marginBottom: SPACING.lg,
   },
-  trackReplayIconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: BORDER_RADIUS.sm,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: SPACING.md,
+  chartTitle: {
+    fontSize: FONT_SIZE.lg,
+    fontWeight: 'bold',
+    marginBottom: SPACING.md,
+  },
+  trackReplayButton: {
+    borderRadius: BORDER_RADIUS.lg,
+    borderWidth: 2,
+    overflow: 'hidden',
+    marginBottom: SPACING.lg,
+  },
+  trackReplayGradient: {
+    padding: SPACING.lg,
   },
   trackReplayContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.md,
+  },
+  trackReplayText: {
     flex: 1,
   },
   trackReplayTitle: {
-    fontSize: FONT_SIZE.md,
-    fontWeight: '600',
-    color: COLORS.text,
-    marginBottom: 2,
+    fontSize: FONT_SIZE.lg,
+    fontWeight: 'bold',
   },
   trackReplaySubtitle: {
     fontSize: FONT_SIZE.sm,
-    color: COLORS.textSecondary,
+    marginTop: 2,
   },
-  chartsSection: {
-    marginBottom: SPACING.lg,
+  loader: {
+    marginTop: 40,
   },
-  diagnosticsCard: {
-    backgroundColor: COLORS.card,
-    borderRadius: BORDER_RADIUS.md,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    padding: SPACING.md,
-    marginBottom: SPACING.lg,
-  },
-  diagnosticRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: SPACING.sm,
-    paddingVertical: SPACING.sm,
-  },
-  diagnosticText: {
-    fontSize: FONT_SIZE.sm,
-    color: COLORS.textSecondary,
+  errorText: {
+    fontSize: FONT_SIZE.lg,
+    textAlign: 'center',
+    marginTop: 40,
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.9)',
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
     justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalContent: {
     alignItems: 'center',
     padding: SPACING.lg,
   },
-  modalButtons: {
+  modalContent: {
+    borderRadius: BORDER_RADIUS.xl,
+    padding: SPACING.lg,
+    width: '100%',
+    maxWidth: 400,
+  },
+  modalActions: {
     flexDirection: 'row',
     gap: SPACING.md,
-    marginTop: SPACING.xl,
+    marginTop: SPACING.lg,
   },
   modalButton: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: SPACING.md,
-    paddingHorizontal: SPACING.xl,
     borderRadius: BORDER_RADIUS.md,
     gap: SPACING.sm,
-    minWidth: 120,
   },
-  cancelButton: {
+  modalButtonPrimary: {
+    // backgroundColor set dynamically
+  },
+  modalButtonSecondary: {
     borderWidth: 1,
   },
-  shareButton: {},
   modalButtonText: {
     fontSize: FONT_SIZE.md,
     fontWeight: '600',

@@ -63,6 +63,7 @@ export interface UserProfile {
   garage?: CarData[];
   friendId?: string;
   crewIds?: string[];
+  state?: string; // US state code (e.g., "CA", "NY", "TX")
 }
 
 interface AuthContextType {

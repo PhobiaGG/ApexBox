@@ -76,6 +76,7 @@ interface AuthContextType {
   resetPassword: (email: string) => Promise<void>;
   updateUsername: (newName: string) => Promise<void>;
   uploadAvatar: (uri: string) => Promise<void>;
+  updateUserState: (stateCode: string) => Promise<void>;
   addCar: (car: Omit<CarData, 'id' | 'isActive'>) => Promise<void>;
   updateCar: (carId: string, updates: Partial<CarData>) => Promise<void>;
   deleteCar: (carId: string) => Promise<void>;

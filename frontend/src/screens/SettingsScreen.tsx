@@ -769,9 +769,47 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZE.sm,
     fontWeight: '600',
   },
-  statePicker: {
+  stateValueContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  modalOverlay: {
     flex: 1,
-    fontSize: FONT_SIZE.sm,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  stateModalContent: {
+    borderTopLeftRadius: BORDER_RADIUS.xl,
+    borderTopRightRadius: BORDER_RADIUS.xl,
+    paddingTop: SPACING.lg,
+    maxHeight: '70%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: SPACING.lg,
+    paddingBottom: SPACING.md,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.1)',
+  },
+  modalTitle: {
+    fontSize: FONT_SIZE.xl,
+    fontWeight: 'bold',
+  },
+  stateList: {
+    paddingHorizontal: SPACING.lg,
+  },
+  stateItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: SPACING.md,
+    borderBottomWidth: 1,
+  },
+  stateItemText: {
+    fontSize: FONT_SIZE.md,
   },
   changeUsernameButton: {
     borderRadius: BORDER_RADIUS.md,

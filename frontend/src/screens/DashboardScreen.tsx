@@ -238,7 +238,7 @@ export default function DashboardScreen() {
 
   const chartData = latestSession?.samples
     ? latestSession.samples
-        .filter((_, i) => i % 2 === 0)
+        .filter((s, i) => i % 2 === 0 && !isNaN(s.speed) && !isNaN(s.timestamp_ms))
         .slice(0, 15)
         .map(s => ({ x: s.timestamp_ms / 1000, y: s.speed }))
     : [];

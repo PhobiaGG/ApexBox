@@ -650,8 +650,8 @@ export default function GroupsScreen() {
 
                     <View style={styles.memberInfo}>
                       <Text style={[styles.memberName, { color: colors.text }]}>{member.displayName}</Text>
-                      <Text style={[styles.memberSessions, { color: colors.textSecondary}]}>
-                        {member.totalSessions} sessions
+                      <Text style={[styles.memberSessions, { color: colors.textSecondary }]}>
+                        {member.totalSessions || 0} sessions
                       </Text>
                     </View>
 

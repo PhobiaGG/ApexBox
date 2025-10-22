@@ -1,7 +1,20 @@
-import { BleManager, Device, Characteristic } from 'react-native-ble-plx';
 import { Platform, PermissionsAndroid } from 'react-native';
 import { BleDevice, BleStatus } from './MockBleService';
 import { TelemetryData, generateRealisticTelemetry } from '../utils/telemetry';
+
+// Conditional import for BLE - will be null in Expo Go
+let BleManager: any = null;
+let Device: any = null;
+let Characteristic: any = null;
+
+try {
+  const ble = require('react-native-ble-plx');
+  BleManager = ble.BleManager;
+  Device = ble.Device;
+  Characteristic = ble.Characteristic;
+} catch (e) {
+  console.log('[RealBleService] BLE library not available (Expo Go or web)');
+}
 
 // ApexBox ESP32 BLE Service UUIDs
 const SERVICE_UUID = '0000ffe0-0000-1000-8000-00805f9b34fb';
@@ -9,8 +22,8 @@ const TELEMETRY_CHAR_UUID = '0000ffe1-0000-1000-8000-00805f9b34fb';
 const COMMAND_CHAR_UUID = '0000ffe2-0000-1000-8000-00805f9b34fb';
 
 class RealBleService {
-  private manager: BleManager | null = null;
-  private connectedDevice: Device | null = null;
+  private manager: any | null = null;
+  private connectedDevice: any | null = null;
   private telemetryListeners: ((data: TelemetryData) => void)[] = [];
   private status: BleStatus = {
     isScanning: false,

@@ -28,7 +28,7 @@ import LeaderboardService from '../services/LeaderboardService';
 export default function SettingsScreen() {
   const { settings, updateUnits, toggleDeveloperMode, resetSettings } = useSettings();
   const { mode, colors, accentColor, setAccentColor, getCurrentAccent, toggleMode } = useTheme();
-  const { profile, updateUsername, uploadAvatar, addCar, setActiveCar, deleteCar, signOut } = useAuth();
+  const { profile, updateUsername, uploadAvatar, addCar, setActiveCar, deleteCar, signOut, updateUserState } = useAuth();
   const { forgetDevice } = useBle();
 
   const garage = profile?.garage || [];

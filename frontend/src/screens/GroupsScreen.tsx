@@ -720,34 +720,33 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZE.md,
     fontWeight: 'bold',
   },
-  crewCard: {
+  crewSelector: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     marginHorizontal: SPACING.lg,
-    marginBottom: SPACING.md,
+    marginBottom: SPACING.lg,
     padding: SPACING.lg,
     borderRadius: BORDER_RADIUS.lg,
-    borderWidth: 1,
+    borderWidth: 2,
   },
-  crewCardLeft: {
+  crewSelectorLeft: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: SPACING.md,
     flex: 1,
   },
-  crewCardInfo: {
-    flex: 1,
+  crewSelectorLabel: {
+    fontSize: FONT_SIZE.xs,
+    fontWeight: '700',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
   },
-  crewCardName: {
+  crewDropdownText: {
     fontSize: FONT_SIZE.lg,
     fontWeight: 'bold',
-    marginBottom: 2,
   },
-  crewCardDesc: {
-    fontSize: FONT_SIZE.sm,
-  },
-  crewCardRight: {
+  crewSelectorRight: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: SPACING.sm,

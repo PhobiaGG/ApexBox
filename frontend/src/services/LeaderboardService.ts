@@ -38,14 +38,23 @@ class LeaderboardService {
         const newMaxGForce = Math.max(currentData.maxGForce || 0, sessionMaxGForce);
         const newTotalSessions = (currentData.totalSessions || 0) + 1;
         
+        // Get latest state from user profile if not provided
+        let stateToUpdate = userState;
+        if (!stateToUpdate) {
+          const userDoc = await getDoc(doc(db, 'users', uid));
+          const userData = userDoc.data();
+          stateToUpdate = userData?.state || null;
+        }
+        
         await updateDoc(leaderboardRef, {
           topSpeed: newTopSpeed,
           maxGForce: newMaxGForce,
           totalSessions: newTotalSessions,
           lastUpdated: Date.now(),
+          state: stateToUpdate, // Always update state from user profile
         });
         
-        console.log('[Leaderboard] ✅ Stats updated');
+        console.log('[Leaderboard] ✅ Stats updated (state:', stateToUpdate, ')');
       } else {
         // Create new entry
         const userDoc = await getDoc(doc(db, 'users', uid));

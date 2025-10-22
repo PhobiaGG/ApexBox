@@ -640,6 +640,61 @@ export default function SettingsScreen() {
         onClose={() => setShowChangeUsername(false)}
         onSave={handleChangeUsername}
       />
+
+      {/* State Selection Modal */}
+      <Modal
+        visible={showStateModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowStateModal(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setShowStateModal(false)}
+        >
+          <View style={[styles.stateModalContent, { backgroundColor: colors.card }]}>
+            <View style={styles.modalHeader}>
+              <Text style={[styles.modalTitle, { color: colors.text }]}>Select Your State</Text>
+              <TouchableOpacity onPress={() => setShowStateModal(false)}>
+                <MaterialCommunityIcons name="close" size={24} color={colors.textSecondary} />
+              </TouchableOpacity>
+            </View>
+            <ScrollView style={styles.stateList}>
+              {LeaderboardService.getUSStates().map(state => (
+                <TouchableOpacity
+                  key={state.code}
+                  style={[
+                    styles.stateItem,
+                    { borderBottomColor: colors.border },
+                    profile?.state === state.code && { backgroundColor: `${accentColorValue}20` }
+                  ]}
+                  onPress={async () => {
+                    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    try {
+                      await updateUserState(state.code);
+                      setShowStateModal(false);
+                      Alert.alert('Success', `Location set to ${state.name}`);
+                    } catch (error: any) {
+                      Alert.alert('Error', error.message);
+                    }
+                  }}
+                >
+                  <Text style={[
+                    styles.stateItemText,
+                    { color: profile?.state === state.code ? accentColorValue : colors.text }
+                  ]}>
+                    {state.name}
+                  </Text>
+                  {profile?.state === state.code && (
+                    <MaterialCommunityIcons name="check" size={20} color={accentColorValue} />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </View>
   );
 }

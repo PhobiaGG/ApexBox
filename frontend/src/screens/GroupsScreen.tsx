@@ -487,14 +487,14 @@ export default function GroupsScreen() {
                   ]}
                 >
                   <View style={styles.rankContainer}>
-                    {index < 3 && (
+                    {index < 3 ? (
                       <View style={[styles.crownContainer, { backgroundColor: accentColor + '20' }]}>
                         <Text style={styles.crownText}>{index === 0 ? '👑' : index === 1 ? '🥈' : '🥉'}</Text>
                       </View>
-                    )}
-                    {index >= 3 && (
+                    ) : null}
+                    {index >= 3 ? (
                       <Text style={[styles.rankNumber, { color: colors.textSecondary }]}>#{index + 1}</Text>
-                    )}
+                    ) : null}
                   </View>
 
                   <UserAvatar name={member.displayName} size={48} uri={member.avatarURI} />
@@ -502,16 +502,16 @@ export default function GroupsScreen() {
                   <View style={styles.memberInfo}>
                     <Text style={[styles.memberName, { color: colors.text }]}>{member.displayName}</Text>
                     <Text style={[styles.memberSessions, { color: colors.textSecondary }]}>
-                      {member.totalSessions} sessions
+                      {member.totalSessions || 0} sessions
                     </Text>
                   </View>
 
                   <View style={styles.speedContainer}>
-                    <Text style={[styles.speedValue, { color: accentColor }]}>{member.topSpeed}</Text>
+                    <Text style={[styles.speedValue, { color: accentColor }]}>{member.topSpeed || 0}</Text>
                     <Text style={[styles.speedUnit, { color: colors.textSecondary }]}>km/h</Text>
                   </View>
                 </View>
-              ))}
+              )) : null}
             </ScrollView>
           )}
         </>

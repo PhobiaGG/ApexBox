@@ -143,6 +143,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           garage,
           friendId,
           crewIds: data.crewIds || [],
+          state: data.state,
         });
         console.log('[Auth] User data loaded successfully');
       }

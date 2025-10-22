@@ -208,30 +208,6 @@ export default function GroupsScreen() {
     }
   };
 
-  const handleLeaveCrew = async (crewId: string) => {
-    Alert.alert(
-      'Leave Crew',
-      'Are you sure you want to leave this crew?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Leave',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-              // In production: await leaveCrew(crewId);
-              Alert.alert('Left Crew', 'You have left the crew');
-              await loadData();
-            } catch (error) {
-              Alert.alert('Error', 'Failed to leave crew');
-            }
-          },
-        },
-      ]
-    );
-  };
-
   // Premium gate
   if (!profile?.premium) {
     return (

@@ -36,6 +36,7 @@ export default function SessionDetailScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [showShareModal, setShowShareModal] = useState(false);
   const [isGeneratingShare, setIsGeneratingShare] = useState(false);
+  const [hasGPS, setHasGPS] = useState(false);
   const shareCardRef = useRef<View>(null);
 
   const accentColor = getCurrentAccent();

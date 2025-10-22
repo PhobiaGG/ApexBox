@@ -22,10 +22,18 @@ class RealBleService {
 
   constructor() {
     try {
+      // Check if we're in Expo Go environment (no native modules)
+      if (Platform.OS === 'web' || !BleManager) {
+        console.log('[RealBleService] BLE not available (web or Expo Go), using mock mode');
+        this.useMockMode = true;
+        this.manager = null;
+        return;
+      }
+      
       this.manager = new BleManager();
       console.log('[RealBleService] BLE Manager initialized');
     } catch (error) {
-      console.warn('[RealBleService] BLE not available, using mock mode:', error);
+      console.warn('[RealBleService] BLE initialization failed, using mock mode:', error);
       this.useMockMode = true;
       this.manager = null;
     }

@@ -107,11 +107,13 @@ export default function TrackReplayScreen() {
     try {
       setLoading(true);
       
-      // Try to load GPS data from saved session if sessionKey is provided
-      const sessionKey = params.sessionKey as string;
+      // Try to load GPS data from saved session
+      const date = params.date as string;
+      const fileName = params.fileName as string;
       let data: GPSPoint[] = [];
       
-      if (sessionKey) {
+      if (date && fileName) {
+        const sessionKey = `${date}/${fileName}`;
         console.log('[TrackReplay] Loading GPS data for session:', sessionKey);
         const gpsDataStr = await AsyncStorage.getItem(`gps_${sessionKey}`);
         

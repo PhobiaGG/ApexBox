@@ -255,9 +255,32 @@ export default function SettingsScreen() {
                 <Text style={[styles.infoValue, { color: colors.text }]}>{profile.displayName}</Text>
               </View>
 
-              <View style={[styles.infoRow, { borderBottomColor: 'transparent' }]}>
+              <View style={[styles.infoRow, { borderBottomColor: colors.border }]}>
                 <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Email</Text>
                 <Text style={[styles.infoValue, { color: colors.text }]}>{profile.email}</Text>
+              </View>
+
+              <View style={[styles.infoRow, { borderBottomColor: 'transparent' }]}>
+                <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>State</Text>
+                <Picker
+                  selectedValue={profile.state || 'ALL'}
+                  onValueChange={async (value) => {
+                    if (value !== profile.state) {
+                      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                      try {
+                        await updateUserState(value);
+                        Alert.alert('Success', 'State updated successfully');
+                      } catch (error: any) {
+                        Alert.alert('Error', error.message);
+                      }
+                    }
+                  }}
+                  style={[styles.statePicker, { color: colors.text }]}
+                >
+                  {LeaderboardService.getUSStates().map(state => (
+                    <Picker.Item key={state.code} label={state.name} value={state.code} />
+                  ))}
+                </Picker>
               </View>
             </View>
 

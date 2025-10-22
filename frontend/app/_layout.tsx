@@ -8,6 +8,7 @@ import { BleProvider } from '../src/contexts/BleContext';
 import { SettingsProvider } from '../src/contexts/SettingsContext';
 import { LogsProvider } from '../src/contexts/LogsContext';
 import OnboardingModal from '../src/components/OnboardingModal';
+import ErrorBoundary from '../src/components/ErrorBoundary';
 import { COLORS, FONT_SIZE } from '../src/constants/theme';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 

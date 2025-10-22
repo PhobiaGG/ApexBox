@@ -498,6 +498,36 @@ const styles = StyleSheet.create({
     color: COLORS.text,
     fontWeight: '600',
   },
+  trackReplayButton: {
+    backgroundColor: COLORS.card,
+    borderRadius: BORDER_RADIUS.md,
+    borderWidth: 2,
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: SPACING.md,
+    marginBottom: SPACING.lg,
+  },
+  trackReplayIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: BORDER_RADIUS.sm,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: SPACING.md,
+  },
+  trackReplayContent: {
+    flex: 1,
+  },
+  trackReplayTitle: {
+    fontSize: FONT_SIZE.md,
+    fontWeight: '600',
+    color: COLORS.text,
+    marginBottom: 2,
+  },
+  trackReplaySubtitle: {
+    fontSize: FONT_SIZE.sm,
+    color: COLORS.textSecondary,
+  },
   chartsSection: {
     marginBottom: SPACING.lg,
   },

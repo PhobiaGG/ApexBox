@@ -220,75 +220,93 @@ export default function LogsScreen() {
                           ]
                         : [];
 
+                      const isDeleting = deletingSession === session.fileName;
+
                       return (
-                        <TouchableOpacity
-                          key={session.fileName}
-                          style={styles.sessionItem}
-                          onPress={() => handleSessionPress(date, session.fileName)}
-                          activeOpacity={0.7}
-                        >
-                          <LinearGradient
-                            colors={[COLORS.card, COLORS.background]}
-                            style={styles.sessionGradient}
+                        <View key={session.fileName} style={styles.sessionItem}>
+                          <TouchableOpacity
+                            style={styles.sessionCard}
+                            onPress={() => handleSessionPress(date, session.fileName)}
+                            activeOpacity={0.7}
+                            disabled={isDeleting}
                           >
-                            <View style={styles.sessionHeader}>
-                              <View style={styles.sessionLeft}>
-                                <MaterialCommunityIcons
-                                  name="timer-outline"
-                                  size={18}
-                                  color={COLORS.textSecondary}
-                                />
-                                <Text style={styles.sessionTime}>{session.time}</Text>
+                            <LinearGradient
+                              colors={[COLORS.card, COLORS.background]}
+                              style={styles.sessionGradient}
+                            >
+                              <View style={styles.sessionHeader}>
+                                <View style={styles.sessionLeft}>
+                                  <MaterialCommunityIcons
+                                    name="timer-outline"
+                                    size={18}
+                                    color={COLORS.textSecondary}
+                                  />
+                                  <Text style={styles.sessionTime}>{session.time}</Text>
+                                </View>
+
+                                {session.stats && (
+                                  <View style={styles.sessionStats}>
+                                    <View style={styles.statChip}>
+                                      <MaterialCommunityIcons
+                                        name="speedometer"
+                                        size={14}
+                                        color={COLORS.cyan}
+                                      />
+                                      <Text style={[styles.statChipText, { color: COLORS.cyan }]}>
+                                        {session.stats.peakSpeed.toFixed(0)}
+                                      </Text>
+                                    </View>
+                                    <View style={styles.statChip}>
+                                      <MaterialCommunityIcons
+                                        name="clock-outline"
+                                        size={14}
+                                        color={COLORS.magenta}
+                                      />
+                                      <Text style={[styles.statChipText, { color: COLORS.magenta }]}>
+                                        {Math.floor(session.stats.duration)}s
+                                      </Text>
+                                    </View>
+                                  </View>
+                                )}
                               </View>
 
-                              {session.stats && (
-                                <View style={styles.sessionStats}>
-                                  <View style={styles.statChip}>
-                                    <MaterialCommunityIcons
-                                      name="speedometer"
-                                      size={14}
-                                      color={COLORS.cyan}
-                                    />
-                                    <Text style={[styles.statChipText, { color: COLORS.cyan }]}>
-                                      {session.stats.peakSpeed.toFixed(0)}
-                                    </Text>
-                                  </View>
-                                  <View style={styles.statChip}>
-                                    <MaterialCommunityIcons
-                                      name="clock-outline"
-                                      size={14}
-                                      color={COLORS.magenta}
-                                    />
-                                    <Text style={[styles.statChipText, { color: COLORS.magenta }]}>
-                                      {Math.floor(session.stats.duration)}s
-                                    </Text>
-                                  </View>
+                              {sparklineData.length > 0 && (
+                                <View style={styles.sparklineContainer}>
+                                  <Sparkline
+                                    data={sparklineData}
+                                    width={280}
+                                    height={40}
+                                    color={COLORS.lime}
+                                    lineWidth={2}
+                                  />
                                 </View>
                               )}
-                            </View>
 
-                            {sparklineData.length > 0 && (
-                              <View style={styles.sparklineContainer}>
-                                <Sparkline
-                                  data={sparklineData}
-                                  width={280}
-                                  height={40}
-                                  color={COLORS.lime}
-                                  lineWidth={2}
+                              <View style={styles.sessionFooter}>
+                                <Text style={styles.sessionHint}>Tap to view details</Text>
+                                <MaterialCommunityIcons
+                                  name="chevron-right"
+                                  size={18}
+                                  color={COLORS.textTertiary}
                                 />
                               </View>
-                            )}
+                            </LinearGradient>
+                          </TouchableOpacity>
 
-                            <View style={styles.sessionFooter}>
-                              <Text style={styles.sessionHint}>Tap to view details</Text>
-                              <MaterialCommunityIcons
-                                name="chevron-right"
-                                size={18}
-                                color={COLORS.textTertiary}
-                              />
-                            </View>
-                          </LinearGradient>
-                        </TouchableOpacity>
+                          {/* Delete Button */}
+                          <TouchableOpacity
+                            style={styles.deleteButton}
+                            onPress={() => handleDeleteSession(session)}
+                            disabled={isDeleting}
+                            activeOpacity={0.7}
+                          >
+                            <MaterialCommunityIcons
+                              name={isDeleting ? "loading" : "trash-can-outline"}
+                              size={20}
+                              color={isDeleting ? COLORS.textSecondary : COLORS.error}
+                            />
+                          </TouchableOpacity>
+                        </View>
                       );
                     })}
                   </View>

@@ -191,7 +191,7 @@ export default function SessionDetailScreen() {
           <View style={[styles.statCard, { backgroundColor: colors.card, borderColor: accentColor }]}>
             <MaterialCommunityIcons name="speedometer" size={24} color={accentColor} />
             <Text style={[styles.statValue, { color: colors.text }]}>
-              {formatSpeed(stats.maxSpeed, settings.units)}
+              {formatSpeed(stats.peakSpeed, settings.units)}
             </Text>
             <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Top Speed</Text>
           </View>
@@ -199,7 +199,7 @@ export default function SessionDetailScreen() {
           <View style={[styles.statCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <MaterialCommunityIcons name="car-brake-alert" size={24} color={accentColor} />
             <Text style={[styles.statValue, { color: colors.text }]}>
-              {formatGForce(stats.maxGForce)}
+              {formatGForce(stats.peakG)}
             </Text>
             <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Max G-Force</Text>
           </View>

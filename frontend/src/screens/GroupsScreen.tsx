@@ -658,12 +658,12 @@ export default function GroupsScreen() {
                     <View style={styles.speedContainer}>
                       {globalCategory === 'topSpeed' ? (
                         <>
-                          <Text style={[styles.speedValue, { color: accentColor }]}>{member.topSpeed}</Text>
+                          <Text style={[styles.speedValue, { color: accentColor }]}>{member.topSpeed || 0}</Text>
                           <Text style={[styles.speedUnit, { color: colors.textSecondary }]}>km/h</Text>
                         </>
                       ) : (
                         <>
-                          <Text style={[styles.speedValue, { color: accentColor }]}>{member.topGForce?.toFixed(2)}</Text>
+                          <Text style={[styles.speedValue, { color: accentColor }]}>{member.topGForce?.toFixed(2) || '0.00'}</Text>
                           <Text style={[styles.speedUnit, { color: colors.textSecondary }]}>g</Text>
                         </>
                       )}

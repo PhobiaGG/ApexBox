@@ -17,9 +17,13 @@ export type PurchasesPackage = any;
 export type CustomerInfo = any;
 export type PurchasesError = any;
 
-// RevenueCat API Keys (should be stored in .env in production)
-const REVENUECAT_APPLE_API_KEY = 'appl_YOUR_KEY_HERE';  // Replace with your actual key
-const REVENUECAT_GOOGLE_API_KEY = 'goog_YOUR_KEY_HERE'; // Replace with your actual key
+// RevenueCat API Keys
+// Get these from: RevenueCat Dashboard → API Keys
+const REVENUECAT_APPLE_API_KEY = 'appl_YOUR_KEY_HERE';  // Replace with your Apple key
+const REVENUECAT_GOOGLE_API_KEY = 'goog_YOUR_KEY_HERE'; // Replace with your Google key
+
+// Product Identifier (matches your RevenueCat setup)
+export const PREMIUM_PRODUCT_ID = 'premium_lifetime';
 
 export interface PremiumStatus {
   isPremium: boolean;

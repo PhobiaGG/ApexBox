@@ -224,6 +224,7 @@ metadata:
 
 test_plan:
   current_focus:
+    - "Track Replay Button in Session Detail"
     - "Session Sharing Feature"
     - "Track Replay with Canvas Visualization"
     - "Settings - Dark/Light Mode Toggle"

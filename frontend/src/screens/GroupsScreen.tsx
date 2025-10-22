@@ -140,13 +140,14 @@ export default function GroupsScreen() {
       let topGForceData;
       
       if (selectedState === 'ALL') {
-        // Load all states
+        console.log('[GroupsScreen] Loading ALL states leaderboard');
         topSpeedData = await LeaderboardService.getTopSpeedLeaderboard(50);
         topGForceData = await LeaderboardService.getMaxGForceLeaderboard(50);
       } else {
-        // Load filtered by state
+        console.log('[GroupsScreen] Loading state-filtered leaderboard for:', selectedState);
         topSpeedData = await LeaderboardService.getTopSpeedLeaderboardByState(selectedState, 50);
         topGForceData = await LeaderboardService.getMaxGForceLeaderboardByState(selectedState, 50);
+        console.log('[GroupsScreen] State-filtered results:', topSpeedData.length, 'speed entries,', topGForceData.length, 'g-force entries');
       }
       
       setGlobalLeaderboard({

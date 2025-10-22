@@ -263,7 +263,7 @@ export default function SessionDetailScreen() {
           )}
 
           {/* Track Replay Button */}
-          {hasGPS && (
+          {hasGPS ? (
             <TouchableOpacity
               style={[styles.trackReplayButton, { borderColor: accentColor }]}
               onPress={handleTrackReplay}

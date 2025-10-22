@@ -237,6 +237,41 @@ test_plan:
 agent_communication:
   - agent: "main"
     message: |
+      🎯 TRACK REPLAY BUTTON INTEGRATION - COMPLETE
+      
+      ✅ IMPLEMENTATION SUMMARY:
+      1. Added getSessionGPS() method to LogService.ts to retrieve GPS coordinates
+      2. Added Track Replay button to SessionDetailScreen.tsx:
+         - Shows only when GPS data is available for the session
+         - Displays "GPS data available" for premium users
+         - Displays "Premium feature" for non-premium users
+         - Includes map-marker-path icon, accent color border, and chevron
+         - Positioned between session summary and charts section
+      3. Implemented handleTrackReplay() function:
+         - Premium gate with upgrade flow
+         - GPS data validation with user-friendly error message
+         - Navigation to TrackReplayScreen with date/fileName params
+         - Haptic feedback integration
+      4. Updated TrackReplayScreen.tsx to accept date/fileName params instead of sessionKey
+      
+      🎨 UI/UX FEATURES:
+      - Clean, prominent button design with icon and accent color
+      - Conditional rendering based on GPS data availability
+      - Premium status indicator in subtitle
+      - Proper error handling and user feedback
+      - Consistent haptic feedback
+      
+      📋 FILES MODIFIED:
+      - /app/frontend/src/services/LogService.ts (added getSessionGPS method)
+      - /app/frontend/src/screens/SessionDetailScreen.tsx (added button, state, handler)
+      - /app/frontend/src/screens/TrackReplayScreen.tsx (updated to accept new params)
+      
+      ✅ ALL LINTING PASSED
+      ✅ FRONTEND RESTARTED
+      
+      Ready for testing!
+  - agent: "main"
+    message: |
       STABILITY VERIFICATION PHASE after react-native-reanimated removal:
       
       🔧 RECENT CHANGES:

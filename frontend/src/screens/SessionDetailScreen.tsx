@@ -52,7 +52,7 @@ export default function SessionDetailScreen() {
         date: date as string,
         fileName: fileName as string,
         time: (fileName as string).replace('.csv', ''),
-        filePath: '',
+        filePath: `${date}/${fileName}`,
       };
 
       const data = await LogService.getSessionData(sessionMeta);
@@ -60,6 +60,10 @@ export default function SessionDetailScreen() {
       
       const calculatedStats = calculateStats(data);
       setStats(calculatedStats);
+
+      // Check if GPS data exists for this session
+      const gpsData = await LogService.getSessionGPS(sessionMeta);
+      setHasGPS(gpsData.length > 0);
     } catch (error) {
       console.error('Error loading session:', error);
       Alert.alert('Error', 'Failed to load session data');

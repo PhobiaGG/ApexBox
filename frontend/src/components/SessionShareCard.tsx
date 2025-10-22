@@ -148,7 +148,8 @@ const styles = StyleSheet.create({
   },
   footer: {
     alignItems: 'center',
-    marginTop: SPACING.lg,
+    marginTop: SPACING.xl,
+    paddingTop: SPACING.lg,
   },
   watermark: {
     fontSize: FONT_SIZE.xs,

@@ -185,6 +185,30 @@ class LogService {
       throw error;
     }
   }
+
+  /**
+   * Get GPS data for a session
+   */
+  async getSessionGPS(session: SessionMetadata): Promise<any[]> {
+    try {
+      console.log('[LogService] Reading GPS data for:', session.date, session.fileName);
+      
+      // Get GPS data from AsyncStorage
+      const gpsKey = `gps_${session.filePath}`;
+      const gpsData = await AsyncStorage.getItem(gpsKey);
+      
+      if (!gpsData) {
+        console.log('[LogService] No GPS data found for:', gpsKey);
+        return [];
+      }
+      
+      console.log('[LogService] Found GPS data, parsing...');
+      return JSON.parse(gpsData);
+    } catch (error) {
+      console.error('[LogService] Error reading GPS data:', error);
+      return [];
+    }
+  }
 }
 
 export default new LogService();

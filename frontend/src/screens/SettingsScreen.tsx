@@ -719,6 +719,10 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZE.sm,
     fontWeight: '600',
   },
+  statePicker: {
+    flex: 1,
+    fontSize: FONT_SIZE.sm,
+  },
   changeUsernameButton: {
     borderRadius: BORDER_RADIUS.md,
     overflow: 'hidden',

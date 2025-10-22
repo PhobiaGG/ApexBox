@@ -279,7 +279,7 @@ export default function SessionDetailScreen() {
               </View>
               <MaterialCommunityIcons name="chevron-right" size={24} color={accentColor} />
             </TouchableOpacity>
-          )}
+          ) : null}
 
           {/* Charts */}
           <View style={styles.chartsSection}>

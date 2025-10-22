@@ -86,7 +86,7 @@ export default function ChartView({ data, title, color, yLabel }: ChartViewProps
             fontSize="11"
             fontWeight="600"
           >
-            {maxValue.toFixed(0)}
+            {(isNaN(maxValue) || !isFinite(maxValue) ? 0 : maxValue).toFixed(0)}
           </SvgText>
           <SvgText
             x={padding - 25}
@@ -95,7 +95,7 @@ export default function ChartView({ data, title, color, yLabel }: ChartViewProps
             fontSize="11"
             fontWeight="600"
           >
-            {minValue.toFixed(0)}
+            {(isNaN(minValue) || !isFinite(minValue) ? 0 : minValue).toFixed(0)}
           </SvgText>
           
           {/* Y-axis label */}

@@ -8,6 +8,8 @@
     "scheme": "apexbox",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "privacy": "public",
+    "description": "Track your vehicle performance with real-time telemetry, GPS-based track replays, and compete with friends on leaderboards. ApexBox Companion connects to your OBD-II device for live data visualization.",
     "splash": {
       "image": "./assets/images/icon.png",
       "resizeMode": "contain",

@@ -262,6 +262,25 @@ export default function SessionDetailScreen() {
             </View>
           )}
 
+          {/* Track Replay Button */}
+          {hasGPS && (
+            <TouchableOpacity
+              style={[styles.trackReplayButton, { borderColor: accentColor }]}
+              onPress={handleTrackReplay}
+            >
+              <View style={[styles.trackReplayIconContainer, { backgroundColor: accentColor }]}>
+                <MaterialCommunityIcons name="map-marker-path" size={24} color={COLORS.text} />
+              </View>
+              <View style={styles.trackReplayContent}>
+                <Text style={styles.trackReplayTitle}>View Track Replay</Text>
+                <Text style={styles.trackReplaySubtitle}>
+                  {profile?.premium ? 'GPS data available' : 'Premium feature'}
+                </Text>
+              </View>
+              <MaterialCommunityIcons name="chevron-right" size={24} color={accentColor} />
+            </TouchableOpacity>
+          )}
+
           {/* Charts */}
           <View style={styles.chartsSection}>
             <Text style={styles.sectionTitle}>Telemetry Analysis</Text>

@@ -1,15 +1,11 @@
 <analysis>
-The AI engineer has meticulously developed the ApexBox Companion app, starting from basic UI to integrating complex features and resolving critical technical debt. Early efforts focused on stabilizing the UI by removing problematic  and  dependencies, replacing them with native  and  solutions, respectively. This involved refactoring components like , , and parts of .
-
-Subsequent work integrated core functionalities, including Firebase authentication, a robust garage system, dynamic theming, session sharing, and initial GPS tracking. Crew management and global leaderboards were implemented, evolving through several iterations to refine UI/UX, data handling, and validation. Persistent issues like login function mismatches, data access errors in  and , and  instantiation bugs were systematically addressed.
-
-More recently, the focus shifted to preparing the app for publication, which included  configuration, creating legal documents, and integrating mock in-app purchases. Critical UI/UX issues like tab bar overlap and inconsistent garage UI updates were also tackled, leading to the implementation of optimistic updates for garage operations. The final phase involves refining these optimistic updates and ensuring immediate, persistent UI synchronization.
+The previous AI engineer meticulously developed the ApexBox Companion app, addressing both UI stability and complex feature integration. Initial work focused on UI stabilization by replacing problematic dependencies and refactoring components. Key features like Firebase authentication, garage management, dynamic theming, and GPS tracking were implemented. Recent efforts involved preparing for publication, including  configuration and mock in-app purchases. Critical issues such as login function mismatches and data access errors were resolved. The trajectory shows the AI engineer addressing user-reported bugs (Expo Go compatibility, car deletion, crew creation, mock data removal) and implementing major features like Track Replay visualization and RevenueCat integration for payments. The engineer also tackled UI/UX refinements, including a state selection modal and adjusting share card layout. The work concluded with the engineer planning to integrate the Track Replay button into the Session Detail screen and then implement remaining final features, after fixing a text overlap issue in the Session Share Card.
 </analysis>
 
 <product_requirements>
-The ApexBox Companion app acts as a dashboard and data viewer for an ESP32 performance tracker, simulating realistic BLE telemetry (speed, G-force, temperature, altitude) with haptic feedback. It processes CSV log files, computes metrics, and caches results. Core navigation includes Dashboard, Logs, Session Detail, Groups (leaderboard), and Settings (profile, units, theme, BLE). The app adheres to a neon-dark theme with specific fonts, accent colors (Cyan, Magenta, Lime), rounded cards, and haptics, compatible with Expo Go/Android.
+The ApexBox Companion app functions as a dashboard and data viewer for an ESP32 performance tracker, simulating BLE telemetry (speed, G-force, temperature, altitude) with haptic feedback. It processes CSV logs, computes metrics, and caches results. Key navigation includes Dashboard, Logs, Session Detail, Groups (leaderboard), and Settings (profile, units, theme, BLE). The app features a neon-dark theme with specific fonts, accent colors (Cyan, Magenta, Lime), rounded cards, and haptics, compatible with Expo Go/Android.
 
-Key implementations include: full user authentication (Firebase Auth), profile management (avatars via Firebase Storage, display name in Firestore), a robust garage system (add, edit, set active, swipe-to-delete cars) with Firestore persistence, dynamic theme system (light/dark, accent colors) and global unit conversion, settings screen for profile/appearance/units/connectivity, premium features infrastructure (ApexBox Pro Pack), dedicated Premium screen with mock purchase, and UI gating for features like Track Map Replay and Crew Leaderboards. A real BLE service () with mock fallback, initial Firebase Storage/Firestore for session syncing, user friend ID generation, Add Friend functionality, initial GPS tracking service, and a session sharing component are also present.
+Implemented functionalities include: full user authentication (Firebase Auth), profile management (avatars, display name), a robust garage system (add, edit, set active, delete cars with optimistic updates), dynamic theming and global unit conversion, settings for profile/appearance/units/connectivity, premium features infrastructure (ApexBox Pro Pack) with a dedicated screen and mock purchase flow, UI gating for Track Map Replay and Crew Leaderboards,  service with mock fallback, initial Firebase Storage/Firestore for session syncing, user friend ID generation, GPS tracking service, and a session sharing component.
 </product_requirements>
 
 <key_technical_concepts>
@@ -17,62 +13,68 @@ Key implementations include: full user authentication (Firebase Auth), profile m
 - ** & React Navigation:** File-based and tab/stack navigation.
 - **Firebase (Auth, Firestore, Storage):** Backend for authentication, database, storage.
 - **:** Bluetooth Low Energy communication.
+- **RevenueCat & :** In-app purchases and subscription management.
 - **:** Local persistent storage.
-- **Context API:** Global state management.
-- **:** Vector graphics for charting.
+- **Context API:** Global state management (Auth, Ble, Logs, Settings, Theme).
+- **:** Vector graphics for charting and Track Replay visualization.
 - **:** GPS data capture.
 - ** & :** Session sharing functionality.
 - **:** Gesture handling.
 - **:** Map rendering (with platform specific handling).
+- ****: Dropdown for selection.
 </key_technical_concepts>
 
 <code_architecture>
 
-
 -   : Configures bottom tab navigator. **Changes:** Adjusted  height/padding, added  for Android to fix overlap.
 -   : Root app layout. **Changes:** Wrapped content with  to resolve gesture-related errors.
 -   : Login screen. **Changes:** Adapted to use 's  function.
--   : Premium features screen. **Changes:** Integrated  from  for mock purchase flow.
+-   : Premium features screen. **Changes:** Integrated  from  for mock purchase flow; later updated to use  for real purchases, and conditionally imported  for Expo Go compatibility.
 -   : Entry for track replay. **Changes:** Managed routing between  versions, currently pointing to a Skia-free .
 -   : Expo configuration. **Changes:** Added  permissions, updated iOS  to , adjusted icons, splash screen, and build properties for production readiness.
--   : **(New File)** EAS build configuration. **Summary:** Used for managing production builds and environment-specific settings.
--   , , : **(New Files)** Legal documents. **Summary:** Created for App Store publication requirements.
+-   : **(New File)** EAS build configuration.
+-   , , : **(New Files)** Legal documents for App Store publication.
 -   : BLE connection modal. **Changes:** Improved scan visual feedback and activity indicators.
--   : Data charts. **Changes:** Replaced  implementation with  due to  dependency issues.
--   : **(New File)** Modal for creating crews. **Summary:** Provides UI for creating new crews with validation. **Changes:** Implemented with centered cancel button.
--   : Telemetry gauge. **Changes:** Migrated animations from  to native  and added null/undefined guards.
--   : **(New File)** Modal for joining crews. **Summary:** Provides UI for joining crews by code with validation. **Changes:** Implemented with centered cancel button.
--   : **(New File)** Component for session snapshots. **Summary:** Generates shareable visual summaries of sessions.
+-   : Data charts. **Changes:** Replaced  with .
+-   : **(New File)** Modal for creating crews. **Changes:** Implemented with centered cancel button.
+-   : Telemetry gauge. **Changes:** Migrated animations from  to native , added null/undefined guards.
+-   : **(New File)** Modal for joining crews. **Changes:** Implemented with centered cancel button.
+-   : **(New File)** Component for session snapshots. **Changes:** Generates shareable visual summaries of sessions; recently adjusted footer margin to fix text overlap.
 -   : User avatars. **Changes:** Added safe fallbacks for the  prop.
--   : Manages user auth, profile, garage, premium, and crews. **Changes:** Enhanced car/crew management, updated  to , added , implemented optimistic UI updates for garage operations, and removed redundant data reloads on successful car modifications to ensure immediate UI feedback.
+-   : Manages user auth, profile, garage, premium, and crews. **Changes:** Enhanced car/crew management, updated  to , added , implemented optimistic UI updates for garage operations, removed redundant data reloads on successful car modifications. Added  function and exported it in the context value. Clean-up function for duplicate cars added (not yet invoked). Addressed Firebase permission issues for crew creation.
 -   : Manages BLE state. **Changes:** Utilizes  for auto-connect and device persistence.
--   : Manages application theme. **Changes:** Ensured  function is correctly exposed and available.
--   : **(New File)** Manages storing/retrieving remembered BLE devices. **Summary:** Provides persistent local storage for BLE devices.
--   : **(New File)** Service for GPS data capture. **Summary:** Handles the collection of GPS location data.
--   : Handles session logging. **Changes:** Added  function, fixed  interface and  function signature issues for correct data processing.
--   : Live telemetry dashboard. **Changes:** Fixed  instantiation,  reference, integrated , and GPS tracking logic.
--   : Car management screen. **Changes:** Fixed data access (), updated  calls, removed swipe hint text, added explicit edit/delete buttons, and resolved JSX structural errors.
--   : Crews and leaderboards screen. **Changes:** UI redesign, dropdown for crews, integrated /, implemented Global Leaderboard (with Top Speed/G-Force categories and empty states), removed default crews, and added input validation.
--   : Application settings. **Changes:** Added Connectivity section, ensured correct  usage, fixed  access, and updated logout functionality.
--   : Session details screen. **Changes:** Integrated  component for sharing session snapshots, including a modal and styles.
--   : Track replay screen. **Changes:** Removed  (which had  as peer dependency) and replaced canvas rendering with a simple placeholder view to resolve lingering  issues.
--   : **(New File)** Temporary map-based track replay screen. **Summary:** Implemented , currently not in active use due to web compatibility issues.
+-   : Manages application theme. **Changes:** Ensured  function is correctly exposed.
+-   : **(New File)** Manages storing/retrieving remembered BLE devices.
+-   : **(New File)** Service for GPS data capture.
+-   : Handles session logging. **Changes:** Added  function, fixed  interface and  signature. Removed mock CSV data and updated ,  to use real data.
+-   : **(Existing File)** No direct changes in trajectory, but implicitly used for crew operations.
+-   : **(New File)** Encapsulates RevenueCat purchase logic. **Changes:** Initialized with user-provided API keys and entitlement identifier ().
+-   : **(New File)** Handles global leaderboard data. **Changes:** Implemented methods for state-filtered leaderboards.
+-   : Live telemetry dashboard. **Changes:** Fixed  instantiation,  reference, integrated  and GPS tracking. Added leaderboard update logic after session save, and fixed user ID reference.
+-   : Car management screen. **Changes:** Fixed data access (), updated  calls, removed swipe hint, added explicit edit/delete buttons, resolved JSX structural errors. Fixed deletion bug caused by duplicate car IDs in Firebase by handling unique keys in rendering.
+-   : Crews and leaderboards screen. **Changes:** UI redesign, dropdown for crews, integrated /, implemented Global Leaderboard. Fixed  error by using  and temporarily hiding member display. Inline implementation of crew loading logic to resolve  undefined error.
+-   : Application settings. **Changes:** Added Connectivity section, ensured correct  usage, fixed  access, updated logout functionality. Integrated a state selection modal with  allowing users to update their state, which is then displayed in a read-only format in their profile.
+-   : Session details screen. **Changes:** Integrated  component for sharing session snapshots, including a modal and styles. (Planned addition of Track Replay button).
+-   : Track replay screen. **Changes:** Removed  (which had  as peer dependency) and replaced canvas rendering with  based visualization (path rendering, G-force color gradients, animated playback, zoom/pan).
+-   : **(New File)** Temporary map-based track replay screen. Not in active use.
 </code_architecture>
 
 <pending_tasks>
-- Fully implement the Track Replay feature with map rendering and playback UI (the current implementation uses a placeholder).
-- Complete performance optimizations for large telemetry datasets and memory management.
-- Address App Store readiness requirements, including final checks for Android/iOS publishing and monetization via in-app purchases with a charging system (currently mock).
+- Refine and finalize Track Replay UI/UX, ensuring clear GPS data visibility and accessibility from logs.
+- Implement dedicated custom leaderboards for individual crews within the GroupsScreen, including UI refinement.
+- Complete performance optimizations for large telemetry datasets.
+- Conduct comprehensive end-to-end testing of the RevenueCat premium purchase flow on a physical device.
+- Integrate state filtering and display for global leaderboards in the GroupsScreen UI.
 </pending_tasks>
 
 <current_work>
-Immediately before this summary, the AI engineer was addressing a critical bug in the garage management system where deleted cars would briefly disappear and then reappear in the UI, indicating a UI refresh inconsistency despite successful deletion from the backend.
+Immediately prior to this summary, the AI engineer was addressing two user-reported issues: the absence of a Track Replay section within the logs and a text overlap issue in the APEXBOX COMPANION text within the session share popup.
 
-The engineer identified that the  function within  was performing an optimistic UI update but also contained an unnecessary data reload on success. This reload would fetch the car again from Firebase before the deletion fully propagated, causing the car to reappear.
+The engineer identified that the Track Replay button was missing from . Concurrently, the engineer examined  to resolve the text overlap.
 
-To fix this, the  function was modified (Chat Message 525) to remove the redundant data reload on successful deletion, ensuring that the optimistic UI update remains consistent with the backend state. The trajectory concludes with the engineer extending this logic to , , and  functions within the same . This ensures that all garage-related operations provide immediate, consistent UI feedback without prematurely re-fetching data, thereby improving the user experience significantly.
+The  was successfully modified to adjust the footer margin, fixing the text overlap. Following this, the engineer planned to add a Track Replay button to , specifically after the session summary and before the charts section. The trajectory concludes at this point, with the button addition planned as the immediate next step before implementing other final features.
 </current_work>
 
 <optional_next_step>
-Remove unnecessary reloads on success for , , and  functions in .
+Add the Track Replay button to .
 </optional_next_step>

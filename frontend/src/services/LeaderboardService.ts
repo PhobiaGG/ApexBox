@@ -190,8 +190,20 @@ class LeaderboardService {
       
       // Firebase composite indexes are not available, so we'll fetch all and filter client-side
       const allEntries = await this.getTopSpeedLeaderboard(1000); // Get more entries
+      console.log('[Leaderboard] Filtering', allEntries.length, 'entries for state:', state);
+      
+      // Debug: Log all unique states found
+      const uniqueStates = [...new Set(allEntries.map(e => e.state).filter(Boolean))];
+      console.log('[Leaderboard] Unique states found:', uniqueStates);
+      
       const filteredEntries = allEntries
-        .filter(entry => entry.state === state)
+        .filter(entry => {
+          const matches = entry.state === state;
+          if (matches) {
+            console.log('[Leaderboard] Match found:', entry.displayName, '- state:', entry.state);
+          }
+          return matches;
+        })
         .slice(0, limitCount);
       
       console.log('[Leaderboard] ✅ Fetched', filteredEntries.length, 'state-filtered top speed entries');

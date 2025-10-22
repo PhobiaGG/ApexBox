@@ -664,6 +664,52 @@ export default function GroupsScreen() {
         </>
       )}
 
+      {/* Crew Picker Modal */}
+      <Modal
+        visible={showCrewPicker}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowCrewPicker(false)}
+      >
+        <View style={styles.pickerModalOverlay}>
+          <View style={[styles.pickerModalContent, { backgroundColor: colors.card }]}>
+            <View style={styles.pickerHeader}>
+              <Text style={[styles.pickerTitle, { color: colors.text }]}>Select Crew</Text>
+              <TouchableOpacity onPress={() => setShowCrewPicker(false)}>
+                <MaterialCommunityIcons name="close" size={24} color={colors.textSecondary} />
+              </TouchableOpacity>
+            </View>
+
+            <FlatList
+              data={userCrews}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={[styles.pickerItem, { borderBottomColor: colors.border }]}
+                  onPress={() => {
+                    setSelectedCrew(item);
+                    setShowCrewPicker(false);
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <View>
+                    <Text style={[styles.pickerItemTitle, { color: colors.text }]}>{item.name}</Text>
+                    <Text style={[styles.pickerItemSub, { color: colors.textSecondary }]}>
+                      {item.memberIds?.length || 0} members
+                    </Text>
+                  </View>
+                  {selectedCrew?.id === item.id ? (
+                    <MaterialCommunityIcons name="check-circle" size={24} color={accentColor} />
+                  ) : null}
+                </TouchableOpacity>
+              )}
+              showsVerticalScrollIndicator={true}
+            />
+          </View>
+        </View>
+      </Modal>
+
       {/* Create Crew Modal */}
       <CreateCrewModal
         visible={showCreateModal}

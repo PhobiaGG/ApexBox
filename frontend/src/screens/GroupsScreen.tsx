@@ -358,44 +358,36 @@ export default function GroupsScreen() {
             </TouchableOpacity>
           </View>
 
-          {/* Crew List */}
-          {userCrews.length > 0 && userCrews.map((crew) => (
+          {/* Crew Selector Dropdown */}
+          {userCrews.length > 0 ? (
             <TouchableOpacity
-              key={crew.id}
-              style={[styles.crewCard, { backgroundColor: colors.card, borderColor: colors.border }]}
+              style={[styles.crewSelector, { backgroundColor: colors.card, borderColor: accentColor }]}
               onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                router.push({
-                  pathname: '/group-detail',
-                  params: { crewId: crew.id },
-                });
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                setShowCrewPicker(true);
               }}
               activeOpacity={0.8}
             >
-              <View style={styles.crewCardLeft}>
-                <MaterialCommunityIcons name="shield-account" size={32} color={accentColor} />
-                <View style={styles.crewCardInfo}>
-                  <Text style={[styles.crewCardName, { color: colors.text }]}>
-                    {crew.name}
+              <View style={styles.crewSelectorLeft}>
+                <MaterialCommunityIcons name="shield-account" size={24} color={accentColor} />
+                <View>
+                  <Text style={[styles.crewSelectorLabel, { color: colors.textSecondary }]}>MY CREW</Text>
+                  <Text style={[styles.crewDropdownText, { color: colors.text }]}>
+                    {selectedCrew?.name || 'Select Crew'}
                   </Text>
-                  {crew.description ? (
-                    <Text style={[styles.crewCardDesc, { color: colors.textSecondary }]} numberOfLines={1}>
-                      {crew.description}
-                    </Text>
-                  ) : null}
                 </View>
               </View>
-              <View style={styles.crewCardRight}>
+              <View style={styles.crewSelectorRight}>
                 <View style={[styles.memberBadge, { backgroundColor: accentColor }]}>
                   <MaterialCommunityIcons name="account-group" size={12} color={colors.text} />
                   <Text style={[styles.memberBadgeText, { color: colors.text }]}>
-                    {crew.memberIds?.length || 0}
+                    {selectedCrew?.memberIds?.length || 0}
                   </Text>
                 </View>
-                <MaterialCommunityIcons name="chevron-right" size={24} color={colors.textSecondary} />
+                <MaterialCommunityIcons name="chevron-down" size={24} color={colors.textSecondary} />
               </View>
             </TouchableOpacity>
-          ))}
+          ) : null}
 
           {/* Empty State */}
           {userCrews.length === 0 ? (

@@ -395,8 +395,8 @@ export default function GroupsScreen() {
                 </TouchableOpacity>
               </View>
 
-              {/* Members List */}
-              {selectedCrew.members?.sort((a, b) => b.topSpeed - a.topSpeed).map((member, index) => (
+              {/* Members List - TODO: Implement member population */}
+              {selectedCrew.memberIds && selectedCrew.memberIds.length > 0 && false && selectedCrew.members?.sort((a, b) => b.topSpeed - a.topSpeed).map((member, index) => (
                 <View
                   key={member.uid}
                   style={[

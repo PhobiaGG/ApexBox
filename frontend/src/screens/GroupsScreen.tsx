@@ -395,6 +395,99 @@ export default function GroupsScreen() {
             </TouchableOpacity>
           ) : null}
 
+          {/* Crew Leaderboard */}
+          {selectedCrew && userCrews.length > 0 ? (
+            <ScrollView
+              style={styles.crewLeaderboardScroll}
+              contentContainerStyle={styles.crewLeaderboardContent}
+              showsVerticalScrollIndicator={false}
+            >
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>
+                {selectedCrew.name} Leaderboard
+              </Text>
+              
+              {selectedCrew.members && selectedCrew.members.length > 0 ? (
+                selectedCrew.members
+                  .sort((a, b) => (b.topSpeed || 0) - (a.topSpeed || 0))
+                  .slice(0, 10)
+                  .map((member, index) => (
+                    <View
+                      key={member.uid}
+                      style={[
+                        styles.leaderboardCard,
+                        {
+                          backgroundColor: colors.card,
+                          borderColor: index === 0 ? accentColor : colors.border,
+                          borderWidth: index === 0 ? 2 : 1,
+                        },
+                      ]}
+                    >
+                      <View style={styles.leaderboardLeft}>
+                        {index < 3 ? (
+                          <View style={[styles.crownContainer, { backgroundColor: accentColor + '20' }]}>
+                            <Text style={styles.crownText}>
+                              {index === 0 ? '👑' : index === 1 ? '🥈' : '🥉'}
+                            </Text>
+                          </View>
+                        ) : (
+                          <Text style={[styles.rankNumber, { color: colors.textSecondary }]}>
+                            #{index + 1}
+                          </Text>
+                        )}
+                        <UserAvatar name={member.displayName} size={40} uri={member.avatarURI} />
+                        <View style={styles.memberInfo}>
+                          <Text style={[styles.memberName, { color: colors.text }]}>
+                            {member.displayName}
+                            {member.uid === user?.uid ? ' (You)' : ''}
+                          </Text>
+                          <Text style={[styles.memberSessions, { color: colors.textSecondary }]}>
+                            {member.totalSessions || 0} sessions
+                          </Text>
+                        </View>
+                      </View>
+                      <View style={styles.leaderboardRight}>
+                        <Text style={[styles.speedValueBig, { color: accentColor }]}>
+                          {(member.topSpeed || 0).toFixed(1)}
+                        </Text>
+                        <Text style={[styles.speedUnit, { color: colors.textSecondary }]}>km/h</Text>
+                      </View>
+                    </View>
+                  ))
+              ) : (
+                <View style={styles.emptyLeaderboard}>
+                  <MaterialCommunityIcons name="trophy-outline" size={48} color={colors.textSecondary} />
+                  <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
+                    No data yet
+                  </Text>
+                  <Text style={[styles.emptyHint, { color: colors.textTertiary }]}>
+                    Complete sessions to appear on the leaderboard
+                  </Text>
+                </View>
+              )}
+
+              {/* View Details Button */}
+              <TouchableOpacity
+                style={[styles.viewDetailsButton, { borderColor: accentColor }]}
+                onPress={() => {
+                  if (selectedCrew) {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                    router.push({
+                      pathname: '/group-detail',
+                      params: { crewId: selectedCrew.id },
+                    });
+                  }
+                }}
+                activeOpacity={0.8}
+              >
+                <MaterialCommunityIcons name="shield-account" size={20} color={accentColor} />
+                <Text style={[styles.viewDetailsButtonText, { color: accentColor }]}>
+                  View Full Details
+                </Text>
+                <MaterialCommunityIcons name="chevron-right" size={20} color={accentColor} />
+              </TouchableOpacity>
+            </ScrollView>
+          ) : null}
+
           {/* Empty State */}
           {userCrews.length === 0 ? (
             <View style={styles.emptyContainer}>

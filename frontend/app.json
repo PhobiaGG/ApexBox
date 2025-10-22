@@ -40,6 +40,7 @@
       },
       "package": "com.apexbox.companion",
       "versionCode": 1,
+      "playStoreUrl": "https://play.google.com/store/apps/details?id=com.apexbox.companion",
       "permissions": [
         "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION",
@@ -49,9 +50,11 @@
         "BLUETOOTH_SCAN",
         "CAMERA",
         "READ_EXTERNAL_STORAGE",
-        "WRITE_EXTERNAL_STORAGE"
+        "WRITE_EXTERNAL_STORAGE",
+        "ACCESS_BACKGROUND_LOCATION"
       ],
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "blockedPermissions": []
     },
     "web": {
       "bundler": "metro",

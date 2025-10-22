@@ -608,11 +608,11 @@ export default function GroupsScreen() {
                 <Text style={[styles.sectionTitle, { color: colors.text }]}>
                   {globalCategory === 'topSpeed' ? 'Fastest Racers' : 'Highest G-Force'}
                 </Text>
-                {globalLeaderboard[globalCategory].map((member: any, index: number) => (
+                {globalLeaderboard[globalCategory].slice(0, leaderboardLimit).map((member: any, index: number) => (
                   <View
                     key={member.uid}
                     style={[
-                      styles.memberCard,
+                      styles.leaderboardCard,
                       {
                         backgroundColor: colors.card,
                         borderColor: index === 0 ? accentColor : colors.border,
@@ -620,37 +620,39 @@ export default function GroupsScreen() {
                       },
                     ]}
                   >
-                    <View style={styles.rankContainer}>
-                      {index < 3 && (
+                    <View style={styles.leaderboardLeft}>
+                      {index < 3 ? (
                         <View style={[styles.crownContainer, { backgroundColor: accentColor + '20' }]}>
                           <Text style={styles.crownText}>{index === 0 ? '👑' : index === 1 ? '🥈' : '🥉'}</Text>
                         </View>
-                      )}
-                      {index >= 3 && (
+                      ) : (
                         <Text style={[styles.rankNumber, { color: colors.textSecondary }]}>#{index + 1}</Text>
                       )}
+
+                      <UserAvatar name={member.displayName} size={44} uri={member.avatarURI} />
+
+                      <View style={styles.memberInfo}>
+                        <Text style={[styles.memberName, { color: colors.text }]}>
+                          {member.displayName}
+                          {member.uid === user?.uid ? ' (You)' : ''}
+                        </Text>
+                        <Text style={[styles.memberSessions, { color: colors.textSecondary }]}>
+                          {member.totalSessions || 0} sessions
+                        </Text>
+                      </View>
                     </View>
 
-                    <UserAvatar name={member.displayName} size={48} uri={member.avatarURI} />
-
-                    <View style={styles.memberInfo}>
-                      <Text style={[styles.memberName, { color: colors.text }]}>{member.displayName}</Text>
-                      <Text style={[styles.memberSessions, { color: colors.textSecondary }]}>
-                        {member.totalSessions || 0} sessions
-                      </Text>
-                    </View>
-
-                    <View style={styles.speedContainer}>
+                    <View style={styles.leaderboardRight}>
                       {globalCategory === 'topSpeed' ? (
                         <>
-                          <Text style={[styles.speedValue, { color: accentColor }]}>
+                          <Text style={[styles.speedValueBig, { color: accentColor }]}>
                             {(member.topSpeed || 0).toFixed(2)}
                           </Text>
                           <Text style={[styles.speedUnit, { color: colors.textSecondary }]}>km/h</Text>
                         </>
                       ) : (
                         <>
-                          <Text style={[styles.speedValue, { color: accentColor }]}>
+                          <Text style={[styles.speedValueBig, { color: accentColor }]}>
                             {(member.topGForce || 0).toFixed(2)}
                           </Text>
                           <Text style={[styles.speedUnit, { color: colors.textSecondary }]}>g</Text>
@@ -659,6 +661,23 @@ export default function GroupsScreen() {
                     </View>
                   </View>
                 ))}
+
+                {/* Load More Button */}
+                {globalLeaderboard[globalCategory].length > leaderboardLimit && leaderboardLimit < 50 ? (
+                  <TouchableOpacity
+                    style={[styles.loadMoreButton, { borderColor: accentColor }]}
+                    onPress={() => {
+                      setLeaderboardLimit(prev => Math.min(prev + 10, 50));
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    }}
+                    activeOpacity={0.8}
+                  >
+                    <MaterialCommunityIcons name="chevron-down" size={20} color={accentColor} />
+                    <Text style={[styles.loadMoreText, { color: accentColor }]}>
+                      Load More ({Math.min(globalLeaderboard[globalCategory].length - leaderboardLimit, 10)} more)
+                    </Text>
+                  </TouchableOpacity>
+                ) : null}
               </>
             )}
           </ScrollView>

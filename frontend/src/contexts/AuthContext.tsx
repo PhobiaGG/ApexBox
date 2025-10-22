@@ -761,6 +761,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         updateUsername,
         uploadAvatar,
         updateUserState,
+        // Car management
         addCar,
         updateCar,
         deleteCar,

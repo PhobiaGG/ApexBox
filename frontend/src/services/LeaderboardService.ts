@@ -59,6 +59,7 @@ class LeaderboardService {
           maxGForce: sessionMaxGForce,
           totalSessions: 1,
           lastUpdated: Date.now(),
+          state: userState || userData?.state || null,
         });
         
         console.log('[Leaderboard] ✅ New entry created');

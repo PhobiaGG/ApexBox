@@ -146,14 +146,14 @@ class RevenueCatService {
     try {
       const customerInfo = await Purchases.getCustomerInfo();
       
-      // Check if user has the "pro" entitlement (you'll configure this in RevenueCat dashboard)
-      const proEntitlement = customerInfo.entitlements.active['pro'];
+      // Check if user has the "premium" entitlement (YOUR ACTUAL ENTITLEMENT)
+      const premiumEntitlement = customerInfo.entitlements.active[PREMIUM_ENTITLEMENT_ID];
       
-      if (proEntitlement) {
+      if (premiumEntitlement) {
         return {
           isPremium: true,
-          expirationDate: proEntitlement.expirationDate || undefined,
-          productIdentifier: proEntitlement.productIdentifier,
+          expirationDate: premiumEntitlement.expirationDate || undefined,
+          productIdentifier: premiumEntitlement.productIdentifier,
         };
       } else {
         return { isPremium: false };

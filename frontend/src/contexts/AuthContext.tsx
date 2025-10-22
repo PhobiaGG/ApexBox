@@ -419,6 +419,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   /**
+   * Update user's state (for leaderboard filtering)
+   */
+  const updateUserState = async (stateCode: string): Promise<void> => {
+    if (!user) throw new Error('No user logged in');
+    
+    try {
+      console.log('[Auth] Updating user state to:', stateCode);
+      
+      // Update Firebase
+      await updateDoc(doc(db, 'users', user.uid), {
+        state: stateCode,
+      });
+      
+      // Update local profile
+      if (profile) {
+        setProfile({ ...profile, state: stateCode });
+      }
+      
+      console.log('[Auth] ✅ User state updated');
+    } catch (error: any) {
+      console.error('[Auth] Error updating state:', error);
+      throw new Error(error.message);
+    }
+  };
+
+  /**
    * Clean up duplicate cars from Firebase
    * This is a utility function to fix data inconsistencies
    */

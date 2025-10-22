@@ -1017,4 +1017,98 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZE.md,
     fontWeight: '500',
   },
+  pickerItemSub: {
+    fontSize: FONT_SIZE.sm,
+    marginTop: 2,
+  },
+  crewLeaderboardScroll: {
+    flex: 1,
+  },
+  crewLeaderboardContent: {
+    paddingHorizontal: SPACING.lg,
+    paddingBottom: 100,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: SPACING.lg,
+  },
+  leaderboardLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.sm,
+    flex: 1,
+  },
+  leaderboardRight: {
+    alignItems: 'flex-end',
+  },
+  speedValueBig: {
+    fontSize: 32,
+    fontWeight: 'bold',
+  },
+  crownContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  crownText: {
+    fontSize: 18,
+  },
+  rankNumber: {
+    fontSize: FONT_SIZE.md,
+    fontWeight: 'bold',
+    width: 32,
+    textAlign: 'center',
+  },
+  memberInfo: {
+    flex: 1,
+  },
+  memberName: {
+    fontSize: FONT_SIZE.md,
+    fontWeight: 'bold',
+  },
+  memberSessions: {
+    fontSize: FONT_SIZE.sm,
+    marginTop: 2,
+  },
+  speedContainer: {
+    alignItems: 'flex-end',
+  },
+  speedValue: {
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  speedUnit: {
+    fontSize: FONT_SIZE.xs,
+    marginTop: 2,
+  },
+  emptyLeaderboard: {
+    alignItems: 'center',
+    paddingVertical: SPACING.xl * 2,
+  },
+  emptyText: {
+    fontSize: FONT_SIZE.md,
+    marginTop: SPACING.md,
+  },
+  emptyHint: {
+    fontSize: FONT_SIZE.sm,
+    marginTop: SPACING.xs,
+    textAlign: 'center',
+  },
+  viewDetailsButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: SPACING.lg,
+    borderRadius: BORDER_RADIUS.md,
+    borderWidth: 2,
+    marginTop: SPACING.lg,
+    gap: SPACING.sm,
+  },
+  viewDetailsButtonText: {
+    fontSize: FONT_SIZE.md,
+    fontWeight: 'bold',
+  },
 });

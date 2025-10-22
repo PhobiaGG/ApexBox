@@ -1131,4 +1131,19 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZE.md,
     fontWeight: 'bold',
   },
+  loadMoreButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: SPACING.md,
+    borderRadius: BORDER_RADIUS.md,
+    borderWidth: 1,
+    marginTop: SPACING.md,
+    marginBottom: SPACING.lg,
+    gap: SPACING.xs,
+  },
+  loadMoreText: {
+    fontSize: FONT_SIZE.sm,
+    fontWeight: '600',
+  },
 });

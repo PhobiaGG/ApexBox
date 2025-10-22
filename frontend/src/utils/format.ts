@@ -1,4 +1,7 @@
-export function formatSpeed(speed: number, isMetric: boolean = true): string {
+export function formatSpeed(speed: number | undefined, isMetric: boolean = true): string {
+  if (speed === undefined || speed === null || isNaN(speed)) {
+    return '--' + (isMetric ? ' km/h' : ' mph');
+  }
   if (isMetric) {
     return `${speed.toFixed(1)} km/h`;
   } else {
@@ -6,7 +9,10 @@ export function formatSpeed(speed: number, isMetric: boolean = true): string {
   }
 }
 
-export function formatGForce(g: number): string {
+export function formatGForce(g: number | undefined): string {
+  if (g === undefined || g === null || isNaN(g)) {
+    return '--g';
+  }
   return `${g.toFixed(2)}g`;
 }
 

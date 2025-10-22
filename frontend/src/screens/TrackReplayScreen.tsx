@@ -98,10 +98,15 @@ export default function TrackReplayScreen() {
   const [translateX, setTranslateX] = useState(0);
   const [translateY, setTranslateY] = useState(0);
   const [loading, setLoading] = useState(true);
+  const hasLoadedData = useRef(false);
 
   useEffect(() => {
-    loadGPSData();
-  }, [params]);
+    // Only load GPS data once
+    if (!hasLoadedData.current) {
+      loadGPSData();
+      hasLoadedData.current = true;
+    }
+  }, []);
 
   const loadGPSData = async () => {
     try {

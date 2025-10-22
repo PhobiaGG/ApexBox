@@ -333,7 +333,7 @@ export default function GroupsScreen() {
                 <View style={[styles.memberBadge, { backgroundColor: accentColor }]}>
                   <MaterialCommunityIcons name="account-group" size={12} color={colors.text} />
                   <Text style={[styles.memberBadgeText, { color: colors.text }]}>
-                    {selectedCrew?.members.length || 0}
+                    {selectedCrew?.memberIds?.length || 0}
                   </Text>
                 </View>
                 <MaterialCommunityIcons name="chevron-down" size={24} color={colors.textSecondary} />

@@ -138,7 +138,6 @@ export default function DashboardScreen() {
         console.log('[Dashboard] Session saved:', sessionKey);
         
         // Update leaderboard with session stats
-        const { user } = useAuth();
         if (user && profile) {
           try {
             const LeaderboardService = (await import('../services/LeaderboardService')).default;

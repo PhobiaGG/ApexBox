@@ -52,15 +52,9 @@ class RevenueCatService {
         return;
       }
 
-      const apiKey = Platform.select({
-        ios: REVENUECAT_APPLE_API_KEY,
-        android: REVENUECAT_GOOGLE_API_KEY,
-        default: REVENUECAT_APPLE_API_KEY, // Fallback for web/other
-      });
-
       console.log('[RevenueCat] Initializing SDK...');
       
-      Purchases.configure({ apiKey });
+      Purchases.configure({ apiKey: REVENUECAT_API_KEY });
       
       // Set user ID if provided (for cross-platform purchases)
       if (userId) {

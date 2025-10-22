@@ -23,6 +23,7 @@ import ChangeUsernameModal from '../components/ChangeUsernameModal';
 import * as ImagePicker from 'expo-image-picker';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
+import LeaderboardService from '../services/LeaderboardService';
 
 export default function SettingsScreen() {
   const { settings, updateUnits, toggleDeveloperMode, resetSettings } = useSettings();

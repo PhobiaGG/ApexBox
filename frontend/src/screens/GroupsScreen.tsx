@@ -388,13 +388,17 @@ export default function GroupsScreen() {
             </TouchableOpacity>
           </View>
 
-          {/* Crew Selector */}
-          {userCrews.length > 0 && (
+          {/* Crew List */}
+          {userCrews.length > 0 && userCrews.map((crew) => (
             <TouchableOpacity
-              style={[styles.crewSelector, { backgroundColor: colors.card, borderColor: accentColor }]}
+              key={crew.id}
+              style={[styles.crewCard, { backgroundColor: colors.card, borderColor: colors.border }]}
               onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                setShowCrewPicker(true);
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                router.push({
+                  pathname: '/group-detail',
+                  params: { crewId: crew.id },
+                });
               }}
               activeOpacity={0.8}
             >

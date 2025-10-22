@@ -38,12 +38,18 @@ export function formatAltitude(altitude: number | undefined, isMetric: boolean =
   }
 }
 
-export function formatDuration(seconds: number): string {
+export function formatDuration(seconds: number | undefined): string {
+  if (seconds === undefined || seconds === null || isNaN(seconds)) {
+    return '--:--';
+  }
   const mins = Math.floor(seconds / 60);
   const secs = Math.floor(seconds % 60);
   return `${mins}:${secs.toString().padStart(2, '0')}`;
 }
 
-export function formatHumidity(humidity: number): string {
+export function formatHumidity(humidity: number | undefined): string {
+  if (humidity === undefined || humidity === null || isNaN(humidity)) {
+    return '--%';
+  }
   return `${humidity.toFixed(1)}%`;
 }

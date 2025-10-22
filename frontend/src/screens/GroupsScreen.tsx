@@ -19,6 +19,7 @@ import { useRouter } from 'expo-router';
 import UserAvatar from '../components/UserAvatar';
 import CreateCrewModal from '../components/CreateCrewModal';
 import JoinCrewModal from '../components/JoinCrewModal';
+import LeaderboardService from '../services/LeaderboardService';
 import * as Haptics from 'expo-haptics';
 
 interface CrewMember {

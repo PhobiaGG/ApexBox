@@ -8,6 +8,7 @@ import {
   Switch,
   TextInput,
   Alert,
+  Modal,
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { SPACING, FONT_SIZE, BORDER_RADIUS } from '../constants/theme';

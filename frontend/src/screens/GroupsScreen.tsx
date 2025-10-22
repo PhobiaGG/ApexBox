@@ -428,7 +428,7 @@ export default function GroupsScreen() {
           ))}
 
           {/* Empty State */}
-          {userCrews.length === 0 && (
+          {userCrews.length === 0 ? (
             <View style={styles.emptyContainer}>
               <MaterialCommunityIcons name="account-group-outline" size={80} color={colors.textSecondary} />
               <Text style={[styles.emptyTitle, { color: colors.text }]}>No Crews Yet</Text>
@@ -436,92 +436,7 @@ export default function GroupsScreen() {
                 Create a crew or join one with a code
               </Text>
             </View>
-          )}
-
-          {/* Leaderboard */}
-          {selectedCrew && (
-            <ScrollView
-              style={styles.scrollView}
-              contentContainerStyle={styles.scrollContent}
-              refreshControl={
-                <RefreshControl
-                  refreshing={refreshing}
-                  onRefresh={onRefresh}
-                  tintColor={accentColor}
-                  colors={[accentColor]}
-                />
-              }
-              showsVerticalScrollIndicator={false}
-            >
-              {/* Crew Info Card */}
-              <View style={[styles.crewInfoCard, { backgroundColor: colors.card, borderColor: accentColor }]}>
-                <View style={styles.crewInfoHeader}>
-                  <Text style={[styles.crewInfoName, { color: colors.text }]}>{selectedCrew.name}</Text>
-                  {selectedCrew.adminId === user?.uid && (
-                    <View style={[styles.adminBadge, { backgroundColor: accentColor }]}>
-                      <MaterialCommunityIcons name="shield-crown" size={12} color={colors.text} />
-                      <Text style={[styles.adminBadgeText, { color: colors.text }]}>ADMIN</Text>
-                    </View>
-                  )}
-                </View>
-                {selectedCrew.description && (
-                  <Text style={[styles.crewInfoDesc, { color: colors.textSecondary }]}>
-                    {selectedCrew.description}
-                  </Text>
-                )}
-                <View style={[styles.crewCodeContainer, { backgroundColor: colors.background, borderColor: accentColor }]}>
-                  <Text style={[styles.crewCodeLabel, { color: colors.textSecondary }]}>Crew Code:</Text>
-                  <Text style={[styles.crewCode, { color: accentColor }]}>{selectedCrew.code}</Text>
-                </View>
-                <TouchableOpacity
-                  style={[styles.leaveButton, { borderColor: colors.magenta }]}
-                  onPress={() => handleLeaveCrew(selectedCrew.id)}
-                >
-                  <Text style={[styles.leaveButtonText, { color: colors.magenta }]}>Leave Crew</Text>
-                </TouchableOpacity>
-              </View>
-
-              {/* Members List - TODO: Implement member population */}
-              {(selectedCrew.memberIds && selectedCrew.memberIds.length > 0 && false && selectedCrew.members) ? selectedCrew.members.sort((a, b) => b.topSpeed - a.topSpeed).map((member, index) => (
-                <View
-                  key={member.uid}
-                  style={[
-                    styles.memberCard,
-                    {
-                      backgroundColor: colors.card,
-                      borderColor: index === 0 ? accentColor : colors.border,
-                      borderWidth: index === 0 ? 2 : 1,
-                    },
-                  ]}
-                >
-                  <View style={styles.rankContainer}>
-                    {index < 3 ? (
-                      <View style={[styles.crownContainer, { backgroundColor: accentColor + '20' }]}>
-                        <Text style={styles.crownText}>{index === 0 ? '👑' : index === 1 ? '🥈' : '🥉'}</Text>
-                      </View>
-                    ) : null}
-                    {index >= 3 ? (
-                      <Text style={[styles.rankNumber, { color: colors.textSecondary }]}>#{index + 1}</Text>
-                    ) : null}
-                  </View>
-
-                  <UserAvatar name={member.displayName} size={48} uri={member.avatarURI} />
-
-                  <View style={styles.memberInfo}>
-                    <Text style={[styles.memberName, { color: colors.text }]}>{member.displayName}</Text>
-                    <Text style={[styles.memberSessions, { color: colors.textSecondary }]}>
-                      {member.totalSessions || 0} sessions
-                    </Text>
-                  </View>
-
-                  <View style={styles.speedContainer}>
-                    <Text style={[styles.speedValue, { color: accentColor }]}>{member.topSpeed || 0}</Text>
-                    <Text style={[styles.speedUnit, { color: colors.textSecondary }]}>km/h</Text>
-                  </View>
-                </View>
-              )) : null}
-            </ScrollView>
-          )}
+          ) : null}
         </>
       )}
 

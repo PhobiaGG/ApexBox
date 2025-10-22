@@ -612,7 +612,7 @@ export default function GroupsScreen() {
                 <View>
                   <Text style={[styles.pickerItemTitle, { color: colors.text }]}>{crew.name}</Text>
                   <Text style={[styles.pickerItemSub, { color: colors.textSecondary }]}>
-                    {crew.members.length} members
+                    {crew.memberIds?.length || 0} members
                   </Text>
                 </View>
                 {selectedCrew?.id === crew.id && (

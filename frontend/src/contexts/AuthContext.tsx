@@ -759,6 +759,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         resetPassword,
         updateUsername,
         uploadAvatar,
+        updateUserState,
         addCar,
         updateCar,
         deleteCar,

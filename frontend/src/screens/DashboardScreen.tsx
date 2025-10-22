@@ -138,7 +138,8 @@ export default function DashboardScreen() {
         console.log('[Dashboard] Session saved:', sessionKey);
         
         // Update leaderboard with session stats
-        if (profile && profile.uid) {
+        const { user } = useAuth();
+        if (user && profile) {
           try {
             const LeaderboardService = (await import('../services/LeaderboardService')).default;
             
@@ -149,7 +150,7 @@ export default function DashboardScreen() {
             console.log('[Dashboard] Updating leaderboard - Top Speed:', topSpeed, 'Max G-Force:', maxGForce);
             
             await LeaderboardService.updateUserStats(
-              profile.uid,
+              user.uid,
               topSpeed,
               maxGForce,
               profile.state

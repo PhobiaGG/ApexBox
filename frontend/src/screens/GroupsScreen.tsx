@@ -735,6 +735,49 @@ export default function GroupsScreen() {
         accentColor={accentColor}
         colors={colors}
       />
+
+      {/* State Picker Modal */}
+      <Modal
+        visible={showStatePicker}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowStatePicker(false)}
+      >
+        <View style={styles.pickerModalOverlay}>
+          <View style={[styles.pickerModalContent, { backgroundColor: colors.card }]}>
+            <View style={styles.pickerHeader}>
+              <Text style={[styles.pickerTitle, { color: colors.text }]}>Filter by State</Text>
+              <TouchableOpacity onPress={() => setShowStatePicker(false)}>
+                <MaterialCommunityIcons name="close" size={24} color={colors.textSecondary} />
+              </TouchableOpacity>
+            </View>
+
+            <FlatList
+              data={LeaderboardService.getUSStates()}
+              keyExtractor={(item) => item.code}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={[styles.pickerItem, { borderBottomColor: colors.border }]}
+                  onPress={() => {
+                    setSelectedState(item.code);
+                    setShowStatePicker(false);
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <View>
+                    <Text style={[styles.pickerItemTitle, { color: colors.text }]}>{item.name}</Text>
+                  </View>
+                  {selectedState === item.code && (
+                    <MaterialCommunityIcons name="check" size={24} color={accentColor} />
+                  )}
+                </TouchableOpacity>
+              )}
+              showsVerticalScrollIndicator={true}
+            />
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }

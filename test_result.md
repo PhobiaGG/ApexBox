@@ -204,6 +204,18 @@ frontend:
         agent: "testing"
         comment: "⚠️ TESTING BLOCKED: App requires authentication to access main features. Dark/Light mode toggle is implemented in SettingsScreen.tsx with proper ThemeContext integration, switch component, and instant UI updates. Code review shows complete implementation with theme persistence and accent color support. Cannot test UI flow due to auth gate."
 
+  - task: "Track Replay Button in Session Detail"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/screens/SessionDetailScreen.tsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "✅ IMPLEMENTATION COMPLETE: Added 'View Track Replay' button to SessionDetailScreen that appears when GPS data is available. Button positioned between session summary and charts. Features: premium status display, GPS data detection, navigation to TrackReplayScreen with session params, haptic feedback, premium gate with upgrade flow. Updated LogService.getSessionGPS() method to retrieve GPS data. Updated TrackReplayScreen to accept date/fileName params instead of sessionKey."
+
 metadata:
   created_by: "main_agent"
   version: "1.0"

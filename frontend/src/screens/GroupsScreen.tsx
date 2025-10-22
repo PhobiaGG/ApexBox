@@ -58,13 +58,11 @@ export default function GroupsScreen() {
   const [globalCategory, setGlobalCategory] = useState<'topSpeed' | 'topGForce'>('topSpeed');
   const [selectedState, setSelectedState] = useState<string>('ALL');
   const [userCrews, setUserCrews] = useState<Crew[]>([]);
-  const [selectedCrew, setSelectedCrew] = useState<Crew | null>(null);
   const [globalLeaderboard, setGlobalLeaderboard] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showJoinModal, setShowJoinModal] = useState(false);
-  const [showCrewPicker, setShowCrewPicker] = useState(false);
   const [showStatePicker, setShowStatePicker] = useState(false);
 
   useEffect(() => {

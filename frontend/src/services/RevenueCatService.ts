@@ -17,13 +17,14 @@ export type PurchasesPackage = any;
 export type CustomerInfo = any;
 export type PurchasesError = any;
 
-// RevenueCat API Keys
-// Get these from: RevenueCat Dashboard → API Keys
-const REVENUECAT_APPLE_API_KEY = 'appl_YOUR_KEY_HERE';  // Replace with your Apple key
-const REVENUECAT_GOOGLE_API_KEY = 'goog_YOUR_KEY_HERE'; // Replace with your Google key
+// RevenueCat API Keys - YOUR ACTUAL CREDENTIALS
+const REVENUECAT_API_KEY = 'test_meYbmTmIfBcXKQCnKZSdTrjiyyz'; // Your test store public key
 
 // Product Identifier (matches your RevenueCat setup)
 export const PREMIUM_PRODUCT_ID = 'premium_lifetime';
+
+// Entitlement Identifier (YOUR ACTUAL ENTITLEMENT)
+export const PREMIUM_ENTITLEMENT_ID = 'premium'; // Your entitlement identifier
 
 export interface PremiumStatus {
   isPremium: boolean;

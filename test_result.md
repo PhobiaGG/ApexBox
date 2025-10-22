@@ -153,7 +153,7 @@ frontend:
     file: "/app/frontend/src/screens/TrackReplayScreen.tsx"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: "NA"
         agent: "main"
@@ -161,6 +161,9 @@ frontend:
       - working: "NA"
         agent: "testing"
         comment: "⚠️ TESTING BLOCKED: App requires authentication to access main features. Track replay feature is implemented with proper premium gating, Skia canvas visualization, playback controls, and G-force color mapping. Code review shows complete implementation with mock GPS data generation and proper premium gate UI. Cannot test UI flow due to auth gate."
+      - working: "NA"
+        agent: "main"
+        comment: "✅ TRACK REPLAY BUTTON INTEGRATION COMPLETE: Added Track Replay button to SessionDetailScreen that appears when GPS data is available. Button shows premium status, navigates to TrackReplayScreen with session data. Updated TrackReplayScreen to accept date/fileName params. Added getSessionGPS method to LogService to retrieve GPS data. Includes premium gating with upgrade flow."
 
   - task: "Crew Management Modals"
     implemented: true

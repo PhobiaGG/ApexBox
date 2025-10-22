@@ -116,6 +116,43 @@ export default function SessionDetailScreen() {
     }
   };
 
+  const handleTrackReplay = async () => {
+    try {
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
+      // Check if user has premium
+      if (!profile?.premium) {
+        Alert.alert(
+          'Premium Feature',
+          'Track Replay is a premium feature. Upgrade to ApexBox Pro Pack to unlock!',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Upgrade', onPress: () => router.push('/premium') },
+          ]
+        );
+        return;
+      }
+
+      // Check if session has GPS data
+      if (!hasGPS) {
+        Alert.alert(
+          'No GPS Data',
+          'This session does not have GPS data. GPS tracking must be enabled during the session to view track replay.'
+        );
+        return;
+      }
+
+      // Navigate to track replay with session info
+      router.push({
+        pathname: '/track-replay',
+        params: { date, fileName },
+      });
+    } catch (error) {
+      console.error('Error opening track replay:', error);
+      Alert.alert('Error', 'Failed to open track replay');
+    }
+  };
+
   if (isLoading) {
     return (
       <View style={styles.container}>

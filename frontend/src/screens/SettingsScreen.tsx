@@ -40,6 +40,7 @@ export default function SettingsScreen() {
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [showAddCar, setShowAddCar] = useState(false);
   const [showChangeUsername, setShowChangeUsername] = useState(false);
+  const [showStateModal, setShowStateModal] = useState(false);
 
   const accentColorValue = getCurrentAccent();
 

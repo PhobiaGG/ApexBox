@@ -17,7 +17,7 @@ export function formatGForce(g: number | undefined): string {
 }
 
 export function formatTemp(temp: number | undefined, isCelsius: boolean = true): string {
-  if (temp === undefined || temp === null) {
+  if (temp === undefined || temp === null || isNaN(temp)) {
     return '--°' + (isCelsius ? 'C' : 'F');
   }
   if (isCelsius) {
@@ -28,7 +28,7 @@ export function formatTemp(temp: number | undefined, isCelsius: boolean = true):
 }
 
 export function formatAltitude(altitude: number | undefined, isMetric: boolean = true): string {
-  if (altitude === undefined || altitude === null) {
+  if (altitude === undefined || altitude === null || isNaN(altitude)) {
     return '--' + (isMetric ? 'm' : 'ft');
   }
   if (isMetric) {

@@ -16,7 +16,18 @@ interface ChartViewProps {
 }
 
 export default function ChartView({ data, title, color, yLabel }: ChartViewProps) {
-  if (!data || data.length === 0) {
+  // Filter out any NaN or invalid values
+  const validData = data.filter(d => 
+    d && 
+    typeof d.x === 'number' && 
+    typeof d.y === 'number' && 
+    !isNaN(d.x) && 
+    !isNaN(d.y) &&
+    isFinite(d.x) &&
+    isFinite(d.y)
+  );
+
+  if (!validData || validData.length === 0) {
     return (
       <View style={styles.container}>
         <Text style={styles.title}>{title}</Text>
@@ -32,14 +43,14 @@ export default function ChartView({ data, title, color, yLabel }: ChartViewProps
   const padding = 30;
 
   // Get min and max values
-  const yValues = data.map(d => d.y);
+  const yValues = validData.map(d => d.y);
   const minValue = Math.min(...yValues);
   const maxValue = Math.max(...yValues);
   const valueRange = maxValue - minValue || 1;
 
   // Create points for polyline
-  const points = data.map((point, index) => {
-    const x = padding + (index / (data.length - 1)) * (width - padding * 2);
+  const points = validData.map((point, index) => {
+    const x = padding + (index / (validData.length - 1)) * (width - padding * 2);
     const y = chartHeight - padding - ((point.y - minValue) / valueRange) * (chartHeight - padding * 2);
     return `${x},${y}`;
   }).join(' ');

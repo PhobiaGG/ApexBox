@@ -102,10 +102,6 @@ export default function GroupsScreen() {
       
       setUserCrews(crews);
       
-      if (crews.length > 0) {
-        setSelectedCrew(crews[0]);
-      }
-      
       console.log('[GroupsScreen] Loaded', crews.length, 'crews');
       
       // Load global leaderboard with real data

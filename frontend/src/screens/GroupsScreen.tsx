@@ -569,48 +569,6 @@ export default function GroupsScreen() {
         </>
       )}
 
-      {/* Crew Picker Modal */}
-      <Modal
-        visible={showCrewPicker}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setShowCrewPicker(false)}
-      >
-        <TouchableOpacity
-          style={styles.modalOverlay}
-          activeOpacity={1}
-          onPress={() => setShowCrewPicker(false)}
-        >
-          <View style={[styles.pickerContainer, { backgroundColor: colors.card, borderColor: accentColor }]}>
-            <Text style={[styles.pickerTitle, { color: colors.text }]}>Select Crew</Text>
-            {userCrews.map((crew) => (
-              <TouchableOpacity
-                key={crew.id}
-                style={[
-                  styles.pickerItem,
-                  selectedCrew?.id === crew.id && { backgroundColor: accentColor + '20', borderColor: accentColor },
-                ]}
-                onPress={() => {
-                  setSelectedCrew(crew);
-                  setShowCrewPicker(false);
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                }}
-              >
-                <View>
-                  <Text style={[styles.pickerItemTitle, { color: colors.text }]}>{crew.name}</Text>
-                  <Text style={[styles.pickerItemSub, { color: colors.textSecondary }]}>
-                    {crew.memberIds?.length || 0} members
-                  </Text>
-                </View>
-                {selectedCrew?.id === crew.id && (
-                  <MaterialCommunityIcons name="check-circle" size={24} color={accentColor} />
-                )}
-              </TouchableOpacity>
-            ))}
-          </View>
-        </TouchableOpacity>
-      </Modal>
-
       {/* Create Crew Modal */}
       <CreateCrewModal
         visible={showCreateModal}

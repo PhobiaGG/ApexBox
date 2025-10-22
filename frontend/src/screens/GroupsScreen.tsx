@@ -73,14 +73,39 @@ export default function GroupsScreen() {
       setIsLoading(true);
       await new Promise(resolve => setTimeout(resolve, 500));
       
-      // Load user's crews from Firebase
-      const crews = await getUserCrews();
-      const validCrews = Array.isArray(crews) ? crews : [];
-      setUserCrews(validCrews);
+      // Load user's crews from Firebase (inline implementation)
+      const crews: Crew[] = [];
       
-      if (validCrews.length > 0) {
-        setSelectedCrew(validCrews[0]);
+      if (profile?.crewIds && profile.crewIds.length > 0) {
+        console.log('[GroupsScreen] Loading crews for user:', profile.crewIds);
+        
+        // Import Firebase functions
+        const { getDoc, doc } = await import('firebase/firestore');
+        const { db } = await import('../config/firebase');
+        
+        for (const crewId of profile.crewIds) {
+          try {
+            const crewDoc = await getDoc(doc(db, 'crews', crewId));
+            if (crewDoc.exists()) {
+              crews.push({
+                id: crewDoc.id,
+                ...crewDoc.data(),
+              } as Crew);
+              console.log('[GroupsScreen] Loaded crew:', crewDoc.data().name);
+            }
+          } catch (error) {
+            console.error('[GroupsScreen] Error loading crew:', crewId, error);
+          }
+        }
       }
+      
+      setUserCrews(crews);
+      
+      if (crews.length > 0) {
+        setSelectedCrew(crews[0]);
+      }
+      
+      console.log('[GroupsScreen] Loaded', crews.length, 'crews');
       
       // Load global leaderboard
       setGlobalLeaderboard(generateMockGlobalLeaderboard());

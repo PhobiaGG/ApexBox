@@ -66,6 +66,7 @@ export default function GroupsScreen() {
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [showCrewPicker, setShowCrewPicker] = useState(false);
   const [showStatePicker, setShowStatePicker] = useState(false);
+  const [leaderboardLimit, setLeaderboardLimit] = useState(10);
 
   useEffect(() => {
     loadData();

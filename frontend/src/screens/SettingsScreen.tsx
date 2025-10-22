@@ -260,28 +260,21 @@ export default function SettingsScreen() {
                 <Text style={[styles.infoValue, { color: colors.text }]}>{profile.email}</Text>
               </View>
 
-              <View style={[styles.infoRow, { borderBottomColor: 'transparent' }]}>
-                <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>State</Text>
-                <Picker
-                  selectedValue={profile.state || 'ALL'}
-                  onValueChange={async (value) => {
-                    if (value !== profile.state) {
-                      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                      try {
-                        await updateUserState(value);
-                        Alert.alert('Success', 'State updated successfully');
-                      } catch (error: any) {
-                        Alert.alert('Error', error.message);
-                      }
-                    }
-                  }}
-                  style={[styles.statePicker, { color: colors.text }]}
-                >
-                  {LeaderboardService.getUSStates().map(state => (
-                    <Picker.Item key={state.code} label={state.name} value={state.code} />
-                  ))}
-                </Picker>
-              </View>
+              <TouchableOpacity 
+                style={[styles.infoRow, { borderBottomColor: 'transparent' }]}
+                onPress={() => setShowStateModal(true)}
+                activeOpacity={0.7}
+              >
+                <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Location</Text>
+                <View style={styles.stateValueContainer}>
+                  <Text style={[styles.infoValue, { color: colors.text }]}>
+                    {profile.state ? 
+                      LeaderboardService.getUSStates().find(s => s.code === profile.state)?.name || 'Not Set'
+                      : 'Not Set'}
+                  </Text>
+                  <MaterialCommunityIcons name="chevron-right" size={20} color={colors.textSecondary} />
+                </View>
+              </TouchableOpacity>
             </View>
 
             <TouchableOpacity

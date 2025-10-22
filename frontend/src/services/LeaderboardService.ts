@@ -1,4 +1,4 @@
-import { collection, getDocs, doc, setDoc, updateDoc, getDoc, query, orderBy, limit } from 'firebase/firestore';
+import { collection, getDocs, doc, setDoc, updateDoc, getDoc, query, orderBy, limit, where } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 

@@ -200,22 +200,14 @@ class LeaderboardService {
     try {
       console.log('[Leaderboard] Fetching max G-force leaderboard for state:', state);
       
-      const leaderboardQuery = query(
-        collection(db, 'leaderboard'),
-        where('state', '==', state),
-        orderBy('maxGForce', 'desc'),
-        limit(limitCount)
-      );
+      // Firebase composite indexes are not available, so we'll fetch all and filter client-side
+      const allEntries = await this.getMaxGForceLeaderboard(1000); // Get more entries
+      const filteredEntries = allEntries
+        .filter(entry => entry.state === state)
+        .slice(0, limitCount);
       
-      const snapshot = await getDocs(leaderboardQuery);
-      const entries: LeaderboardEntry[] = [];
-      
-      snapshot.forEach((doc) => {
-        entries.push(doc.data() as LeaderboardEntry);
-      });
-      
-      console.log('[Leaderboard] ✅ Fetched', entries.length, 'state-filtered max G-force entries');
-      return entries;
+      console.log('[Leaderboard] ✅ Fetched', filteredEntries.length, 'state-filtered max G-force entries');
+      return filteredEntries;
     } catch (error) {
       console.error('[Leaderboard] Error fetching state-filtered max G-force leaderboard:', error);
       return [];

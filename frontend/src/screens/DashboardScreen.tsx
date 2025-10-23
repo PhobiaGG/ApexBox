@@ -27,6 +27,8 @@ import { calculateStats } from '../utils/csv';
 import * as Haptics from 'expo-haptics';
 import * as Location from 'expo-location';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import OfflineBanner from '../components/OfflineBanner';
+import { useNetworkStatus } from '../hooks/useNetworkStatus';
 
 export default function DashboardScreen() {
   const { status, scan, connect, disconnect, devices, sendCommand, telemetry } = useBle();

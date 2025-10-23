@@ -77,14 +77,15 @@ export default function SettingsScreen() {
         setUploadingAvatar(true);
         await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
         
-        const downloadURL = await uploadAvatar(result.assets[0].uri);
-        await updateProfile({ avatarURI: downloadURL });
+        // uploadAvatar handles everything internally now
+        await uploadAvatar(result.assets[0].uri);
         
         await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        Alert.alert('Success', 'Avatar updated!');
-      } catch (error) {
+        Alert.alert('Success', 'Avatar updated successfully!');
+      } catch (error: any) {
+        console.error('[SettingsScreen] Avatar upload error:', error);
         await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-        Alert.alert('Error', 'Failed to upload avatar');
+        Alert.alert('Error', error.message || 'Failed to upload avatar');
       } finally {
         setUploadingAvatar(false);
       }

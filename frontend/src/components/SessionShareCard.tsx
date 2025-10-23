@@ -99,10 +99,12 @@ export default function SessionShareCard({
 
 const styles = StyleSheet.create({
   container: {
-    width: 400,
+    width: '100%',
+    maxWidth: 400,
     height: 600,
     borderRadius: BORDER_RADIUS.lg,
     overflow: 'hidden',
+    alignSelf: 'center',
   },
   gradient: {
     flex: 1,

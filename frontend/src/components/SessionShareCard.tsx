@@ -99,8 +99,7 @@ export default function SessionShareCard({
 
 const styles = StyleSheet.create({
   container: {
-    width: '100%',
-    maxWidth: 400,
+    width: 400,
     height: 600,
     borderRadius: BORDER_RADIUS.lg,
     overflow: 'hidden',

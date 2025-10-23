@@ -134,6 +134,29 @@ export default function LogsScreen() {
     }
   };
 
+  // Show loading skeletons while loading
+  if (isLoading) {
+    return (
+      <View style={styles.container}>
+        <LinearGradient colors={[COLORS.background, '#0F0F0F']} style={styles.gradient}>
+          <View style={styles.header}>
+            <Text style={styles.title}>Session Logs</Text>
+            <TouchableOpacity onPress={handleRescan} style={styles.headerButton}>
+              <MaterialCommunityIcons name="refresh" size={24} color={COLORS.cyan} />
+            </TouchableOpacity>
+          </View>
+          <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+            <LogCardSkeleton />
+            <LogCardSkeleton />
+            <LogCardSkeleton />
+            <LogCardSkeleton />
+          </ScrollView>
+        </LinearGradient>
+      </View>
+    );
+  }
+
+  // Show empty state if no sessions
   if (dates.length === 0) {
     return (
       <View style={styles.container}>
@@ -144,18 +167,14 @@ export default function LogsScreen() {
               <MaterialCommunityIcons name="refresh" size={24} color={COLORS.cyan} />
             </TouchableOpacity>
           </View>
-
-          <View style={styles.emptyContainer}>
-            <MaterialCommunityIcons name="folder-open" size={80} color={COLORS.textTertiary} />
-            <Text style={styles.emptyTitle}>No Logs Found</Text>
-            <Text style={styles.emptyText}>Connect your ApexBox and sync logs to get started</Text>
-            <TouchableOpacity style={styles.refreshButton} onPress={handleRescan}>
-              <LinearGradient colors={[COLORS.cyan, '#0088AA']} style={styles.refreshGradient}>
-                <MaterialCommunityIcons name="refresh" size={20} color={COLORS.text} />
-                <Text style={styles.refreshButtonText}>Refresh</Text>
-              </LinearGradient>
-            </TouchableOpacity>
-          </View>
+          <EmptyState
+            icon="file-document-outline"
+            title="No Sessions Yet"
+            message="Start recording by connecting your ApexBox and tapping 'Start Analysis' on the Dashboard"
+            actionLabel="Refresh"
+            onAction={handleRescan}
+            accentColor={COLORS.cyan}
+          />
         </LinearGradient>
       </View>
     );

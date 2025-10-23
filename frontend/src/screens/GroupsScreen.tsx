@@ -487,9 +487,11 @@ export default function GroupsScreen() {
                       </View>
                       <View style={styles.leaderboardRight}>
                         <Text style={[styles.speedValueBig, { color: accentColor }]}>
-                          {(member.topSpeed || 0).toFixed(1)}
+                          {convertSpeed(member.topSpeed || 0, isMetric).toFixed(1)}
                         </Text>
-                        <Text style={[styles.speedUnit, { color: colors.textSecondary }]}>km/h</Text>
+                        <Text style={[styles.speedUnit, { color: colors.textSecondary }]}>
+                          {getSpeedUnit(isMetric)}
+                        </Text>
                       </View>
                     </View>
                   ))

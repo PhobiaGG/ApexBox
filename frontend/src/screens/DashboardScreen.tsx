@@ -67,8 +67,11 @@ export default function DashboardScreen() {
       // Check permission status first
       const { status } = await Location.getForegroundPermissionsAsync();
       
+      console.log(`[Dashboard] Current permission status: ${status}`);
+      
       // If permission not granted, show explanation and request
       if (status !== 'granted') {
+        console.log('[Dashboard] Permission not granted, showing explanation dialog');
         Alert.alert(
           '📍 Location Permission Required',
           'ApexBox needs your location to create GPS track replays and analyze your driving routes.\n\nThis data is only used during active sessions and can be disabled in settings.',
@@ -90,6 +93,7 @@ export default function DashboardScreen() {
       }
       
       // Permission already granted, start tracking
+      console.log('[Dashboard] Permission already granted, starting session');
       await startTrackingSession();
       
     } catch (error) {

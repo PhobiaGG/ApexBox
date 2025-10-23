@@ -283,9 +283,21 @@ export default function GroupsScreen() {
         <View style={styles.header}>
           <Text style={[styles.title, { color: colors.text }]}>Leaderboards</Text>
         </View>
-        <View style={styles.loadingContainer}>
-          <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Loading...</Text>
-        </View>
+        <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
+          {activeTab === 'crews' ? (
+            <>
+              <CrewCardSkeleton />
+              <CrewCardSkeleton />
+            </>
+          ) : (
+            <>
+              <LeaderboardCardSkeleton />
+              <LeaderboardCardSkeleton />
+              <LeaderboardCardSkeleton />
+              <LeaderboardCardSkeleton />
+            </>
+          )}
+        </ScrollView>
       </View>
     );
   }

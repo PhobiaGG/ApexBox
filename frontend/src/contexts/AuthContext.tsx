@@ -276,16 +276,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Update user profile doc
       await updateDoc(doc(db, 'users', user.uid), { avatarUrl: downloadURL });
       
-      // Update leaderboard entries
-      const leaderboardRef = doc(db, 'leaderboards', user.uid);
-      await updateDoc(leaderboardRef, { avatarUrl: downloadURL });
+      // Update leaderboard entries (if exists, using setDoc with merge)
+      try {
+        const leaderboardRef = doc(db, 'leaderboards', user.uid);
+        await setDoc(leaderboardRef, { avatarUrl: downloadURL }, { merge: true });
+        console.log('[Auth] ✅ Updated leaderboard entry');
+      } catch (leaderboardError) {
+        console.log('[Auth] No leaderboard entry to update (will create on first session)');
+      }
       
       // Update local state
       if (profile) {
         setProfile({ ...profile, avatarUrl: downloadURL });
       }
       
-      console.log('[Auth] ✅ Avatar updated everywhere');
+      console.log('[Auth] ✅ Avatar updated');
     } catch (error: any) {
       console.error('[Auth] Upload avatar error:', error);
       throw new Error(error.message);

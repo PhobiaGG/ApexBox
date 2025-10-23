@@ -273,13 +273,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await uploadBytes(storageRef, blob);
       const downloadURL = await getDownloadURL(storageRef);
       
-      // Update user profile doc
-      await updateDoc(doc(db, 'users', user.uid), { avatarUrl: downloadURL });
+      // Update user profile doc (use avatarURI to match interface)
+      await updateDoc(doc(db, 'users', user.uid), { avatarURI: downloadURL });
       
       // Update leaderboard entries (if exists, using setDoc with merge)
       try {
         const leaderboardRef = doc(db, 'leaderboards', user.uid);
-        await setDoc(leaderboardRef, { avatarUrl: downloadURL }, { merge: true });
+        await setDoc(leaderboardRef, { avatarURI: downloadURL }, { merge: true });
         console.log('[Auth] ✅ Updated leaderboard entry');
       } catch (leaderboardError) {
         console.log('[Auth] No leaderboard entry to update (will create on first session)');
@@ -287,7 +287,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       // Update local state
       if (profile) {
-        setProfile({ ...profile, avatarUrl: downloadURL });
+        setProfile({ ...profile, avatarURI: downloadURL });
       }
       
       console.log('[Auth] ✅ Avatar updated');

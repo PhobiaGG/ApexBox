@@ -53,14 +53,18 @@ export default function SessionShareCard({
         <View style={styles.statsGrid}>
           <View style={[styles.statCard, { backgroundColor: colors.card, borderColor: accentColor }]}>
             <MaterialCommunityIcons name="speedometer" size={32} color={accentColor} />
-            <Text style={[styles.statValue, { color: colors.text }]}>{peakSpeed}</Text>
+            <Text style={[styles.statValue, { color: colors.text }]}>
+              {(peakSpeed || 0).toFixed(0)}
+            </Text>
             <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Peak Speed</Text>
             <Text style={[styles.statUnit, { color: colors.textSecondary }]}>km/h</Text>
           </View>
 
           <View style={[styles.statCard, { backgroundColor: colors.card, borderColor: accentColor }]}>
             <MaterialCommunityIcons name="arrow-up-bold" size={32} color={accentColor} />
-            <Text style={[styles.statValue, { color: colors.text }]}>{peakGForce.toFixed(2)}</Text>
+            <Text style={[styles.statValue, { color: colors.text }]}>
+              {(peakGForce || 0).toFixed(2)}
+            </Text>
             <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Peak G-Force</Text>
             <Text style={[styles.statUnit, { color: colors.textSecondary }]}>g</Text>
           </View>
@@ -74,7 +78,9 @@ export default function SessionShareCard({
 
           <View style={[styles.statCard, { backgroundColor: colors.card, borderColor: accentColor }]}>
             <MaterialCommunityIcons name="chart-line" size={32} color={accentColor} />
-            <Text style={[styles.statValue, { color: colors.text }]}>{avgSpeed}</Text>
+            <Text style={[styles.statValue, { color: colors.text }]}>
+              {(avgSpeed || 0).toFixed(0)}
+            </Text>
             <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Avg Speed</Text>
             <Text style={[styles.statUnit, { color: colors.textSecondary }]}>km/h</Text>
           </View>

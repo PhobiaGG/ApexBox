@@ -59,44 +59,107 @@ export default function DashboardScreen() {
   // Handle Start Analysis with GPS tracking
   const handleStartAnalysis = async () => {
     try {
-      setIsAnalyzing(true);
-      setSessionStartTime(Date.now());
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
       
-      console.log('[Dashboard] Requesting GPS permissions...');
+      console.log('[Dashboard] Checking location permissions...');
       
-      // Request GPS permissions and start tracking
-      const gpsStarted = await GpsService.startTracking();
+      // Check permission status first
+      const { status } = await import('expo-location').then(Location => 
+        Location.getForegroundPermissionsAsync()
+      );
       
-      if (gpsStarted) {
-        setIsTrackingGPS(true);
-        setGpsCoordinateCount(0);
-        console.log('[Dashboard] GPS tracking started successfully');
-        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      } else {
-        console.warn('[Dashboard] GPS tracking failed to start');
+      // If permission not granted, show explanation and request
+      if (status !== 'granted') {
         Alert.alert(
-          '⚠️ GPS Unavailable',
-          'Could not start GPS tracking. Session will record telemetry without location data.',
+          '📍 Location Permission Required',
+          'ApexBox needs your location to create GPS track replays and analyze your driving routes.\n\nThis data is only used during active sessions and can be disabled in settings.',
           [
-            { text: 'Cancel', style: 'cancel', onPress: () => {
-              setIsAnalyzing(false);
-              setSessionStartTime(null);
-            }},
             {
-              text: 'Continue Anyway',
-              onPress: () => {
-                console.log('[Dashboard] Continuing without GPS');
+              text: 'Cancel',
+              style: 'cancel',
+              onPress: () => console.log('[Dashboard] User cancelled permission request'),
+            },
+            {
+              text: 'Allow Location',
+              onPress: async () => {
+                await requestLocationAndStart();
+              },
+            },
+          ]
+        );
+        return;
+      }
+      
+      // Permission already granted, start tracking
+      await startTrackingSession();
+      
+    } catch (error) {
+      console.error('[Dashboard] Start analysis error:', error);
+      Alert.alert('Error', 'Failed to start analysis');
+    }
+  };
+
+  // Request location permission and start session
+  const requestLocationAndStart = async () => {
+    try {
+      const Location = await import('expo-location');
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      
+      if (status === 'granted') {
+        console.log('[Dashboard] Location permission granted');
+        await startTrackingSession();
+      } else {
+        console.log('[Dashboard] Location permission denied');
+        Alert.alert(
+          '⚠️ Location Permission Denied',
+          'You can still record sessions without GPS tracking, but you won\'t have track replay available.\n\nYou can enable location later in your device settings.',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            {
+              text: 'Continue Without GPS',
+              onPress: async () => {
+                await startTrackingSession(false);
               },
             },
           ]
         );
       }
     } catch (error) {
-      console.error('[Dashboard] Start analysis error:', error);
+      console.error('[Dashboard] Permission request error:', error);
+      Alert.alert('Error', 'Failed to request location permission');
+    }
+  };
+
+  // Start the tracking session
+  const startTrackingSession = async (enableGPS: boolean = true) => {
+    try {
+      setIsAnalyzing(true);
+      setSessionStartTime(Date.now());
+      
+      if (enableGPS) {
+        console.log('[Dashboard] Starting GPS tracking...');
+        const gpsStarted = await GpsService.startTracking();
+        
+        if (gpsStarted) {
+          setIsTrackingGPS(true);
+          setGpsCoordinateCount(0);
+          console.log('[Dashboard] ✅ GPS tracking started successfully');
+          await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        } else {
+          console.warn('[Dashboard] ⚠️ GPS tracking failed to start');
+          // Continue without GPS
+          setIsTrackingGPS(false);
+        }
+      } else {
+        console.log('[Dashboard] Starting session without GPS');
+        setIsTrackingGPS(false);
+        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+    } catch (error) {
+      console.error('[Dashboard] Start tracking error:', error);
       setIsAnalyzing(false);
       setSessionStartTime(null);
-      Alert.alert('Error', 'Failed to start analysis');
+      Alert.alert('Error', 'Failed to start session tracking');
     }
   };
 

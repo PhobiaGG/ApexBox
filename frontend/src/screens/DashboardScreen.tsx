@@ -101,7 +101,6 @@ export default function DashboardScreen() {
   // Request location permission and start session
   const requestLocationAndStart = async () => {
     try {
-      const Location = await import('expo-location');
       const { status } = await Location.requestForegroundPermissionsAsync();
       
       if (status === 'granted') {

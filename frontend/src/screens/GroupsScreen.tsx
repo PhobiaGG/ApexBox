@@ -57,7 +57,9 @@ export default function GroupsScreen() {
   const router = useRouter();
   const { profile, user, createCrew, joinCrew, leaveCrew } = useAuth();
   const { colors, getCurrentAccent } = useTheme();
+  const { settings } = useSettings();
   const accentColor = getCurrentAccent();
+  const isMetric = settings.units === 'metric';
 
   const [activeTab, setActiveTab] = useState<'crews' | 'global'>('crews');
   const [globalCategory, setGlobalCategory] = useState<'topSpeed' | 'topGForce'>('topSpeed');

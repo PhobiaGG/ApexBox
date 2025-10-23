@@ -25,6 +25,7 @@ import LogService from '../services/LogService';
 import { formatTemp, formatAltitude, formatHumidity } from '../utils/format';
 import { calculateStats } from '../utils/csv';
 import * as Haptics from 'expo-haptics';
+import * as Location from 'expo-location';
 
 export default function DashboardScreen() {
   const { status, scan, connect, disconnect, devices, sendCommand, telemetry } = useBle();

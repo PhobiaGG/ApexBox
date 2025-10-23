@@ -526,13 +526,14 @@ export default function GroupsScreen() {
 
           {/* Empty State */}
           {userCrews.length === 0 ? (
-            <View style={styles.emptyContainer}>
-              <MaterialCommunityIcons name="account-group-outline" size={80} color={colors.textSecondary} />
-              <Text style={[styles.emptyTitle, { color: colors.text }]}>No Crews Yet</Text>
-              <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
-                Create a crew or join one with a code
-              </Text>
-            </View>
+            <EmptyState
+              icon="account-group-outline"
+              title="No Crews Yet"
+              message="Create your own crew or join one with a code to compete with friends!"
+              actionLabel="Create Crew"
+              onAction={() => setShowCreateModal(true)}
+              accentColor={accentColor}
+            />
           ) : null}
         </>
       )}

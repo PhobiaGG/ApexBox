@@ -32,7 +32,8 @@ export default function LogsScreen() {
   const router = useRouter();
   const isMetric = settings.units?.isMetric ?? true; // Default to metric if undefined
   
-  console.log('[LogsScreen] Settings units:', settings.units, 'isMetric:', isMetric);
+  console.log('[LogsScreen] Settings:', settings.units, 'isMetric:', isMetric);
+  console.log('[LogsScreen] Test conversion: 100 km/h =', convertSpeed(100, isMetric), isMetric ? 'km/h' : 'mph');
   const [expandedDates, setExpandedDates] = useState<Set<string>>(new Set());
   const [refreshing, setRefreshing] = useState(false);
   const [sortMode, setSortMode] = useState<SortMode>('date');

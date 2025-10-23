@@ -53,3 +53,38 @@ export function formatHumidity(humidity: number | undefined): string {
   }
   return `${humidity.toFixed(1)}%`;
 }
+
+// Raw value converters (return numbers, not strings)
+export function convertSpeed(speed: number | undefined, isMetric: boolean = true): number {
+  if (speed === undefined || speed === null || isNaN(speed)) {
+    return 0;
+  }
+  return isMetric ? speed : speed * 0.621371;
+}
+
+export function convertTemp(temp: number | undefined, isCelsius: boolean = true): number {
+  if (temp === undefined || temp === null || isNaN(temp)) {
+    return 0;
+  }
+  return isCelsius ? temp : temp * 9/5 + 32;
+}
+
+export function convertAltitude(altitude: number | undefined, isMetric: boolean = true): number {
+  if (altitude === undefined || altitude === null || isNaN(altitude)) {
+    return 0;
+  }
+  return isMetric ? altitude : altitude * 3.28084;
+}
+
+// Get unit labels
+export function getSpeedUnit(isMetric: boolean = true): string {
+  return isMetric ? 'km/h' : 'mph';
+}
+
+export function getTempUnit(isCelsius: boolean = true): string {
+  return isCelsius ? '°C' : '°F';
+}
+
+export function getAltitudeUnit(isMetric: boolean = true): string {
+  return isMetric ? 'm' : 'ft';
+}

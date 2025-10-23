@@ -65,9 +65,7 @@ export default function DashboardScreen() {
       console.log('[Dashboard] Checking location permissions...');
       
       // Check permission status first
-      const { status } = await import('expo-location').then(Location => 
-        Location.getForegroundPermissionsAsync()
-      );
+      const { status } = await Location.getForegroundPermissionsAsync();
       
       // If permission not granted, show explanation and request
       if (status !== 'granted') {

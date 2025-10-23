@@ -316,7 +316,8 @@ export default function DashboardScreen() {
               <MaterialCommunityIcons name="crown" size={16} color={colors.background} />
               <Text style={[styles.proBadgeText, { color: colors.background }]}>PRO</Text>
             </View>
-          )}\n        </View>
+          )}
+        </View>
 
         {/* Active Car Display */}
         {activeCar && (

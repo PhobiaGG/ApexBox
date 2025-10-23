@@ -6,25 +6,30 @@ import { useTheme } from '../contexts/ThemeContext';
 import { SPACING, FONT_SIZE, BORDER_RADIUS } from '../constants/theme';
 
 interface SessionShareCardProps {
-  peakSpeed: number;
-  avgSpeed: number;
-  peakGForce: number;
-  duration: string;
-  carModel: string;
   date: string;
+  time: string;
+  stats: any;
+  settings: any;
+  profile: any;
   accentColor: string;
 }
 
 export default function SessionShareCard({
-  peakSpeed,
-  avgSpeed,
-  peakGForce,
-  duration,
-  carModel,
   date,
+  time,
+  stats,
+  settings,
+  profile,
   accentColor,
 }: SessionShareCardProps) {
   const { colors } = useTheme();
+  
+  // Safe value extraction with defaults
+  const peakSpeed = stats?.peakSpeed || 0;
+  const avgSpeed = stats?.avgSpeed || 0;
+  const peakGForce = stats?.peakG || 0;
+  const duration = stats?.duration ? (stats.duration / 60).toFixed(1) : '0';
+  const carModel = profile?.currentCar?.model || 'My Vehicle';
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>

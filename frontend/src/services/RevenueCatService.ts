@@ -1,4 +1,5 @@
 import { Platform } from 'react-native';
+import Constants from 'expo-constants';
 
 // Optional import - only works with custom dev client, not Expo Go
 let Purchases: any = null;

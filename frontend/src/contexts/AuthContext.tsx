@@ -235,12 +235,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!user) throw new Error('No user logged in');
     
     try {
+      // Update Firebase Auth profile
       await updateProfile(user, { displayName: newName });
+      
+      // Update user profile doc
       await updateDoc(doc(db, 'users', user.uid), { displayName: newName });
       
+      // Update leaderboard entries
+      const leaderboardRef = doc(db, 'leaderboards', user.uid);
+      await updateDoc(leaderboardRef, { displayName: newName });
+      
+      // Update local state
       if (profile) {
         setProfile({ ...profile, displayName: newName });
       }
+      
+      console.log('[Auth] ✅ Username updated everywhere:', newName);
     } catch (error: any) {
       console.error('[Auth] Update username error:', error);
       throw new Error(error.message);

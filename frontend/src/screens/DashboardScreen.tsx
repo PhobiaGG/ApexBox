@@ -66,30 +66,44 @@ export default function DashboardScreen() {
       console.log('[Dashboard] Checking location permissions...');
       
       // Check permission status first
-      const { status } = await Location.getForegroundPermissionsAsync();
+      const { status, canAskAgain } = await Location.getForegroundPermissionsAsync();
       
-      console.log(`[Dashboard] Current permission status: ${status}`);
+      console.log(`[Dashboard] Permission status: ${status}, canAskAgain: ${canAskAgain}`);
       
-      // If permission not granted, show explanation and request
+      // Check if we've already shown the explanation
+      const hasSeenExplanation = await AsyncStorage.getItem('location_permission_explained');
+      
+      // If permission not granted
       if (status !== 'granted') {
-        console.log('[Dashboard] Permission not granted, showing explanation dialog');
-        Alert.alert(
-          '📍 Location Permission Required',
-          'ApexBox needs your location to create GPS track replays and analyze your driving routes.\n\nThis data is only used during active sessions and can be disabled in settings.',
-          [
-            {
-              text: 'Cancel',
-              style: 'cancel',
-              onPress: () => console.log('[Dashboard] User cancelled permission request'),
-            },
-            {
-              text: 'Allow Location',
-              onPress: async () => {
-                await requestLocationAndStart();
+        // Only show explanation dialog if it's the first time (undetermined status)
+        // or if user hasn't seen the explanation yet
+        if (status === 'undetermined' && !hasSeenExplanation) {
+          console.log('[Dashboard] First time requesting permission, showing explanation');
+          Alert.alert(
+            '📍 Location Permission Required',
+            'ApexBox needs your location to create GPS track replays and analyze your driving routes.\n\nThis data is only used during active sessions and can be disabled in settings.',
+            [
+              {
+                text: 'Cancel',
+                style: 'cancel',
+                onPress: () => console.log('[Dashboard] User cancelled permission request'),
               },
-            },
-          ]
-        );
+              {
+                text: 'Allow Location',
+                onPress: async () => {
+                  // Mark that we've shown the explanation
+                  await AsyncStorage.setItem('location_permission_explained', 'true');
+                  await requestLocationAndStart();
+                },
+              },
+            ]
+          );
+          return;
+        }
+        
+        // For "Ask Every Time" or subsequent requests, just request directly
+        console.log('[Dashboard] Requesting permission directly (Ask Every Time or subsequent request)');
+        await requestLocationAndStart();
         return;
       }
       

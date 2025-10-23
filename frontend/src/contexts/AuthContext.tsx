@@ -241,16 +241,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Update user profile doc
       await updateDoc(doc(db, 'users', user.uid), { displayName: newName });
       
-      // Update leaderboard entries
-      const leaderboardRef = doc(db, 'leaderboards', user.uid);
-      await updateDoc(leaderboardRef, { displayName: newName });
+      // Update leaderboard entries (if exists, using setDoc with merge)
+      try {
+        const leaderboardRef = doc(db, 'leaderboards', user.uid);
+        await setDoc(leaderboardRef, { displayName: newName }, { merge: true });
+        console.log('[Auth] ✅ Updated leaderboard entry');
+      } catch (leaderboardError) {
+        console.log('[Auth] No leaderboard entry to update (will create on first session)');
+      }
       
       // Update local state
       if (profile) {
         setProfile({ ...profile, displayName: newName });
       }
       
-      console.log('[Auth] ✅ Username updated everywhere:', newName);
+      console.log('[Auth] ✅ Username updated:', newName);
     } catch (error: any) {
       console.error('[Auth] Update username error:', error);
       throw new Error(error.message);

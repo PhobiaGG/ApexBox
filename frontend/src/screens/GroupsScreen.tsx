@@ -59,7 +59,7 @@ export default function GroupsScreen() {
   const { colors, getCurrentAccent } = useTheme();
   const { settings } = useSettings();
   const accentColor = getCurrentAccent();
-  const isMetric = settings.units === 'metric';
+  const isMetric = settings.units?.isMetric ?? true; // Default to metric if undefined
   
   console.log('[GroupsScreen] Settings units:', settings.units, 'isMetric:', isMetric);
 

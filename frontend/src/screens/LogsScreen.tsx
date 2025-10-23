@@ -28,7 +28,9 @@ type SortMode = 'date' | 'peakSpeed' | 'duration';
 export default function LogsScreen() {
   const { sessionsByDate, isLoading, rescan } = useLogs();
   const { status, sendCommand } = useBle();
+  const { settings } = useSettings();
   const router = useRouter();
+  const isMetric = settings.units === 'metric';
   const [expandedDates, setExpandedDates] = useState<Set<string>>(new Set());
   const [refreshing, setRefreshing] = useState(false);
   const [sortMode, setSortMode] = useState<SortMode>('date');

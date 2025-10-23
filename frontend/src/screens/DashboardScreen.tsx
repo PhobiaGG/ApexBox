@@ -36,6 +36,7 @@ export default function DashboardScreen() {
   const { settings } = useSettings();
   const { colors, getCurrentAccent } = useTheme();
   const { getActiveCar, profile, user } = useAuth();
+  const { isConnected } = useNetworkStatus();
   const accentColor = getCurrentAccent();
   const activeCar = getActiveCar();
   const [currentSpeed, setCurrentSpeed] = useState(0);

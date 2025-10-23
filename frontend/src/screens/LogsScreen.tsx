@@ -118,17 +118,17 @@ export default function LogsScreen() {
       // Refresh the logs list
       await rescan();
 
-      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      
       const successMessage = isConnected
         ? 'Session deleted from app and ApexBox'
         : 'Session deleted from app (ApexBox not connected)';
       
-      Alert.alert('Success', successMessage);
+      await ErrorHandler.success(successMessage);
     } catch (error) {
       console.error('[LogsScreen] Error deleting session:', error);
-      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      Alert.alert('Error', 'Failed to delete session. Please try again.');
+      ErrorHandler.handle(error, {
+        label: 'Try Again',
+        onPress: () => performDelete(session, isConnected)
+      });
     } finally {
       setDeletingSession(null);
     }

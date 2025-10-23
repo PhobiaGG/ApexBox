@@ -235,14 +235,14 @@ export default function LogsScreen() {
                 {isExpanded && (
                   <View style={styles.sessionsList}>
                     {sessions.map(session => {
-                      // Generate sparkline data (simplified for now - use actual session data when available)
+                      // Generate sparkline data with unit conversion
                       const sparklineData = session.stats
                         ? [
-                            session.stats.avgSpeed * 0.7,
-                            session.stats.peakSpeed * 0.85,
-                            session.stats.peakSpeed,
-                            session.stats.peakSpeed * 0.9,
-                            session.stats.avgSpeed * 0.8,
+                            convertSpeed(session.stats.avgSpeed * 0.7, isMetric),
+                            convertSpeed(session.stats.peakSpeed * 0.85, isMetric),
+                            convertSpeed(session.stats.peakSpeed, isMetric),
+                            convertSpeed(session.stats.peakSpeed * 0.9, isMetric),
+                            convertSpeed(session.stats.avgSpeed * 0.8, isMetric),
                           ]
                         : [];
 

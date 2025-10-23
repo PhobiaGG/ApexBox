@@ -281,7 +281,7 @@ export default function LogsScreen() {
                                         color={COLORS.cyan}
                                       />
                                       <Text style={[styles.statChipText, { color: COLORS.cyan }]}>
-                                        {convertSpeed(session.stats.peakSpeed, isMetric).toFixed(0)}
+                                        {convertSpeed(session.stats.peakSpeed, isMetric).toFixed(0)} {getSpeedUnit(isMetric)}
                                       </Text>
                                     </View>
                                     <View style={styles.statChip}>

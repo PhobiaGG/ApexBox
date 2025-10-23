@@ -261,17 +261,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!user) throw new Error('No user logged in');
     
     try {
+      // Upload image to storage
       const response = await fetch(uri);
       const blob = await response.blob();
       const storageRef = ref(storage, `avatars/${user.uid}`);
       await uploadBytes(storageRef, blob);
       const downloadURL = await getDownloadURL(storageRef);
       
-      await updateDoc(doc(db, 'users', user.uid), { avatarURI: downloadURL });
+      // Update user profile doc
+      await updateDoc(doc(db, 'users', user.uid), { avatarUrl: downloadURL });
       
+      // Update leaderboard entries
+      const leaderboardRef = doc(db, 'leaderboards', user.uid);
+      await updateDoc(leaderboardRef, { avatarUrl: downloadURL });
+      
+      // Update local state
       if (profile) {
-        setProfile({ ...profile, avatarURI: downloadURL });
+        setProfile({ ...profile, avatarUrl: downloadURL });
       }
+      
+      console.log('[Auth] ✅ Avatar updated everywhere');
     } catch (error: any) {
       console.error('[Auth] Upload avatar error:', error);
       throw new Error(error.message);

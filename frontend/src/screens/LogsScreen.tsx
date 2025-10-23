@@ -30,7 +30,7 @@ export default function LogsScreen() {
   const { status, sendCommand } = useBle();
   const { settings } = useSettings();
   const router = useRouter();
-  const isMetric = settings.units === 'metric';
+  const isMetric = settings.units?.isMetric ?? true; // Default to metric if undefined
   
   console.log('[LogsScreen] Settings units:', settings.units, 'isMetric:', isMetric);
   const [expandedDates, setExpandedDates] = useState<Set<string>>(new Set());

@@ -328,6 +328,7 @@ export default function DashboardScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
+      {!isConnected && <OfflineBanner />}
       <LinearGradient colors={[colors.background, colors.background]} style={styles.gradient}>
         {/* Header */}
         <View style={styles.header}>

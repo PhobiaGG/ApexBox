@@ -60,6 +60,8 @@ export default function GroupsScreen() {
   const { settings } = useSettings();
   const accentColor = getCurrentAccent();
   const isMetric = settings.units === 'metric';
+  
+  console.log('[GroupsScreen] Settings units:', settings.units, 'isMetric:', isMetric);
 
   const [activeTab, setActiveTab] = useState<'crews' | 'global'>('crews');
   const [globalCategory, setGlobalCategory] = useState<'topSpeed' | 'topGForce'>('topSpeed');

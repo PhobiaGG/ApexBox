@@ -18,8 +18,11 @@ export type PurchasesPackage = any;
 export type CustomerInfo = any;
 export type PurchasesError = any;
 
-// RevenueCat API Keys - YOUR ACTUAL CREDENTIALS
-const REVENUECAT_API_KEY = 'test_meYbmTmIfBcXKQCnKZSdTrjiyyz'; // Your test store public key
+// RevenueCat API Key from environment variables
+const REVENUECAT_API_KEY = 
+  process.env.EXPO_PUBLIC_REVENUECAT_API_KEY || 
+  Constants.expoConfig?.extra?.revenuecatApiKey ||
+  '';
 
 // Product Identifier (matches your RevenueCat setup)
 export const PREMIUM_PRODUCT_ID = 'premium_lifetime';

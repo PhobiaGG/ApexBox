@@ -1,16 +1,8 @@
-import React, { useEffect } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, Animated } from 'react-native';
 import { COLORS, SPACING, FONT_SIZE, BORDER_RADIUS } from '../constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Circle } from 'react-native-svg';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  useAnimatedProps,
-  withSpring,
-  withTiming,
-  Easing,
-} from 'react-native-reanimated';
 
 interface GaugeProps {
   value: number;
@@ -25,9 +17,9 @@ interface GaugeProps {
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
 export default function Gauge({ value, maxValue, label, unit, color, size = 140 }: GaugeProps) {
-  const progress = useSharedValue(0);
-  const scale = useSharedValue(0.95);
-  const opacity = useSharedValue(0);
+  const progressAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(0.95)).current;
+  const opacityAnim = useRef(new Animated.Value(0)).current;
 
   const strokeWidth = 12;
   const radius = (size - strokeWidth) / 2;
@@ -35,34 +27,52 @@ export default function Gauge({ value, maxValue, label, unit, color, size = 140 
 
   useEffect(() => {
     // Entry animation
-    opacity.value = withTiming(1, { duration: 300 });
-    scale.value = withSpring(1, { damping: 15, stiffness: 150 });
+    Animated.parallel([
+      Animated.timing(opacityAnim, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        tension: 150,
+        friction: 15,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
 
+  useEffect(() => {
     // Update progress with smooth spring
     const targetProgress = Math.min((value / maxValue) * 100, 100);
-    progress.value = withSpring(targetProgress, {
-      damping: 20,
-      stiffness: 90,
-      mass: 1,
-    });
+    Animated.spring(progressAnim, {
+      toValue: targetProgress,
+      tension: 90,
+      friction: 20,
+      useNativeDriver: true,
+    }).start();
   }, [value, maxValue]);
 
-  const animatedProps = useAnimatedProps(() => {
-    const strokeDashoffset = circumference - (progress.value / 100) * circumference;
-    return {
-      strokeDashoffset,
-    };
-  });
-
-  const animatedContainerStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-    opacity: opacity.value,
-  }));
-
   const percentage = Math.min((value / maxValue) * 100, 100);
+  
+  // Calculate stroke dash offset
+  const strokeDashoffset = progressAnim.interpolate({
+    inputRange: [0, 100],
+    outputRange: [circumference, 0],
+  });
+  
+  // Safe formatting for telemetry value
+  const displayValue = typeof value === 'number' ? value.toFixed(1) : '–';
 
   return (
-    <Animated.View style={[styles.container, { width: size + 20, height: size + 60 }, animatedContainerStyle]}>
+    <Animated.View style={[
+      styles.container, 
+      { width: size + 20, height: size + 60 },
+      { 
+        transform: [{ scale: scaleAnim }],
+        opacity: opacityAnim,
+      }
+    ]}>
       <View style={styles.gaugeContainer}>
         <Svg width={size} height={size}>
           <Circle
@@ -81,14 +91,14 @@ export default function Gauge({ value, maxValue, label, unit, color, size = 140 
             strokeWidth={strokeWidth}
             fill="none"
             strokeDasharray={circumference}
+            strokeDashoffset={strokeDashoffset}
             strokeLinecap="round"
             rotation="-90"
             origin={`${size / 2}, ${size / 2}`}
-            animatedProps={animatedProps}
           />
         </Svg>
         <View style={styles.valueContainer}>
-          <Text style={[styles.value, { color }]}>{value.toFixed(1)}</Text>
+          <Text style={[styles.value, { color }]}>{displayValue}</Text>
           <Text style={styles.unit}>{unit}</Text>
         </View>
       </View>

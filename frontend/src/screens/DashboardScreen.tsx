@@ -15,24 +15,262 @@ import { useBle } from '../contexts/BleContext';
 import { useLogs } from '../contexts/LogsContext';
 import { useSettings } from '../contexts/SettingsContext';
 import { useTheme } from '../contexts/ThemeContext';
+import { useAuth } from '../contexts/AuthContext';
 import Gauge from '../components/Gauge';
 import MetricCard from '../components/MetricCard';
 import ChartView from '../components/ChartView';
+import BleConnectionModal from '../components/BleConnectionModal';
+import GpsService from '../services/GpsService';
+import LogService from '../services/LogService';
 import { formatTemp, formatAltitude, formatHumidity } from '../utils/format';
 import { calculateStats } from '../utils/csv';
+import * as Haptics from 'expo-haptics';
+import * as Location from 'expo-location';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import OfflineBanner from '../components/OfflineBanner';
+import { useNetworkStatus } from '../hooks/useNetworkStatus';
 
 export default function DashboardScreen() {
   const { status, scan, connect, disconnect, devices, sendCommand, telemetry } = useBle();
   const { latestSession, isLoading, rescan } = useLogs();
   const { settings } = useSettings();
   const { colors, getCurrentAccent } = useTheme();
+  const { getActiveCar, profile, user } = useAuth();
+  const { isConnected } = useNetworkStatus();
   const accentColor = getCurrentAccent();
+  const activeCar = getActiveCar();
   const [currentSpeed, setCurrentSpeed] = useState(0);
   const [currentGForce, setCurrentGForce] = useState(0);
   const [currentTemp, setCurrentTemp] = useState(65);
   const [currentAltitude, setCurrentAltitude] = useState(350);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [autoConnect, setAutoConnect] = useState(false);
+  const [showBleModal, setShowBleModal] = useState(false);
+  const [isTrackingGPS, setIsTrackingGPS] = useState(false);
+  const [gpsCoordinateCount, setGpsCoordinateCount] = useState(0);
+  const [sessionStartTime, setSessionStartTime] = useState<number | null>(null);
+
+  // Update GPS coordinate count in real-time
+  useEffect(() => {
+    if (isTrackingGPS) {
+      const unsubscribe = GpsService.onCoordinateUpdate(() => {
+        const coords = GpsService.getCoordinates();
+        setGpsCoordinateCount(coords.length);
+      });
+      return unsubscribe;
+    }
+  }, [isTrackingGPS]);
+
+  // Handle Start Analysis with GPS tracking
+  const handleStartAnalysis = async () => {
+    try {
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+      
+      console.log('[Dashboard] Checking location permissions...');
+      
+      // Check permission status first
+      const { status, canAskAgain } = await Location.getForegroundPermissionsAsync();
+      
+      console.log(`[Dashboard] Permission status: ${status}, canAskAgain: ${canAskAgain}`);
+      
+      // Check if we've already shown the explanation
+      const hasSeenExplanation = await AsyncStorage.getItem('location_permission_explained');
+      
+      // If permission not granted
+      if (status !== 'granted') {
+        // Only show explanation dialog if it's the first time (undetermined status)
+        // or if user hasn't seen the explanation yet
+        if (status === 'undetermined' && !hasSeenExplanation) {
+          console.log('[Dashboard] First time requesting permission, showing explanation');
+          Alert.alert(
+            '📍 Location Permission Required',
+            'ApexBox needs your location to create GPS track replays and analyze your driving routes.\n\nThis data is only used during active sessions and can be disabled in settings.',
+            [
+              {
+                text: 'Cancel',
+                style: 'cancel',
+                onPress: () => console.log('[Dashboard] User cancelled permission request'),
+              },
+              {
+                text: 'Allow Location',
+                onPress: async () => {
+                  // Mark that we've shown the explanation
+                  await AsyncStorage.setItem('location_permission_explained', 'true');
+                  await requestLocationAndStart();
+                },
+              },
+            ]
+          );
+          return;
+        }
+        
+        // For "Ask Every Time" or subsequent requests, just request directly
+        console.log('[Dashboard] Requesting permission directly (Ask Every Time or subsequent request)');
+        await requestLocationAndStart();
+        return;
+      }
+      
+      // Permission already granted, start tracking
+      console.log('[Dashboard] Permission already granted, starting session');
+      await startTrackingSession();
+      
+    } catch (error) {
+      console.error('[Dashboard] Start analysis error:', error);
+      Alert.alert('Error', 'Failed to start analysis');
+    }
+  };
+
+  // Request location permission and start session
+  const requestLocationAndStart = async () => {
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      
+      if (status === 'granted') {
+        console.log('[Dashboard] Location permission granted');
+        await startTrackingSession();
+      } else {
+        console.log('[Dashboard] Location permission denied');
+        Alert.alert(
+          '⚠️ Location Permission Denied',
+          'You can still record sessions without GPS tracking, but you won\'t have track replay available.\n\nYou can enable location later in your device settings.',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            {
+              text: 'Continue Without GPS',
+              onPress: async () => {
+                await startTrackingSession(false);
+              },
+            },
+          ]
+        );
+      }
+    } catch (error) {
+      console.error('[Dashboard] Permission request error:', error);
+      Alert.alert('Error', 'Failed to request location permission');
+    }
+  };
+
+  // Start the tracking session
+  const startTrackingSession = async (enableGPS: boolean = true) => {
+    try {
+      setIsAnalyzing(true);
+      setSessionStartTime(Date.now());
+      
+      if (enableGPS) {
+        console.log('[Dashboard] Starting GPS tracking...');
+        const gpsStarted = await GpsService.startTracking();
+        
+        if (gpsStarted) {
+          setIsTrackingGPS(true);
+          setGpsCoordinateCount(0);
+          console.log('[Dashboard] ✅ GPS tracking started successfully');
+          await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        } else {
+          console.warn('[Dashboard] ⚠️ GPS tracking failed to start');
+          // Continue without GPS
+          setIsTrackingGPS(false);
+        }
+      } else {
+        console.log('[Dashboard] Starting session without GPS');
+        setIsTrackingGPS(false);
+        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+    } catch (error) {
+      console.error('[Dashboard] Start tracking error:', error);
+      setIsAnalyzing(false);
+      setSessionStartTime(null);
+      Alert.alert('Error', 'Failed to start session tracking');
+    }
+  };
+
+  const handleStopAnalysis = async () => {
+    try {
+      console.log('[Dashboard] Stopping analysis...');
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+      
+      // Stop GPS tracking and get coordinates
+      const coordinates = GpsService.stopTracking();
+      const duration = sessionStartTime ? Math.floor((Date.now() - sessionStartTime) / 1000) : 0;
+      
+      setIsTrackingGPS(false);
+      setIsAnalyzing(false);
+      setGpsCoordinateCount(0);
+      setSessionStartTime(null);
+      
+      console.log(`[Dashboard] Session ended. Duration: ${duration}s, Captured ${coordinates.length} GPS points`);
+      
+      // Save session with telemetry data (using mock data for demo)
+      try {
+        const logService = LogService;
+        
+        // Create mock telemetry samples based on duration
+        const mockSamples: any[] = [];
+        for (let i = 0; i < duration; i++) {
+          mockSamples.push({
+            timestamp_ms: i * 1000,
+            speed: currentSpeed + Math.random() * 10 - 5,
+            g_force: currentGForce + Math.random() * 0.5 - 0.25,
+            temp: currentTemp,
+            humidity: 45,
+            lux: 800,
+            altitude: currentAltitude,
+          });
+        }
+        
+        const sessionKey = await logService.saveSession(mockSamples, [], duration);
+        console.log('[Dashboard] Session saved:', sessionKey);
+        
+        // Update leaderboard with session stats
+        if (user && profile) {
+          try {
+            const LeaderboardService = (await import('../services/LeaderboardService')).default;
+            
+            // Calculate top speed and max G-force from session
+            const topSpeed = Math.max(...mockSamples.map(s => s.speed || 0));
+            const maxGForce = Math.max(...mockSamples.map(s => s.g_force || 0));
+            
+            console.log('[Dashboard] Updating leaderboard - Top Speed:', topSpeed, 'Max G-Force:', maxGForce);
+            
+            await LeaderboardService.updateUserStats(
+              user.uid,
+              topSpeed,
+              maxGForce,
+              profile.state
+            );
+            
+            console.log('[Dashboard] ✅ Leaderboard updated successfully');
+          } catch (leaderboardError) {
+            console.error('[Dashboard] Error updating leaderboard:', leaderboardError);
+            // Don't fail the session save if leaderboard update fails
+          }
+        }
+        
+        // Rescan to update logs list
+        await rescan();
+      } catch (saveError) {
+        console.error('[Dashboard] Error saving session:', saveError);
+      }
+      
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      
+      Alert.alert(
+        '✅ Session Complete',
+        `Duration: ${Math.floor(duration / 60)}m ${duration % 60}s\nGPS Points: ${coordinates.length}\n\n${
+          coordinates.length > 0 
+            ? 'Session saved with location data!' 
+            : 'Session saved (no GPS data).'
+        }`,
+        [{ text: 'View Logs', onPress: () => {/* Navigate to logs */} }, { text: 'OK' }]
+      );
+    } catch (error) {
+      console.error('[Dashboard] Stop analysis error:', error);
+      setIsAnalyzing(false);
+      setIsTrackingGPS(false);
+      setGpsCoordinateCount(0);
+      setSessionStartTime(null);
+      Alert.alert('Error', 'Failed to stop analysis');
+    }
+  };
 
   // Auto-connect after scan completes
   useEffect(() => {
@@ -46,7 +284,7 @@ export default function DashboardScreen() {
   useEffect(() => {
     if (telemetry && status.isConnected) {
       setCurrentSpeed(telemetry.speed);
-      setCurrentGForce(telemetry.g_force);
+      setCurrentGForce(telemetry.gForce);
       setCurrentTemp(telemetry.temperature);
       setCurrentAltitude(telemetry.altitude);
     } else if (latestSession?.samples && latestSession.samples.length > 0) {
@@ -58,23 +296,6 @@ export default function DashboardScreen() {
       setCurrentAltitude(lastSample.altitude);
     }
   }, [telemetry, latestSession, status.isConnected]);
-
-  const handleStartAnalysis = async () => {
-    if (!status.isConnected) {
-      Alert.alert('Not Connected', 'Please connect to an ApexBox device first');
-      return;
-    }
-
-    try {
-      setIsAnalyzing(true);
-      await sendCommand('START_ANALYSIS');
-      Alert.alert('Analysis Started', 'ApexBox is now collecting telemetry data');
-    } catch (error) {
-      Alert.alert('Error', 'Failed to start analysis');
-    } finally {
-      setIsAnalyzing(false);
-    }
-  };
 
   const handleSyncLogs = async () => {
     if (!status.isConnected) {
@@ -92,31 +313,108 @@ export default function DashboardScreen() {
   };
 
   const handleBlePress = async () => {
-    if (status.isConnected) {
-      await disconnect();
-    } else {
-      setAutoConnect(true);
-      await scan();
-    }
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setShowBleModal(true);
   };
 
   const stats = latestSession?.samples ? calculateStats(latestSession.samples) : null;
 
   const chartData = latestSession?.samples
     ? latestSession.samples
-        .filter((_, i) => i % 2 === 0)
+        .filter((s, i) => i % 2 === 0 && !isNaN(s.speed) && !isNaN(s.timestamp_ms))
         .slice(0, 15)
         .map(s => ({ x: s.timestamp_ms / 1000, y: s.speed }))
     : [];
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
+      {!isConnected && <OfflineBanner />}
       <LinearGradient colors={[colors.background, colors.background]} style={styles.gradient}>
         {/* Header */}
         <View style={styles.header}>
           <Text style={[styles.title, { color: colors.text }]}>ApexBox</Text>
           <Text style={[styles.subtitle, { color: colors.textSecondary }]}>COMPANION</Text>
+          {profile?.premium && (
+            <View style={[styles.proBadge, { backgroundColor: accentColor }]}>
+              <MaterialCommunityIcons name="crown" size={16} color={colors.background} />
+              <Text style={[styles.proBadgeText, { color: colors.background }]}>PRO</Text>
+            </View>
+          )}
         </View>
+
+        {/* Active Car Display */}
+        {activeCar && (
+          <View style={[styles.activeCarContainer, { backgroundColor: colors.card, borderColor: accentColor }]}>
+            <MaterialCommunityIcons name="car-sports" size={24} color={accentColor} />
+            <View style={styles.activeCarInfo}>
+              <Text style={[styles.activeCarLabel, { color: colors.textSecondary }]}>
+                Current Vehicle
+              </Text>
+              <Text style={[styles.activeCarName, { color: colors.text }]}>
+                {activeCar.year} {activeCar.make} {activeCar.model}
+              </Text>
+            </View>
+          </View>
+        )}
+
+        {/* BLE Status Banner */}
+        <TouchableOpacity
+          style={[
+            styles.bleStatusBanner,
+            { 
+              backgroundColor: status.isConnected ? accentColor + '15' : colors.card + '80',
+              borderColor: status.isConnected ? accentColor : colors.border,
+            },
+          ]}
+          onPress={handleBlePress}
+          activeOpacity={0.8}
+        >
+          <View style={styles.bleStatusLeft}>
+            <MaterialCommunityIcons
+              name={status.isConnected ? 'bluetooth-connect' : 'bluetooth-off'}
+              size={20}
+              color={status.isConnected ? accentColor : colors.textSecondary}
+            />
+            <View style={styles.bleStatusTextContainer}>
+              <Text style={[styles.bleStatusText, { color: status.isConnected ? accentColor : colors.textSecondary }]}>
+                {status.isConnected 
+                  ? `🟢 Connected to ${status.connectedDevice?.name}` 
+                  : '🟠 Simulation Mode (Offline)'}
+              </Text>
+            </View>
+          </View>
+          <MaterialCommunityIcons name="cog" size={20} color={status.isConnected ? accentColor : colors.textSecondary} />
+        </TouchableOpacity>
+
+        {/* Recording Indicator */}
+        {isAnalyzing && (
+          <View style={[styles.recordingBanner, { backgroundColor: colors.magenta + '15', borderColor: colors.magenta }]}>
+            <View style={styles.recordingLeft}>
+              <View style={styles.recordingDot} />
+              <Text style={[styles.recordingText, { color: colors.magenta }]}>
+                🔴 RECORDING SESSION
+              </Text>
+            </View>
+            <View style={styles.recordingStats}>
+              {isTrackingGPS && (
+                <View style={styles.recordingStat}>
+                  <MaterialCommunityIcons name="map-marker" size={16} color={colors.lime} />
+                  <Text style={[styles.recordingStatText, { color: colors.lime }]}>
+                    {gpsCoordinateCount} pts
+                  </Text>
+                </View>
+              )}
+              {sessionStartTime && (
+                <View style={styles.recordingStat}>
+                  <MaterialCommunityIcons name="timer" size={16} color={colors.cyan} />
+                  <Text style={[styles.recordingStatText, { color: colors.cyan }]}>
+                    {Math.floor((Date.now() - sessionStartTime) / 1000)}s
+                  </Text>
+                </View>
+              )}
+            </View>
+          </View>
+        )}
 
         <ScrollView
           style={styles.scrollView}
@@ -201,24 +499,33 @@ export default function DashboardScreen() {
           {/* Action Buttons */}
           <View style={styles.actionsContainer}>
             <TouchableOpacity
-              style={[styles.actionButton, !status.isConnected && styles.actionButtonDisabled]}
-              onPress={handleStartAnalysis}
-              disabled={!status.isConnected || isAnalyzing}
+              style={[styles.actionButton, !status.isConnected && !isAnalyzing && styles.actionButtonDisabled]}
+              onPress={isAnalyzing ? handleStopAnalysis : handleStartAnalysis}
+              disabled={!status.isConnected && !isAnalyzing}
               activeOpacity={0.8}
             >
               <LinearGradient
-                colors={status.isConnected ? [accentColor, colors.background] : [colors.border, colors.border]}
+                colors={
+                  isAnalyzing
+                    ? [colors.magenta, colors.background]
+                    : status.isConnected
+                    ? [accentColor, colors.background]
+                    : [colors.border, colors.border]
+                }
                 style={styles.buttonGradient}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
               >
-                {isAnalyzing ? (
-                  <ActivityIndicator color={colors.text} />
-                ) : (
-                  <>
-                    <MaterialCommunityIcons name="play-circle" size={24} color={colors.text} />
-                    <Text style={[styles.actionButtonText, { color: colors.text }]}>Start Analysis</Text>
-                  </>
+                <MaterialCommunityIcons
+                  name={isAnalyzing ? 'stop-circle' : 'play-circle'}
+                  size={24}
+                  color={colors.text}
+                />
+                <Text style={[styles.actionButtonText, { color: colors.text }]}>
+                  {isAnalyzing ? 'Stop Analysis' : 'Start Analysis'}
+                </Text>
+                {isTrackingGPS && (
+                  <MaterialCommunityIcons name="map-marker" size={16} color={colors.lime} />
                 )}
               </LinearGradient>
             </TouchableOpacity>
@@ -261,6 +568,13 @@ export default function DashboardScreen() {
           )}
         </ScrollView>
       </LinearGradient>
+
+      {/* BLE Connection Modal */}
+      <BleConnectionModal
+        visible={showBleModal}
+        onClose={() => setShowBleModal(false)}
+        accentColor={accentColor}
+      />
     </View>
   );
 }
@@ -287,6 +601,109 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZE.sm,
     letterSpacing: 4,
     marginTop: 4,
+  },
+  proBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: SPACING.sm,
+    paddingVertical: 6,
+    borderRadius: 12,
+    gap: 4,
+    marginTop: SPACING.sm,
+  },
+  proBadgeText: {
+    fontSize: FONT_SIZE.xs,
+    fontWeight: 'bold',
+    letterSpacing: 1,
+  },
+  activeCarContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: SPACING.lg,
+    marginBottom: SPACING.md,
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.md,
+    borderRadius: BORDER_RADIUS.md,
+    borderWidth: 2,
+    gap: SPACING.sm,
+  },
+  activeCarInfo: {
+    flex: 1,
+  },
+  activeCarLabel: {
+    fontSize: FONT_SIZE.xs,
+    textTransform: 'uppercase',
+    fontWeight: '600',
+    letterSpacing: 1,
+  },
+  activeCarName: {
+    fontSize: FONT_SIZE.md,
+    fontWeight: 'bold',
+    marginTop: 2,
+  },
+  bleStatusBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginHorizontal: SPACING.lg,
+    marginBottom: SPACING.md,
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.sm,
+    borderRadius: BORDER_RADIUS.md,
+    borderWidth: 1,
+  },
+  bleStatusLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.sm,
+    flex: 1,
+  },
+  bleStatusTextContainer: {
+    flex: 1,
+  },
+  bleStatusText: {
+    fontSize: FONT_SIZE.sm,
+    fontWeight: '600',
+  },
+  recordingBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginHorizontal: SPACING.lg,
+    marginBottom: SPACING.md,
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.sm,
+    borderRadius: BORDER_RADIUS.md,
+    borderWidth: 2,
+  },
+  recordingLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.sm,
+  },
+  recordingDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#FF0055',
+  },
+  recordingText: {
+    fontSize: FONT_SIZE.sm,
+    fontWeight: 'bold',
+    letterSpacing: 1,
+  },
+  recordingStats: {
+    flexDirection: 'row',
+    gap: SPACING.md,
+  },
+  recordingStat: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  recordingStatText: {
+    fontSize: FONT_SIZE.xs,
+    fontWeight: 'bold',
   },
   scrollView: {
     flex: 1,

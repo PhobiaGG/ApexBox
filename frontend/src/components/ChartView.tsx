@@ -1,22 +1,7 @@
 import React from 'react';
-import { View, Text, StyleSheet, Dimensions, Platform } from 'react-native';
-import { COLORS, SPACING, FONT_SIZE } from '../constants/theme';
-
-// Only import Victory-native on native platforms
-let CartesianChart: any, Line: any, useChartPressState: any, Circle: any;
-
-if (Platform.OS !== 'web') {
-  try {
-    const victory = require('victory-native');
-    const skia = require('@shopify/react-native-skia');
-    CartesianChart = victory.CartesianChart;
-    Line = victory.Line;
-    useChartPressState = victory.useChartPressState;
-    Circle = skia.Circle;
-  } catch (e) {
-    console.log('[ChartView] Victory-native not available');
-  }
-}
+import { View, Text, StyleSheet, Dimensions } from 'react-native';
+import Svg, { Polyline, Line, Text as SvgText } from 'react-native-svg';
+import { COLORS, SPACING, FONT_SIZE, BORDER_RADIUS } from '../constants/theme';
 
 interface ChartData {
   x: number;
@@ -30,76 +15,19 @@ interface ChartViewProps {
   yLabel: string;
 }
 
-const screenWidth = Dimensions.get('window').width;
-
-// Simple SVG-like chart fallback for web
-function WebChart({ data, color }: { data: ChartData[]; color: string }) {
-  if (data.length === 0) return null;
-
-  const yValues = data.map(d => d.y);
-  const minY = Math.min(...yValues);
-  const maxY = Math.max(...yValues);
-  const rangeY = maxY - minY || 1;
-
-  const chartWidth = screenWidth - SPACING.lg * 4;
-  const chartHeight = 180;
-
-  // Create simple line path
-  const points = data.map((d, i) => {
-    const x = (i / (data.length - 1)) * chartWidth;
-    const y = chartHeight - ((d.y - minY) / rangeY) * chartHeight;
-    return { x, y };
-  });
-
-  return (
-    <View style={[styles.webChartContainer, { height: chartHeight }]}>
-      {/* Grid lines */}
-      {[0, 0.25, 0.5, 0.75, 1].map((pct, i) => (
-        <View
-          key={i}
-          style={[
-            styles.gridLine,
-            { top: pct * chartHeight, opacity: pct === 0 || pct === 1 ? 0.3 : 0.1 },
-          ]}
-        />
-      ))}
-
-      {/* Data line */}
-      <View style={styles.lineContainer}>
-        {points.map((point, i) => {
-          if (i === 0) return null;
-          const prev = points[i - 1];
-          const length = Math.sqrt(Math.pow(point.x - prev.x, 2) + Math.pow(point.y - prev.y, 2));
-          const angle = Math.atan2(point.y - prev.y, point.x - prev.x) * (180 / Math.PI);
-
-          return (
-            <View
-              key={i}
-              style={[
-                styles.lineSegment,
-                {
-                  left: prev.x,
-                  top: prev.y,
-                  width: length,
-                  backgroundColor: color,
-                  transform: [{ rotate: `${angle}deg` }],
-                },
-              ]}
-            />
-          );
-        })}
-      </View>
-    </View>
-  );
-}
-
 export default function ChartView({ data, title, color, yLabel }: ChartViewProps) {
-  // Use native chart press state only on native
-  const nativeState = Platform.OS !== 'web' && useChartPressState ? useChartPressState({ x: 0, y: { y: 0 } }) : null;
-  const state = nativeState?.state;
-  const isActive = nativeState?.isActive || false;
+  // Filter out any NaN or invalid values
+  const validData = data.filter(d => 
+    d && 
+    typeof d.x === 'number' && 
+    typeof d.y === 'number' && 
+    !isNaN(d.x) && 
+    !isNaN(d.y) &&
+    isFinite(d.x) &&
+    isFinite(d.y)
+  );
 
-  if (!data || data.length === 0) {
+  if (!validData || validData.length === 0) {
     return (
       <View style={styles.container}>
         <Text style={styles.title}>{title}</Text>
@@ -110,77 +38,76 @@ export default function ChartView({ data, title, color, yLabel }: ChartViewProps
     );
   }
 
-  // Calculate min and max for display
-  const yValues = data.map(d => d.y);
-  const minY = Math.min(...yValues);
-  const maxY = Math.max(...yValues);
-  const avgY = yValues.reduce((a, b) => a + b, 0) / yValues.length;
+  const width = Dimensions.get('window').width - SPACING.lg * 4;
+  const chartHeight = 180;
+  const padding = 30;
+
+  // Get min and max values
+  const yValues = validData.map(d => d.y);
+  const minValue = Math.min(...yValues);
+  const maxValue = Math.max(...yValues);
+  const valueRange = maxValue - minValue || 1;
+
+  // Create points for polyline
+  const points = validData.map((point, index) => {
+    const x = padding + (index / (validData.length - 1)) * (width - padding * 2);
+    const y = chartHeight - padding - ((point.y - minValue) / valueRange) * (chartHeight - padding * 2);
+    return `${x},${y}`;
+  }).join(' ');
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>{title}</Text>
-      
-      {/* Interactive value display (native only) */}
-      {isActive && state && (
-        <View style={styles.activeValue}>
-          <Text style={[styles.activeValueText, { color }]}>
-            {state.y.y.value.toFixed(2)}
-          </Text>
-          <Text style={styles.activeValueLabel}>{yLabel}</Text>
-        </View>
-      )}
-
       <View style={styles.chartContainer}>
-        {Platform.OS === 'web' ? (
-          <WebChart data={data} color={color} />
-        ) : CartesianChart ? (
-          <CartesianChart
-            data={data}
-            xKey="x"
-            yKeys={["y"]}
-            domainPadding={{ left: 20, right: 20, top: 20, bottom: 20 }}
-            chartPressState={state}
+        <Svg width={width} height={chartHeight}>
+          {/* Grid line at bottom */}
+          <Line
+            x1={padding}
+            y1={chartHeight - padding}
+            x2={width - padding}
+            y2={chartHeight - padding}
+            stroke={COLORS.border}
+            strokeWidth="1"
+          />
+          
+          {/* Data line */}
+          <Polyline
+            points={points}
+            fill="none"
+            stroke={color}
+            strokeWidth="2.5"
+          />
+          
+          {/* Y-axis labels */}
+          <SvgText
+            x={padding - 25}
+            y={padding + 5}
+            fill={COLORS.textSecondary}
+            fontSize="11"
+            fontWeight="600"
           >
-            {({ points, chartBounds }: any) => (
-              <>
-                <Line
-                  points={points.y}
-                  color={color}
-                  strokeWidth={2.5}
-                  curveType="natural"
-                  animate={{ type: "timing", duration: 300 }}
-                />
-                {isActive && state && Circle && (
-                  <Circle
-                    cx={state.x.position}
-                    cy={state.y.y.position}
-                    r={6}
-                    color={color}
-                    opacity={0.8}
-                  />
-                )}
-              </>
-            )}
-          </CartesianChart>
-        ) : (
-          <WebChart data={data} color={color} />
-        )}
-      </View>
-
-      {/* Stats Row */}
-      <View style={styles.statsRow}>
-        <View style={styles.statBox}>
-          <Text style={styles.statLabel}>Min</Text>
-          <Text style={[styles.statValue, { color }]}>{minY.toFixed(1)}</Text>
-        </View>
-        <View style={styles.statBox}>
-          <Text style={styles.statLabel}>Avg</Text>
-          <Text style={[styles.statValue, { color }]}>{avgY.toFixed(1)}</Text>
-        </View>
-        <View style={styles.statBox}>
-          <Text style={styles.statLabel}>Max</Text>
-          <Text style={[styles.statValue, { color }]}>{maxY.toFixed(1)}</Text>
-        </View>
+            {(isNaN(maxValue) || !isFinite(maxValue) ? 0 : maxValue).toFixed(0)}
+          </SvgText>
+          <SvgText
+            x={padding - 25}
+            y={chartHeight - padding + 5}
+            fill={COLORS.textSecondary}
+            fontSize="11"
+            fontWeight="600"
+          >
+            {(isNaN(minValue) || !isFinite(minValue) ? 0 : minValue).toFixed(0)}
+          </SvgText>
+          
+          {/* Y-axis label */}
+          <SvgText
+            x={5}
+            y={chartHeight / 2}
+            fill={COLORS.textSecondary}
+            fontSize="10"
+          >
+            {yLabel}
+          </SvgText>
+        </Svg>
       </View>
     </View>
   );
@@ -188,93 +115,28 @@ export default function ChartView({ data, title, color, yLabel }: ChartViewProps
 
 const styles = StyleSheet.create({
   container: {
-    marginVertical: SPACING.md,
-    backgroundColor: COLORS.card,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    overflow: 'hidden',
+    marginBottom: SPACING.lg,
   },
   title: {
     fontSize: FONT_SIZE.md,
     color: COLORS.text,
-    fontWeight: 'bold',
-    paddingHorizontal: SPACING.md,
-    paddingTop: SPACING.md,
-    paddingBottom: SPACING.sm,
-  },
-  activeValue: {
-    alignItems: 'center',
-    paddingVertical: SPACING.xs,
-    backgroundColor: COLORS.background,
-    marginHorizontal: SPACING.md,
-    borderRadius: 8,
     marginBottom: SPACING.sm,
-  },
-  activeValueText: {
-    fontSize: FONT_SIZE.xl,
     fontWeight: 'bold',
-  },
-  activeValueLabel: {
-    fontSize: FONT_SIZE.xs,
-    color: COLORS.textSecondary,
-    marginTop: 2,
   },
   chartContainer: {
-    height: 220,
-    paddingHorizontal: SPACING.sm,
-  },
-  webChartContainer: {
-    position: 'relative',
-    width: '100%',
-  },
-  gridLine: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    height: 1,
-    backgroundColor: COLORS.border,
-  },
-  lineContainer: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-  },
-  lineSegment: {
-    position: 'absolute',
-    height: 2.5,
-    transformOrigin: 'left center',
-  },
-  statsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.md,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.border,
-  },
-  statBox: {
-    alignItems: 'center',
-  },
-  statLabel: {
-    fontSize: FONT_SIZE.xs,
-    color: COLORS.textSecondary,
-    textTransform: 'uppercase',
-  },
-  statValue: {
-    fontSize: FONT_SIZE.lg,
-    fontWeight: 'bold',
-    marginTop: 4,
+    backgroundColor: COLORS.card,
+    borderRadius: BORDER_RADIUS.md,
+    padding: SPACING.sm,
   },
   emptyContainer: {
-    height: 200,
-    alignItems: 'center',
+    height: 180,
     justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: COLORS.card,
+    borderRadius: BORDER_RADIUS.md,
   },
   emptyText: {
-    fontSize: FONT_SIZE.sm,
     color: COLORS.textSecondary,
+    fontSize: FONT_SIZE.sm,
   },
 });

@@ -5,10 +5,14 @@
 
 export interface TelemetryData {
   speed: number;          // km/h (0-200)
-  g_force: number;        // g (0-3)
+  gForce: number;         // g (0-3) - renamed from g_force
+  gForceX?: number;       // optional for detailed data
+  gForceY?: number;
+  gForceZ?: number;
   temperature: number;    // °C (20-95)
   altitude: number;       // meters (0-2000)
-  timestamp_ms: number;
+  humidity?: number;      // optional
+  timestamp: number;      // renamed from timestamp_ms
 }
 
 export class TelemetrySimulator {
@@ -44,10 +48,11 @@ export class TelemetrySimulator {
 
     return {
       speed: this.addNoise(this.currentSpeed, 1.5),
-      g_force: this.addNoise(gForce, 0.08),
+      gForce: this.addNoise(gForce, 0.08),
       temperature: this.addNoise(this.engineTemp, 1.0),
       altitude: this.addNoise(this.baseAltitude, 2.0),
-      timestamp_ms: now,
+      humidity: 45 + Math.random() * 10, // 45-55%
+      timestamp: now,
     };
   }
 
@@ -194,4 +199,11 @@ export class TelemetrySimulator {
     this.currentPhase = 'idle';
     this.phaseStartTime = Date.now();
   }
+}
+
+// Helper function for quick telemetry generation
+const simulator = new TelemetrySimulator();
+
+export function generateRealisticTelemetry(): TelemetryData {
+  return simulator.generateSample();
 }

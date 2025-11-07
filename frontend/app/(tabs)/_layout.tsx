@@ -1,26 +1,36 @@
 import React from 'react';
 import { Tabs } from 'expo-router';
+import { Platform } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { COLORS } from '../../src/constants/theme';
+import { useTheme } from '../../src/contexts/ThemeContext';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function TabsLayout() {
+  const { colors, getCurrentAccent } = useTheme();
+  const accentColor = getCurrentAccent();
+  const insets = useSafeAreaInsets();
+
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: COLORS.cyan,
-        tabBarInactiveTintColor: COLORS.textSecondary,
+        tabBarActiveTintColor: accentColor,
+        tabBarInactiveTintColor: colors.textSecondary,
         tabBarStyle: {
-          backgroundColor: COLORS.card,
-          borderTopColor: COLORS.border,
+          backgroundColor: colors.card,
+          borderTopColor: colors.border,
           borderTopWidth: 1,
-          height: 70,
-          paddingBottom: 10,
-          paddingTop: 10,
+          height: Platform.OS === 'ios' ? 85 + insets.bottom : 70 + insets.bottom,
+          paddingBottom: Math.max(insets.bottom, Platform.OS === 'ios' ? 20 : 10),
+          paddingTop: 8,
         },
         tabBarLabelStyle: {
-          fontSize: 12,
+          fontSize: 10,
           fontWeight: '600',
+          marginBottom: Platform.OS === 'ios' ? 2 : 4,
+        },
+        tabBarIconStyle: {
+          marginTop: 4,
         },
       }}
     >
@@ -39,6 +49,15 @@ export default function TabsLayout() {
           title: 'Logs',
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="file-chart" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="garage"
+        options={{
+          title: 'Garage',
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="car-sports" size={size} color={color} />
           ),
         }}
       />

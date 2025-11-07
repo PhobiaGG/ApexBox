@@ -1,157 +1,68 @@
 <analysis>
-The AI engineer began by analyzing the provided app_description and confirming key requirements for the ApexBox Companion App — a mobile interface for an ESP32-based performance tracker. The user clarified that the app should interpret existing ApexBox CSV logs, simulate BLE connections, and later support real telemetry sync. After gathering user input, the engineer installed all dependencies, set up the Expo project with expo-router, created the folder structure, and generated mock log files. Core contexts, services, components, and screens (Dashboard, Logs, Groups, Settings, SessionDetail) were implemented.
+The AI engineer's work began by addressing initial feature implementations like Track Replay and Global Leaderboard, alongside critical bug fixes for Expo Go crashes related to BLE native modules and a lingering CORS issue from a forked environment. The focus then shifted to resolving Unexpected text node UI errors and preparing the app for App Store deployment, which involved  updates and an  component.
 
-The app successfully bundled and rendered the Dashboard screen in Expo Go with the neon-dark theme, connection indicators, gauges, and metric cards visible. Debugging focused on victory-native and @shopify/react-native-skia compatibility. The charts were temporarily simplified for performance testing, and the app declared stable and functional at the UI layer.
-The next phase will focus on enabling interactive logic — connecting BLE simulation, restoring charts, populating logs and group data, and integrating persistent settings.
+After resolving a syntax error in  and gaining user confirmation, new issues emerged. These included a maximum update depth exceeded error in track replay (fixed with  in ), toFixed errors (addressed by adding null/NaN checks in ), and significant UI/UX improvements for the Groups screen (crew selection, dedicated crew leaderboards, improved state filtering display, global leaderboard styling with rankings and pagination). A major challenge with state-filtered leaderboards due to Firebase indexing limitations was circumvented by client-side filtering in . The latest fixes involved correcting property name mismatches in  for displaying stats and ensuring the user's state is consistently updated in leaderboard entries in , with additional debugging logs implemented for state filtering.
 </analysis>
+
 <product_requirements>
-The ApexBox Companion app serves as a dashboard and data viewer for an ESP32-powered performance tracking device.
-It must read and interpret /ApexBox_Logs/{Date}/{Time}.csv files, simulate BLE telemetry connections, display real-time data visualization, and manage user preferences.
-
-Core product goals:
-
-Mock BLE simulation: Connect/disconnect to devices named ApexBox-001, ApexBox-002, simulate telemetry (speed, G-force, temp, altitude), and mock commands for “Start Analysis” and “Sync Logs” with haptic feedback.
-
-Data Handling: Use Expo FileSystem to browse and load CSV sessions, compute key metrics (Peak Speed, Avg Speed, Peak G-Force, Temp Range, Altitude Change, Duration), and cache results with AsyncStorage.
-
-Navigation: Bottom tab navigator featuring:
-
-Dashboard: Live telemetry gauges and metric cards.
-
-Logs: Session browser grouped by date.
-
-Session Detail: Detailed summaries and charts.
-
-Groups: Local leaderboard and community mock data.
-
-Settings: Profile, Units, Theme, Connectivity, System Info.
-
-Design: Neon-dark theme with Orbitron/Rajdhani fonts, accent colors (Cyan, Magenta, Lime), rounded glossy cards, haptic-enhanced interactions.
-
-Compatibility: Fully functional in Expo Go and Android build targets.
-
-Stability: Graceful empty-state handling when no CSVs or BLE connections exist.
+The ApexBox Companion app serves as a performance tracker dashboard for an ESP32 device, displaying simulated BLE telemetry data (speed, G-force, temperature, altitude) with haptic feedback. It processes CSV logs, calculates metrics, and caches results. The app features core navigation including Dashboard, Logs, Session Detail, Groups (leaderboard), and Settings, with a dark theme, specific fonts, and accent colors. Authentication is via Firebase, profile management is in place, and a garage system manages cars with optimistic UI. Dynamic theming, global unit conversion, and premium features (ApexBox Pro Pack, RevenueCat integration) are also implemented. GPS tracking, session sharing, and  (with mock fallback) are functional. Recent additions include a Track Replay button in  and a Global Leaderboard with state filtering in  fetching real data. The user has explicitly requested to keep existing icons and to make the app ready for App Store deployment while maintaining Expo Go compatibility. Further requests include improving the Groups page with a crew selection dropdown, displaying crew-specific leaderboards, allowing users to leave groups, navigating to a full screen for group details instead of a popup, fixing maximum update depth exceeded error on track replay, adjusting the APEXBOX COMPANION text in the session sharing popup, ensuring state filtering works correctly in global leaderboards, rounding leaderboard numbers, improving leaderboard card styling (bold numbers, ranking, pagination), and resolving invalid number formatting character errors.
 </product_requirements>
+
 <key_technical_concepts>
-Expo React Native: Core framework for mobile app development.
-
-expo-router: File-based navigation handling.
-
-React Navigation: Tab and stack navigation management.
-
-Expo FileSystem: Reads and parses ApexBox CSV logs from local assets.
-
-AsyncStorage: Persists settings, mock data, and user state.
-
-Victory-native: For telemetry chart visualization (Speed, G, Temp, Alt vs Time).
-
-Expo Haptics: Provides tactile feedback for BLE and button interactions.
-
-Mock BLE: Simulated BLE logic for testing connectivity and telemetry updates.
-
-@shopify/react-native-skia: Peer dependency required for victory-native rendering.
-
-Expo Sharing: Enables CSV exports for sessions.
+-   **Expo React Native:** Cross-platform mobile app development.
+-   ** & React Navigation:** File-based and tab/stack navigation.
+-   **Firebase (Auth, Firestore, Storage):** Backend for user authentication, database, and cloud storage.
+-   **:** Bluetooth Low Energy communication (with mock fallback).
+-   **RevenueCat:** In-app purchases and subscription management.
+-   **Context API:** React's built-in state management for global data.
+-   **:** Rendering vector graphics for charts and track replay.
+-   **:** GPS data capture.
 </key_technical_concepts>
+
 <code_architecture>
-The project uses a modular Expo React Native structure emphasizing scalability and clean separation between UI, logic, and storage.
 
-/app
-├── backend/
-├── frontend/
-    ├── app/
-        ├── (tabs)/
-            ├── _layout.tsx
-            ├── dashboard.tsx
-            ├── logs.tsx
-            ├── groups.tsx
-            ├── settings.tsx
-        ├── logs/[date]/[file].tsx  (SessionDetailScreen)
-        ├── _layout.tsx
-    ├── src/
-        ├── components/
-            ├── ChartView.tsx
-            ├── Gauge.tsx
-            ├── GroupCard.tsx
-            ├── MetricCard.tsx
-            ├── SettingSection.tsx
-        ├── constants/
-            ├── theme.ts
-        ├── contexts/
-            ├── BleContext.tsx
-            ├── LogsContext.tsx
-            ├── SettingsContext.tsx
-        ├── services/
-            ├── BleService.ts
-            ├── MockBleService.ts
-            ├── LogService.ts
-            ├── GroupService.ts
-            ├── SettingsService.ts
-        ├── utils/
-            ├── csv.ts
-            ├── format.ts
-
-
-Dashboard: Displays telemetry gauges, BLE state, and quick stats.
-
-Logs: Lists sessions, grouped by date, linking to detail pages.
-
-SessionDetail: Displays parsed CSV data and charts.
-
-Groups: Shows local leaderboard data from AsyncStorage.
-
-Settings: Manages user profile, theme, units, and BLE preferences.
+-   : Configures bottom tab navigator. No recent changes.
+-   : Root app layout. **Changes**: Wrapped content with  for graceful error handling.
+-   : **New file** created as a route for the .
+-   : Expo configuration. **Changes**: Updated with App Store metadata and configurations (e.g., build number, display name, scheme, iOS/Android specific settings).
+-   : **New file** for a React Error Boundary component to catch UI errors gracefully and display a fallback UI.
+-   : Component for session snapshots. **Changes**: Adjusted footer margin (likely  style) to prevent text overlap.
+-   : **New file** created to display details and a specific leaderboard for a chosen crew.
+-   : Crews and leaderboards screen. **Changes**: Significantly refactored to:
+    -   Navigate to  instead of showing a modal for crew details.
+    -   Remove old leave crew functionality.
+    -   Re-introduce crew selection dropdown and display crew-specific leaderboards.
+    -   Improve state picker modal styling for better visibility and scrollability by adding missing styles (e.g., , ).
+    -   Update global leaderboard cards to display rounded numbers, rankings (#1, #2, etc., up to 50), larger bold numbers for values, and a Load More button for pagination.
+    -   Remove various unused state variables, functions, and styles related to old crew selection/picker logic.
+    -   Fixed a syntax error ().
+-   : Session details. **Changes**: Fixed maximum update depth exceeded error by using  to ensure GPS data fetching () is called only once. Also, corrected the display of session statistics by changing  to  and  to  to match the properties returned by .
+-   : Handles leaderboard data. **Changes**:
+    -   Implemented a client-side filtering workaround for state-filtered leaderboards in  and  due to Firebase indexing limitations.
+    -   Modified  to ensure the user's  field is always updated, not just on new entries, to correctly reflect state-filtered leaderboards.
+    -   Added debugging logs for state filtering.
+-   : Utility for formatting numbers. **Changes**: Added  and / checks to , , , , , and  to prevent toFixed of undefined and invalid number formatting character errors.
+-   : **New file** providing guidance for App Store submission assets.
+-   : **New file** outlining deployment steps.
+-   : **New file** created for summarizing fixes.
+-   : **New file** summarizing the production readiness work.
 </code_architecture>
+
 <pending_tasks>
- BLE Simulation Logic: Implement scanning, connecting, and streaming mock telemetry (speed, g, temp, altitude) via MockBleService.
-
- BLE Context Integration: Reflect real-time BLE state on Dashboard and Settings.
-
- Victory-native Restoration: Re-enable and debug chart rendering for Speed, G, Temp, and Altitude data.
-
- Logs & Analytics: Parse CSVs asynchronously, compute session stats, and save to AsyncStorage.
-
- Groups: Display dynamic leaderboards and allow join/create mock functionality.
-
- Settings Enhancements: Persist profile data, handle BLE auto-connect, implement reset and export options.
-
- Haptics: Add tactile feedback for BLE actions, Start/Stop buttons, and navigation.
-
- Error Handling: Gracefully handle missing CSVs, corrupted data, or BLE disconnections.
-
- Developer Options: Add hidden settings for debugging mock BLE and logs.
+- Investigate Firebase indexing requirements for efficient state filtering in leaderboards (cannot be fixed directly by agent).
+- Comprehensive end-to-end testing of RevenueCat premium purchase flow on a physical device.
+- Further performance optimizations for large telemetry datasets.
 </pending_tasks>
+
 <current_work>
-The app currently builds and runs successfully in Expo Go, with all navigation routes functioning.
-The Dashboard is fully themed and renders gauges, connection indicators, and metrics correctly.
-Mock CSVs are accessible and partially parsed by LogService.
-The chart visualization (ChartView.tsx) was simplified during debugging but is planned for reactivation in the next iteration.
-
-Focus is now shifting to:
-
-Integrating BLE simulation and telemetry updates,
-
-Restoring full chart visualization,
-
-Populating the Logs, Groups, and Settings screens with live mock data,
-
-Adding haptics and persistent user configuration.
-
-The app’s visual design, theming, and navigation layer are confirmed to be stable and production-quality.
+Immediately before this summary, the AI engineer was addressing two critical issues reported by the user:
+1.  **invalid number formatting error** when opening logs, which was re-emerging. This was traced to a mismatch in property names between  and the  function in .  was expecting  and , while  returns  and . The AI engineer corrected  to use the  and  properties.
+    
+2.  **State filtering issue** where the user's profile was not appearing on the global leaderboard when filtering by their specific state (e.g., Washington). The investigation revealed that the  method in  was only setting the  field on *new* leaderboard entries, not updating it for *existing* entries. The AI engineer modified this service to ensure the  field is always updated.
+    
+Additionally, debugging logs were added to both  and  to aid in further troubleshooting of the state filtering mechanism. The frontend application was restarted after these changes.
 </current_work>
+
 <optional_next_step>
-Once mock BLE and telemetry logic are stable:
-
-Replace simulated BLE with real BLE streaming using react-native-ble-plx and ApexBox’s advertised services (Speed, G, Temp, Alt characteristics).
-
-Add Firebase integration for user authentication, cloud log sync, and leaderboards.
-
-Introduce session replay animations and export options (CSV, JSON).
-
-Optionally add a Firmware Update via BLE (OTA) system for advanced users.
-
-In the short term, the next goal is to:
-
-Fully connect BLE simulation → Dashboard → Logs parsing → Victory charts
-producing a self-contained, interactive demo ready for real ApexBox hardware integration.
+Review the application logs to verify the state filtering and number formatting fixes.
 </optional_next_step>

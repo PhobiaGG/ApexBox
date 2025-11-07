@@ -8,23 +8,31 @@ import {
   Switch,
   TextInput,
   Alert,
+  Modal,
 } from 'react-native';
+import { Picker } from '@react-native-picker/picker';
 import { SPACING, FONT_SIZE, BORDER_RADIUS } from '../constants/theme';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSettings } from '../contexts/SettingsContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
+import { useBle } from '../contexts/BleContext';
 import UserAvatar from '../components/UserAvatar';
 import AddCarModal, { CarData } from '../components/AddCarModal';
+import ChangeUsernameModal from '../components/ChangeUsernameModal';
 import * as ImagePicker from 'expo-image-picker';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
+import LeaderboardService from '../services/LeaderboardService';
 
 export default function SettingsScreen() {
   const { settings, updateUnits, toggleDeveloperMode, resetSettings } = useSettings();
-  const { mode, colors, accentColor, toggleMode, setAccentColor, getCurrentAccent } = useTheme();
-  const { profile, garage, updateProfile, uploadAvatar, addCar, setActiveCar, deleteCar, logout, deleteAccount } = useAuth();
+  const { mode, colors, accentColor, setAccentColor, getCurrentAccent, toggleMode } = useTheme();
+  const { profile, updateUsername, uploadAvatar, addCar, setActiveCar, deleteCar, signOut, updateUserState } = useAuth();
+  const { forgetDevice } = useBle();
+
+  const garage = profile?.garage || [];
   const router = useRouter();
   
   const [tapCount, setTapCount] = useState(0);
@@ -32,6 +40,8 @@ export default function SettingsScreen() {
   const [carYear, setCarYear] = useState(profile?.carYear || '');
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [showAddCar, setShowAddCar] = useState(false);
+  const [showChangeUsername, setShowChangeUsername] = useState(false);
+  const [showStateModal, setShowStateModal] = useState(false);
 
   const accentColorValue = getCurrentAccent();
 
@@ -67,14 +77,15 @@ export default function SettingsScreen() {
         setUploadingAvatar(true);
         await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
         
-        const downloadURL = await uploadAvatar(result.assets[0].uri);
-        await updateProfile({ avatarURI: downloadURL });
+        // uploadAvatar handles everything internally now
+        await uploadAvatar(result.assets[0].uri);
         
         await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        Alert.alert('Success', 'Avatar updated!');
-      } catch (error) {
+        Alert.alert('Success', 'Avatar updated successfully!');
+      } catch (error: any) {
+        console.error('[SettingsScreen] Avatar upload error:', error);
         await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-        Alert.alert('Error', 'Failed to upload avatar');
+        Alert.alert('Error', error.message || 'Failed to upload avatar');
       } finally {
         setUploadingAvatar(false);
       }
@@ -89,6 +100,37 @@ export default function SettingsScreen() {
     } catch (error) {
       Alert.alert('Error', 'Failed to update profile');
     }
+  };
+
+  const handleChangeUsername = async (newUsername: string) => {
+    try {
+      await updateUsername(newUsername);
+    } catch (error: any) {
+      throw new Error(error.message || 'Failed to update username');
+    }
+  };
+
+  const handleForgetDevice = async () => {
+    Alert.alert(
+      'Forget Device',
+      'This will clear the remembered ApexBox device. You\'ll need to manually reconnect next time.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Forget',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+              await forgetDevice();
+              Alert.alert('Success', 'Device forgotten. You can reconnect from the Dashboard.');
+            } catch (error) {
+              Alert.alert('Error', 'Failed to forget device');
+            }
+          },
+        },
+      ]
+    );
   };
 
   const handleSaveCar = async (carData: CarData) => {
@@ -123,7 +165,7 @@ export default function SettingsScreen() {
         style: 'destructive',
         onPress: async () => {
           await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-          await logout();
+          await signOut();
           router.replace('/login');
         }
       }
@@ -220,7 +262,44 @@ export default function SettingsScreen() {
                 <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Email</Text>
                 <Text style={[styles.infoValue, { color: colors.text }]}>{profile.email}</Text>
               </View>
+
+              <TouchableOpacity 
+                style={[styles.infoRow, { borderBottomColor: 'transparent' }]}
+                onPress={() => setShowStateModal(true)}
+                activeOpacity={0.7}
+              >
+                <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Location</Text>
+                <View style={styles.stateValueContainer}>
+                  <Text style={[styles.infoValue, { color: colors.text }]}>
+                    {profile.state ? 
+                      LeaderboardService.getUSStates().find(s => s.code === profile.state)?.name || 'Not Set'
+                      : 'Not Set'}
+                  </Text>
+                  <MaterialCommunityIcons name="chevron-right" size={20} color={colors.textSecondary} />
+                </View>
+              </TouchableOpacity>
             </View>
+
+            <TouchableOpacity
+              style={styles.changeUsernameButton}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                setShowChangeUsername(true);
+              }}
+              activeOpacity={0.8}
+            >
+              <LinearGradient
+                colors={[accentColorValue, colors.background]}
+                style={styles.changeUsernameGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+              >
+                <MaterialCommunityIcons name="account-edit" size={20} color={colors.text} />
+                <Text style={[styles.changeUsernameText, { color: colors.text }]}>
+                  Change Username
+                </Text>
+              </LinearGradient>
+            </TouchableOpacity>
           </View>
         )}
 
@@ -444,6 +523,58 @@ export default function SettingsScreen() {
           </View>
         </View>
 
+        {/* ========== CONNECTIVITY SECTION ========== */}
+        <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Connectivity</Text>
+          
+          <TouchableOpacity 
+            style={[styles.settingRow, { borderBottomColor: 'transparent' }]} 
+            onPress={handleForgetDevice}
+          >
+            <View style={styles.settingLeft}>
+              <MaterialCommunityIcons name="bluetooth-off" size={20} color={colors.textSecondary} />
+              <Text style={[styles.settingLabel, { color: colors.text, marginLeft: SPACING.sm }]}>
+                Forget Remembered Device
+              </Text>
+            </View>
+            <MaterialCommunityIcons name="chevron-right" size={20} color={colors.textSecondary} />
+          </TouchableOpacity>
+
+          <Text style={[styles.connectivityHint, { color: colors.textTertiary }]}>
+            Clear saved ApexBox device for auto-connect
+          </Text>
+        </View>
+
+        {/* ========== PREMIUM SECTION ========== */}
+        {!profile?.premium && (
+          <TouchableOpacity
+            style={[styles.premiumCard, { backgroundColor: colors.card, borderColor: accentColorValue }]}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+              router.push('/premium');
+            }}
+            activeOpacity={0.8}
+          >
+            <LinearGradient
+              colors={[accentColorValue + '40', colors.card]}
+              style={styles.premiumGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+            >
+              <View style={styles.premiumContent}>
+                <MaterialCommunityIcons name="crown" size={32} color={accentColorValue} />
+                <View style={styles.premiumText}>
+                  <Text style={[styles.premiumTitle, { color: colors.text }]}>Upgrade to Pro</Text>
+                  <Text style={[styles.premiumSubtitle, { color: colors.textSecondary }]}>
+                    Unlock Track Replay & Crew Leaderboards
+                  </Text>
+                </View>
+              </View>
+              <MaterialCommunityIcons name="chevron-right" size={24} color={accentColorValue} />
+            </LinearGradient>
+          </TouchableOpacity>
+        )}
+
         {/* ========== SYSTEM SECTION ========== */}
         <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>System</Text>
@@ -504,6 +635,68 @@ export default function SettingsScreen() {
         onSave={handleSaveCar}
         accentColor={accentColorValue}
       />
+
+      <ChangeUsernameModal
+        visible={showChangeUsername}
+        currentUsername={profile?.displayName || ''}
+        onClose={() => setShowChangeUsername(false)}
+        onSave={handleChangeUsername}
+      />
+
+      {/* State Selection Modal */}
+      <Modal
+        visible={showStateModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowStateModal(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setShowStateModal(false)}
+        >
+          <View style={[styles.stateModalContent, { backgroundColor: colors.card }]}>
+            <View style={styles.modalHeader}>
+              <Text style={[styles.modalTitle, { color: colors.text }]}>Select Your State</Text>
+              <TouchableOpacity onPress={() => setShowStateModal(false)}>
+                <MaterialCommunityIcons name="close" size={24} color={colors.textSecondary} />
+              </TouchableOpacity>
+            </View>
+            <ScrollView style={styles.stateList}>
+              {LeaderboardService.getUSStates().map(state => (
+                <TouchableOpacity
+                  key={state.code}
+                  style={[
+                    styles.stateItem,
+                    { borderBottomColor: colors.border },
+                    profile?.state === state.code && { backgroundColor: `${accentColorValue}20` }
+                  ]}
+                  onPress={async () => {
+                    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    try {
+                      await updateUserState(state.code);
+                      setShowStateModal(false);
+                      Alert.alert('Success', `Location set to ${state.name}`);
+                    } catch (error: any) {
+                      Alert.alert('Error', error.message);
+                    }
+                  }}
+                >
+                  <Text style={[
+                    styles.stateItemText,
+                    { color: profile?.state === state.code ? accentColorValue : colors.text }
+                  ]}>
+                    {state.name}
+                  </Text>
+                  {profile?.state === state.code && (
+                    <MaterialCommunityIcons name="check" size={20} color={accentColorValue} />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </View>
   );
 }
@@ -574,6 +767,64 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZE.sm,
   },
   infoValue: {
+    fontSize: FONT_SIZE.sm,
+    fontWeight: '600',
+  },
+  stateValueContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  stateModalContent: {
+    borderTopLeftRadius: BORDER_RADIUS.xl,
+    borderTopRightRadius: BORDER_RADIUS.xl,
+    paddingTop: SPACING.lg,
+    maxHeight: '70%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: SPACING.lg,
+    paddingBottom: SPACING.md,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.1)',
+  },
+  modalTitle: {
+    fontSize: FONT_SIZE.xl,
+    fontWeight: 'bold',
+  },
+  stateList: {
+    paddingHorizontal: SPACING.lg,
+  },
+  stateItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: SPACING.md,
+    borderBottomWidth: 1,
+  },
+  stateItemText: {
+    fontSize: FONT_SIZE.md,
+  },
+  changeUsernameButton: {
+    borderRadius: BORDER_RADIUS.md,
+    overflow: 'hidden',
+    marginTop: SPACING.md,
+  },
+  changeUsernameGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: SPACING.sm,
+    gap: SPACING.xs,
+  },
+  changeUsernameText: {
     fontSize: FONT_SIZE.sm,
     fontWeight: '600',
   },
@@ -711,6 +962,46 @@ const styles = StyleSheet.create({
   developerText: {
     fontSize: FONT_SIZE.xs,
     fontWeight: 'bold',
+  },
+  settingLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  connectivityHint: {
+    fontSize: FONT_SIZE.xs,
+    paddingHorizontal: SPACING.md,
+    paddingBottom: SPACING.sm,
+    fontStyle: 'italic',
+  },
+  premiumCard: {
+    borderRadius: BORDER_RADIUS.lg,
+    borderWidth: 2,
+    overflow: 'hidden',
+    marginBottom: SPACING.md,
+  },
+  premiumGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: SPACING.lg,
+  },
+  premiumContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    gap: SPACING.md,
+  },
+  premiumText: {
+    flex: 1,
+  },
+  premiumTitle: {
+    fontSize: FONT_SIZE.lg,
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  premiumSubtitle: {
+    fontSize: FONT_SIZE.sm,
   },
   dangerButton: {
     paddingVertical: SPACING.md,

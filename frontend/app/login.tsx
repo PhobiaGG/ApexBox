@@ -13,20 +13,20 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { COLORS, SPACING, FONT_SIZE, BORDER_RADIUS } from '../src/constants/theme';
+import { SPACING, FONT_SIZE, BORDER_RADIUS } from '../src/constants/theme';
 import { useAuth } from '../src/contexts/AuthContext';
-import { useAccentColor } from '../src/hooks/useAccentColor';
+import { useTheme } from '../src/contexts/ThemeContext';
 import * as Haptics from 'expo-haptics';
 
 export default function LoginScreen() {
   const router = useRouter();
   const { signIn } = useAuth();
-  const accentColor = useAccentColor();
+  const { colors, getCurrentAccent } = useTheme();
+  const accentColor = getCurrentAccent();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [rememberMe, setRememberMe] = useState(true);
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -42,7 +42,7 @@ export default function LoginScreen() {
       await signIn(email, password);
       
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      router.replace('/(tabs)');
+      // No need to manually navigate - AuthWrapper will handle it
     } catch (error: any) {
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       Alert.alert('Login Failed', error.message || 'Invalid credentials');
@@ -62,7 +62,7 @@ export default function LoginScreen() {
   };
 
   return (
-    <LinearGradient colors={[COLORS.background, '#0F0F0F']} style={styles.container}>
+    <LinearGradient colors={[colors.background, colors.card]} style={styles.container}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
@@ -70,19 +70,19 @@ export default function LoginScreen() {
         <View style={styles.content}>
           {/* Logo/Title */}
           <View style={styles.header}>
-            <MaterialCommunityIcons name="car-speed-limiter" size={80} color={accentColor} />
-            <Text style={styles.title}>ApexBox</Text>
-            <Text style={styles.subtitle}>Performance Tracking Companion</Text>
+            <MaterialCommunityIcons name="car-sports" size={80} color={accentColor} />
+            <Text style={[styles.title, { color: colors.text }]}>ApexBox</Text>
+            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Performance Tracking Companion</Text>
           </View>
 
           {/* Login Form */}
           <View style={styles.form}>
-            <View style={styles.inputContainer}>
-              <MaterialCommunityIcons name="email-outline" size={20} color={COLORS.textSecondary} />
+            <View style={[styles.inputContainer, { backgroundColor: colors.card, borderColor: colors.border }]}>
+              <MaterialCommunityIcons name="email-outline" size={20} color={colors.textSecondary} />
               <TextInput
-                style={styles.input}
+                style={[styles.input, { color: colors.text }]}
                 placeholder="Email"
-                placeholderTextColor={COLORS.textSecondary}
+                placeholderTextColor={colors.textSecondary}
                 value={email}
                 onChangeText={setEmail}
                 autoCapitalize="none"
@@ -91,12 +91,12 @@ export default function LoginScreen() {
               />
             </View>
 
-            <View style={styles.inputContainer}>
-              <MaterialCommunityIcons name="lock-outline" size={20} color={COLORS.textSecondary} />
+            <View style={[styles.inputContainer, { backgroundColor: colors.card, borderColor: colors.border }]}>
+              <MaterialCommunityIcons name="lock-outline" size={20} color={colors.textSecondary} />
               <TextInput
-                style={styles.input}
+                style={[styles.input, { color: colors.text }]}
                 placeholder="Password"
-                placeholderTextColor={COLORS.textSecondary}
+                placeholderTextColor={colors.textSecondary}
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry={!showPassword}
@@ -107,32 +107,15 @@ export default function LoginScreen() {
                 <MaterialCommunityIcons
                   name={showPassword ? 'eye-off-outline' : 'eye-outline'}
                   size={20}
-                  color={COLORS.textSecondary}
+                  color={colors.textSecondary}
                 />
               </TouchableOpacity>
             </View>
 
-            {/* Remember Me & Forgot Password */}
-            <View style={styles.optionsRow}>
-              <TouchableOpacity
-                style={styles.rememberMe}
-                onPress={async () => {
-                  await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  setRememberMe(!rememberMe);
-                }}
-              >
-                <View style={[styles.checkbox, rememberMe && { backgroundColor: accentColor }]}>
-                  {rememberMe && (
-                    <MaterialCommunityIcons name="check" size={16} color={COLORS.text} />
-                  )}
-                </View>
-                <Text style={styles.rememberText}>Remember Me</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity onPress={handleForgotPassword}>
-                <Text style={[styles.linkText, { color: accentColor }]}>Forgot Password?</Text>
-              </TouchableOpacity>
-            </View>
+            {/* Forgot Password Link */}
+            <TouchableOpacity onPress={handleForgotPassword} style={styles.forgotPassword}>
+              <Text style={[styles.linkText, { color: accentColor }]}>Forgot Password?</Text>
+            </TouchableOpacity>
 
             {/* Login Button */}
             <TouchableOpacity
@@ -142,27 +125,28 @@ export default function LoginScreen() {
               activeOpacity={0.8}
             >
               <LinearGradient
-                colors={[accentColor, COLORS.background]}
+                colors={[accentColor, colors.background]}
                 style={styles.buttonGradient}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
               >
                 {loading ? (
-                  <ActivityIndicator color={COLORS.text} />
+                  <ActivityIndicator color={colors.text} />
                 ) : (
-                  <>
-                    <MaterialCommunityIcons name="login" size={24} color={COLORS.text} />
-                    <Text style={styles.buttonText}>Sign In</Text>
-                  </>
+                  <Text style={[styles.buttonText, { color: colors.text }]}>Sign In</Text>
                 )}
               </LinearGradient>
             </TouchableOpacity>
 
             {/* Sign Up Link */}
-            <View style={styles.signUpContainer}>
-              <Text style={styles.signUpText}>Don't have an account? </Text>
+            <View style={styles.signupContainer}>
+              <Text style={[styles.signupText, { color: colors.textSecondary }]}>
+                Don't have an account?{' '}
+              </Text>
               <TouchableOpacity onPress={handleSignUp}>
-                <Text style={[styles.signUpLink, { color: accentColor }]}>Sign Up</Text>
+                <Text style={[styles.linkText, { color: accentColor, fontWeight: 'bold' }]}>
+                  Sign Up
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -191,12 +175,10 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 48,
     fontWeight: 'bold',
-    color: COLORS.text,
     marginTop: SPACING.md,
   },
   subtitle: {
     fontSize: FONT_SIZE.md,
-    color: COLORS.textSecondary,
     marginTop: SPACING.sm,
   },
   form: {
@@ -205,10 +187,8 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.card,
     borderRadius: BORDER_RADIUS.md,
     borderWidth: 1,
-    borderColor: COLORS.border,
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.sm,
     marginBottom: SPACING.md,
@@ -216,33 +196,12 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     fontSize: FONT_SIZE.md,
-    color: COLORS.text,
     marginLeft: SPACING.sm,
     paddingVertical: SPACING.sm,
   },
-  optionsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+  forgotPassword: {
+    alignSelf: 'flex-end',
     marginBottom: SPACING.lg,
-  },
-  rememberMe: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  checkbox: {
-    width: 20,
-    height: 20,
-    borderRadius: 4,
-    borderWidth: 2,
-    borderColor: COLORS.border,
-    marginRight: SPACING.sm,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  rememberText: {
-    fontSize: FONT_SIZE.sm,
-    color: COLORS.textSecondary,
   },
   linkText: {
     fontSize: FONT_SIZE.sm,
@@ -251,31 +210,24 @@ const styles = StyleSheet.create({
   loginButton: {
     borderRadius: BORDER_RADIUS.md,
     overflow: 'hidden',
-    marginBottom: SPACING.lg,
+    marginBottom: SPACING.md,
   },
   buttonGradient: {
-    flexDirection: 'row',
+    paddingVertical: SPACING.lg,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: SPACING.md,
-    gap: SPACING.sm,
   },
   buttonText: {
     fontSize: FONT_SIZE.lg,
     fontWeight: 'bold',
-    color: COLORS.text,
   },
-  signUpContainer: {
+  signupContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
+    marginTop: SPACING.lg,
   },
-  signUpText: {
+  signupText: {
     fontSize: FONT_SIZE.md,
-    color: COLORS.textSecondary,
-  },
-  signUpLink: {
-    fontSize: FONT_SIZE.md,
-    fontWeight: 'bold',
   },
 });

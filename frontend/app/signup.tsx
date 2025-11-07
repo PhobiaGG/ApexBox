@@ -16,13 +16,14 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { COLORS, SPACING, FONT_SIZE, BORDER_RADIUS } from '../src/constants/theme';
 import { useAuth } from '../src/contexts/AuthContext';
-import { useAccentColor } from '../src/hooks/useAccentColor';
+import { useTheme } from '../src/contexts/ThemeContext';
 import * as Haptics from 'expo-haptics';
 
 export default function SignUpScreen() {
   const router = useRouter();
   const { signUp } = useAuth();
-  const accentColor = useAccentColor();
+  const { colors, getCurrentAccent } = useTheme();
+  const accentColor = getCurrentAccent();
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -55,7 +56,12 @@ export default function SignUpScreen() {
   };
 
   const handleSignUp = async () => {
+    console.log('[SignUp] Starting signup process...');
+    console.log('[SignUp] Display Name:', displayName);
+    console.log('[SignUp] Email:', email);
+    
     if (!validateInputs()) {
+      console.log('[SignUp] Validation failed');
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       return;
     }
@@ -64,8 +70,10 @@ export default function SignUpScreen() {
       setLoading(true);
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       
+      console.log('[SignUp] Calling signUp function...');
       await signUp(email, password, displayName);
       
+      console.log('[SignUp] Signup successful!');
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       Alert.alert(
         'Account Created!',
@@ -73,6 +81,7 @@ export default function SignUpScreen() {
         [{ text: 'Continue', onPress: () => router.replace('/(tabs)') }]
       );
     } catch (error: any) {
+      console.error('[SignUp] Error:', error);
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       Alert.alert('Sign Up Failed', error.message || 'Unable to create account');
     } finally {
@@ -179,16 +188,16 @@ export default function SignUpScreen() {
               activeOpacity={0.8}
             >
               <LinearGradient
-                colors={[accentColor, COLORS.background]}
+                colors={[accentColor, colors.background]}
                 style={styles.buttonGradient}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
               >
                 {loading ? (
-                  <ActivityIndicator color={COLORS.text} />
+                  <ActivityIndicator color={colors.text} />
                 ) : (
                   <>
-                    <MaterialCommunityIcons name="account-check" size={24} color={COLORS.text} />
+                    <MaterialCommunityIcons name="account-check" size={24} color={colors.text} />
                     <Text style={styles.buttonText}>Create Account</Text>
                   </>
                 )}

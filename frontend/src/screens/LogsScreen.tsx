@@ -12,18 +12,32 @@ import { COLORS, SPACING, FONT_SIZE, BORDER_RADIUS } from '../constants/theme';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLogs } from '../contexts/LogsContext';
+import { useBle } from '../contexts/BleContext';
+import { useSettings } from '../contexts/SettingsContext';
 import { useRouter } from 'expo-router';
+import { convertSpeed, getSpeedUnit } from '../utils/format';
 import * as Haptics from 'expo-haptics';
 import Sparkline from '../components/Sparkline';
+import LogService, { SessionMetadata } from '../services/LogService';
+import { LogCardSkeleton } from '../components/LoadingSkeleton';
+import EmptyState from '../components/EmptyState';
+import ErrorHandler from '../utils/errorHandler';
 
 type SortMode = 'date' | 'peakSpeed' | 'duration';
 
 export default function LogsScreen() {
   const { sessionsByDate, isLoading, rescan } = useLogs();
+  const { status, sendCommand } = useBle();
+  const { settings } = useSettings();
   const router = useRouter();
+  const isMetric = settings.units?.isMetric ?? true; // Default to metric if undefined
+  
+  console.log('[LogsScreen] Settings:', settings.units, 'isMetric:', isMetric);
+  console.log('[LogsScreen] Test conversion: 100 km/h =', convertSpeed(100, isMetric), isMetric ? 'km/h' : 'mph');
   const [expandedDates, setExpandedDates] = useState<Set<string>>(new Set());
   const [refreshing, setRefreshing] = useState(false);
   const [sortMode, setSortMode] = useState<SortMode>('date');
+  const [deletingSession, setDeletingSession] = useState<string | null>(null);
 
   const dates = Object.keys(sessionsByDate).sort().reverse();
 
@@ -63,6 +77,93 @@ export default function LogsScreen() {
     setRefreshing(false);
   };
 
+  const handleDeleteSession = (session: SessionMetadata) => {
+    const isConnected = status === 'connected';
+    
+    const message = isConnected
+      ? `Delete this session?\n\nThis will remove:\n• Local app data\n• Files from ApexBox SD card\n\nThis action cannot be undone.`
+      : `Delete this session?\n\n⚠️ ApexBox is not connected.\n\nThis will only remove the local app data. The file will remain on the ApexBox SD card until you connect and delete it manually.\n\nContinue?`;
+
+    Alert.alert(
+      'Delete Session',
+      message,
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+          onPress: () => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light),
+        },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            await performDelete(session, isConnected);
+          },
+        },
+      ]
+    );
+  };
+
+  const performDelete = async (session: SessionMetadata, isConnected: boolean) => {
+    try {
+      setDeletingSession(session.fileName);
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
+      // Delete from local storage
+      await LogService.deleteSession(session);
+
+      // If connected to ApexBox, also delete from SD card
+      if (isConnected) {
+        try {
+          await LogService.deleteFromApexBox(session, sendCommand);
+        } catch (error) {
+          console.error('[LogsScreen] Error deleting from ApexBox:', error);
+          // Continue even if ApexBox deletion fails
+        }
+      }
+
+      // Refresh the logs list
+      await rescan();
+
+      const successMessage = isConnected
+        ? 'Session deleted from app and ApexBox'
+        : 'Session deleted from app (ApexBox not connected)';
+      
+      await ErrorHandler.success(successMessage);
+    } catch (error) {
+      console.error('[LogsScreen] Error deleting session:', error);
+      ErrorHandler.handle(error, {
+        label: 'Try Again',
+        onPress: () => performDelete(session, isConnected)
+      });
+    } finally {
+      setDeletingSession(null);
+    }
+  };
+
+  // Show loading skeletons while loading
+  if (isLoading) {
+    return (
+      <View style={styles.container}>
+        <LinearGradient colors={[COLORS.background, '#0F0F0F']} style={styles.gradient}>
+          <View style={styles.header}>
+            <Text style={styles.title}>Session Logs</Text>
+            <TouchableOpacity onPress={handleRescan} style={styles.headerButton}>
+              <MaterialCommunityIcons name="refresh" size={24} color={COLORS.cyan} />
+            </TouchableOpacity>
+          </View>
+          <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+            <LogCardSkeleton />
+            <LogCardSkeleton />
+            <LogCardSkeleton />
+            <LogCardSkeleton />
+          </ScrollView>
+        </LinearGradient>
+      </View>
+    );
+  }
+
+  // Show empty state if no sessions
   if (dates.length === 0) {
     return (
       <View style={styles.container}>
@@ -73,18 +174,14 @@ export default function LogsScreen() {
               <MaterialCommunityIcons name="refresh" size={24} color={COLORS.cyan} />
             </TouchableOpacity>
           </View>
-
-          <View style={styles.emptyContainer}>
-            <MaterialCommunityIcons name="folder-open" size={80} color={COLORS.textTertiary} />
-            <Text style={styles.emptyTitle}>No Logs Found</Text>
-            <Text style={styles.emptyText}>Connect your ApexBox and sync logs to get started</Text>
-            <TouchableOpacity style={styles.refreshButton} onPress={handleRescan}>
-              <LinearGradient colors={[COLORS.cyan, '#0088AA']} style={styles.refreshGradient}>
-                <MaterialCommunityIcons name="refresh" size={20} color={COLORS.text} />
-                <Text style={styles.refreshButtonText}>Refresh</Text>
-              </LinearGradient>
-            </TouchableOpacity>
-          </View>
+          <EmptyState
+            icon="file-document-outline"
+            title="No Sessions Yet"
+            message="Start recording by connecting your ApexBox and tapping 'Start Analysis' on the Dashboard"
+            actionLabel="Refresh"
+            onAction={handleRescan}
+            accentColor={COLORS.cyan}
+          />
         </LinearGradient>
       </View>
     );
@@ -141,86 +238,104 @@ export default function LogsScreen() {
                 {isExpanded && (
                   <View style={styles.sessionsList}>
                     {sessions.map(session => {
-                      // Generate sparkline data (simplified for now - use actual session data when available)
+                      // Generate sparkline data with unit conversion
                       const sparklineData = session.stats
                         ? [
-                            session.stats.avgSpeed * 0.7,
-                            session.stats.peakSpeed * 0.85,
-                            session.stats.peakSpeed,
-                            session.stats.peakSpeed * 0.9,
-                            session.stats.avgSpeed * 0.8,
+                            convertSpeed(session.stats.avgSpeed * 0.7, isMetric),
+                            convertSpeed(session.stats.peakSpeed * 0.85, isMetric),
+                            convertSpeed(session.stats.peakSpeed, isMetric),
+                            convertSpeed(session.stats.peakSpeed * 0.9, isMetric),
+                            convertSpeed(session.stats.avgSpeed * 0.8, isMetric),
                           ]
                         : [];
 
+                      const isDeleting = deletingSession === session.fileName;
+
                       return (
-                        <TouchableOpacity
-                          key={session.fileName}
-                          style={styles.sessionItem}
-                          onPress={() => handleSessionPress(date, session.fileName)}
-                          activeOpacity={0.7}
-                        >
-                          <LinearGradient
-                            colors={[COLORS.card, COLORS.background]}
-                            style={styles.sessionGradient}
+                        <View key={session.fileName} style={styles.sessionItem}>
+                          <TouchableOpacity
+                            style={styles.sessionCard}
+                            onPress={() => handleSessionPress(date, session.fileName)}
+                            activeOpacity={0.7}
+                            disabled={isDeleting}
                           >
-                            <View style={styles.sessionHeader}>
-                              <View style={styles.sessionLeft}>
-                                <MaterialCommunityIcons
-                                  name="timer-outline"
-                                  size={18}
-                                  color={COLORS.textSecondary}
-                                />
-                                <Text style={styles.sessionTime}>{session.time}</Text>
+                            <LinearGradient
+                              colors={[COLORS.card, COLORS.background]}
+                              style={styles.sessionGradient}
+                            >
+                              <View style={styles.sessionHeader}>
+                                <View style={styles.sessionLeft}>
+                                  <MaterialCommunityIcons
+                                    name="timer-outline"
+                                    size={18}
+                                    color={COLORS.textSecondary}
+                                  />
+                                  <Text style={styles.sessionTime}>{session.time}</Text>
+                                </View>
+
+                                {session.stats && (
+                                  <View style={styles.sessionStats}>
+                                    <View style={styles.statChip}>
+                                      <MaterialCommunityIcons
+                                        name="speedometer"
+                                        size={14}
+                                        color={COLORS.cyan}
+                                      />
+                                      <Text style={[styles.statChipText, { color: COLORS.cyan }]}>
+                                        {convertSpeed(session.stats.peakSpeed, isMetric).toFixed(0)} {getSpeedUnit(isMetric)}
+                                      </Text>
+                                    </View>
+                                    <View style={styles.statChip}>
+                                      <MaterialCommunityIcons
+                                        name="clock-outline"
+                                        size={14}
+                                        color={COLORS.magenta}
+                                      />
+                                      <Text style={[styles.statChipText, { color: COLORS.magenta }]}>
+                                        {Math.floor(session.stats.duration)}s
+                                      </Text>
+                                    </View>
+                                  </View>
+                                )}
                               </View>
 
-                              {session.stats && (
-                                <View style={styles.sessionStats}>
-                                  <View style={styles.statChip}>
-                                    <MaterialCommunityIcons
-                                      name="speedometer"
-                                      size={14}
-                                      color={COLORS.cyan}
-                                    />
-                                    <Text style={[styles.statChipText, { color: COLORS.cyan }]}>
-                                      {session.stats.peakSpeed.toFixed(0)}
-                                    </Text>
-                                  </View>
-                                  <View style={styles.statChip}>
-                                    <MaterialCommunityIcons
-                                      name="clock-outline"
-                                      size={14}
-                                      color={COLORS.magenta}
-                                    />
-                                    <Text style={[styles.statChipText, { color: COLORS.magenta }]}>
-                                      {Math.floor(session.stats.duration)}s
-                                    </Text>
-                                  </View>
+                              {sparklineData.length > 0 && (
+                                <View style={styles.sparklineContainer}>
+                                  <Sparkline
+                                    data={sparklineData}
+                                    width={280}
+                                    height={40}
+                                    color={COLORS.lime}
+                                    lineWidth={2}
+                                  />
                                 </View>
                               )}
-                            </View>
 
-                            {sparklineData.length > 0 && (
-                              <View style={styles.sparklineContainer}>
-                                <Sparkline
-                                  data={sparklineData}
-                                  width={280}
-                                  height={40}
-                                  color={COLORS.lime}
-                                  lineWidth={2}
+                              <View style={styles.sessionFooter}>
+                                <Text style={styles.sessionHint}>Tap to view details</Text>
+                                <MaterialCommunityIcons
+                                  name="chevron-right"
+                                  size={18}
+                                  color={COLORS.textTertiary}
                                 />
                               </View>
-                            )}
+                            </LinearGradient>
+                          </TouchableOpacity>
 
-                            <View style={styles.sessionFooter}>
-                              <Text style={styles.sessionHint}>Tap to view details</Text>
-                              <MaterialCommunityIcons
-                                name="chevron-right"
-                                size={18}
-                                color={COLORS.textTertiary}
-                              />
-                            </View>
-                          </LinearGradient>
-                        </TouchableOpacity>
+                          {/* Delete Button */}
+                          <TouchableOpacity
+                            style={styles.deleteButton}
+                            onPress={() => handleDeleteSession(session)}
+                            disabled={isDeleting}
+                            activeOpacity={0.7}
+                          >
+                            <MaterialCommunityIcons
+                              name={isDeleting ? "loading" : "trash-can-outline"}
+                              size={20}
+                              color={isDeleting ? COLORS.textSecondary : COLORS.danger}
+                            />
+                          </TouchableOpacity>
+                        </View>
                       );
                     })}
                   </View>
@@ -306,6 +421,12 @@ const styles = StyleSheet.create({
     gap: SPACING.sm,
   },
   sessionItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.sm,
+  },
+  sessionCard: {
+    flex: 1,
     borderRadius: BORDER_RADIUS.md,
     overflow: 'hidden',
     borderWidth: 1,
@@ -317,6 +438,16 @@ const styles = StyleSheet.create({
     paddingVertical: SPACING.md,
     borderRadius: BORDER_RADIUS.md,
     gap: SPACING.sm,
+  },
+  deleteButton: {
+    width: 44,
+    height: 44,
+    borderRadius: BORDER_RADIUS.md,
+    backgroundColor: COLORS.card,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   sessionHeader: {
     flexDirection: 'row',

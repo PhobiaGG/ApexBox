@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -31,6 +31,7 @@ export interface CarData {
   model: string;
   year: string;
   color: string;
+  upgrades?: string;
 }
 
 export default function AddCarModal({ visible, onClose, onSave, accentColor, editCar }: AddCarModalProps) {
@@ -39,7 +40,18 @@ export default function AddCarModal({ visible, onClose, onSave, accentColor, edi
   const [model, setModel] = useState(editCar?.model || '');
   const [year, setYear] = useState(editCar?.year || '');
   const [color, setColor] = useState(editCar?.color || '');
+  const [upgrades, setUpgrades] = useState(editCar?.upgrades || '');
   const [loading, setLoading] = useState(false);
+
+  // Reset form fields when editCar changes
+  useEffect(() => {
+    setNickname(editCar?.nickname || '');
+    setMake(editCar?.make || '');
+    setModel(editCar?.model || '');
+    setYear(editCar?.year || '');
+    setColor(editCar?.color || '');
+    setUpgrades(editCar?.upgrades || '');
+  }, [editCar]);
 
   const validateInputs = (): boolean => {
     if (!nickname.trim()) {
@@ -86,6 +98,7 @@ export default function AddCarModal({ visible, onClose, onSave, accentColor, edi
         model: model.trim(),
         year: year.trim(),
         color: color.trim(),
+        upgrades: upgrades.trim(),
       });
 
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -96,6 +109,7 @@ export default function AddCarModal({ visible, onClose, onSave, accentColor, edi
       setModel('');
       setYear('');
       setColor('');
+      setUpgrades('');
       
       onClose();
     } catch (error) {
@@ -113,6 +127,7 @@ export default function AddCarModal({ visible, onClose, onSave, accentColor, edi
     setModel('');
     setYear('');
     setColor('');
+    setUpgrades('');
     onClose();
   };
 
@@ -137,6 +152,9 @@ export default function AddCarModal({ visible, onClose, onSave, accentColor, edi
               <View style={styles.header}>
                 <MaterialCommunityIcons name="car-sports" size={40} color={accentColor} />
                 <Text style={styles.title}>{editCar ? 'Edit Car' : 'Add New Car'}</Text>
+                <Text style={styles.subtitle}>
+                  {editCar ? 'Update your vehicle details' : 'Add a vehicle to your garage'}
+                </Text>
                 <TouchableOpacity style={styles.closeButton} onPress={handleCancel}>
                   <MaterialCommunityIcons name="close" size={28} color={COLORS.textSecondary} />
                 </TouchableOpacity>
@@ -226,6 +244,29 @@ export default function AddCarModal({ visible, onClose, onSave, accentColor, edi
                     />
                   </View>
                 </View>
+
+                {/* Upgrades */}
+                <View style={styles.inputContainer}>
+                  <Text style={styles.label}>Upgrades (Optional)</Text>
+                  <View style={[styles.inputWrapper, { alignItems: 'flex-start' }]}>
+                    <MaterialCommunityIcons 
+                      name="wrench" 
+                      size={20} 
+                      color={COLORS.textSecondary} 
+                      style={{ marginTop: 12 }}
+                    />
+                    <TextInput
+                      style={[styles.input, { minHeight: 80 }]}
+                      placeholder="e.g., Cold air intake, cat-back exhaust, tuned ECU..."
+                      placeholderTextColor={COLORS.textSecondary}
+                      value={upgrades}
+                      onChangeText={setUpgrades}
+                      multiline
+                      numberOfLines={4}
+                      textAlignVertical="top"
+                    />
+                  </View>
+                </View>
               </ScrollView>
 
               {/* Action Buttons */}
@@ -297,6 +338,12 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: COLORS.text,
     marginTop: SPACING.sm,
+  },
+  subtitle: {
+    fontSize: FONT_SIZE.sm,
+    color: COLORS.textSecondary,
+    marginTop: SPACING.xs,
+    textAlign: 'center',
   },
   closeButton: {
     position: 'absolute',

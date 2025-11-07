@@ -1,0 +1,66 @@
+// Firestore Security Rules for ApexBox Companion
+// Copy and paste these into Firebase Console → Firestore → Rules
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper function to check if user is authenticated
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    // Helper function to check if user owns the document
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+    
+    // Users collection
+    match /users/{userId} {
+      // Allow users to read and write their own profile
+      allow read, write: if isOwner(userId);
+      
+      // Garage subcollection
+      match /garage/{carId} {
+        allow read, write: if isOwner(userId);
+      }
+    }
+    
+    // Crews collection
+    match /crews/{crewId} {
+      // Anyone authenticated can read crews
+      allow read: if isSignedIn();
+      
+      // Only authenticated users can create crews
+      allow create: if isSignedIn() && 
+                      request.resource.data.adminId == request.auth.uid;
+      
+      // Only admin can update or delete crew
+      allow update, delete: if isSignedIn() && 
+                               resource.data.adminId == request.auth.uid;
+    }
+    
+    // Leaderboard collection
+    match /leaderboard/{userId} {
+      // Anyone can read leaderboard entries
+      allow read: if true;
+      
+      // Only the user can write their own leaderboard entry
+      allow write: if isSignedIn() && 
+                     (request.auth.uid == userId || 
+                      request.auth.uid == request.resource.data.uid);
+    }
+    
+    // Sessions collection (if you add cloud sync)
+    match /sessions/{sessionId} {
+      // Users can read their own sessions
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+      
+      // Users can create their own sessions
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      
+      // Users can update/delete their own sessions
+      allow update, delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+    }
+  }
+}

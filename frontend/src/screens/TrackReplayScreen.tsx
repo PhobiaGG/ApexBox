@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
   Dimensions,
   Alert,
-  ScrollView,
+  ScrollView, // ✅ ADD THIS
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -15,9 +15,16 @@ import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { SPACING, FONT_SIZE, BORDER_RADIUS } from '../constants/theme';
 import * as Haptics from 'expo-haptics';
-import Svg, { Path, Circle, G, Defs, LinearGradient as SvgGradient, Stop } from 'react-native-svg';
-import { GestureHandlerRootView, PinchGestureHandler, PanGestureHandler, State } from 'react-native-gesture-handler';
+import Svg, { Path, Circle, G, Text as SvgText } from 'react-native-svg';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import GeocodingService from '../services/GeocodingService';
+
+const safeFormat = (value: any, decimals: number = 0, fallback: string = '--'): string => {
+  if (value === null || value === undefined) return fallback;
+  const num = Number(value);
+  if (isNaN(num) || !isFinite(num)) return fallback;
+  return num.toFixed(decimals);
+};
 
 const { width, height } = Dimensions.get('window');
 
@@ -29,7 +36,7 @@ interface GPSPoint {
   timestamp: number;
 }
 
-// Performance optimization: Downsample GPS points for display
+// Downsample GPS points for display
 const downsamplePoints = (points: GPSPoint[], maxPoints: number = 200): GPSPoint[] => {
   if (points.length <= maxPoints) return points;
   
@@ -40,7 +47,6 @@ const downsamplePoints = (points: GPSPoint[], maxPoints: number = 200): GPSPoint
     downsampled.push(points[i]);
   }
   
-  // Always include the last point
   if (downsampled[downsampled.length - 1] !== points[points.length - 1]) {
     downsampled.push(points[points.length - 1]);
   }
@@ -48,27 +54,22 @@ const downsamplePoints = (points: GPSPoint[], maxPoints: number = 200): GPSPoint
   return downsampled;
 };
 
-// Mock GPS data for demonstration (realistic track pattern)
+// Mock GPS data for demonstration
 const generateMockGPSData = (): GPSPoint[] => {
   const points: GPSPoint[] = [];
   const centerLat = 37.7749;
   const centerLon = -122.4194;
-  const numPoints = 100; // Increased for smoother visualization
+  const numPoints = 100;
 
-  // Create a figure-8 track pattern
   for (let i = 0; i < numPoints; i++) {
-    const t = (i / numPoints) * Math.PI * 4; // 2 loops
+    const t = (i / numPoints) * Math.PI * 4;
     const radius = 0.008;
     
-    // Figure-8 parametric equations
     const lat = centerLat + radius * Math.sin(t);
     const lon = centerLon + radius * Math.sin(t) * Math.cos(t);
     
-    // Simulate speed variations (faster on straights, slower on turns)
     const curvature = Math.abs(Math.cos(t * 2));
     const speed = 40 + curvature * 80;
-    
-    // G-force correlates with speed changes and turns
     const gForce = 0.3 + curvature * 2.5;
     
     points.push({
@@ -94,25 +95,34 @@ export default function TrackReplayScreen() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [mapBounds, setMapBounds] = useState({ minLat: 0, maxLat: 0, minLon: 0, maxLon: 0 });
-  const [scale, setScale] = useState(1);
-  const [translateX, setTranslateX] = useState(0);
-  const [translateY, setTranslateY] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [currentRoadName, setCurrentRoadName] = useState<string>('');
   const hasLoadedData = useRef(false);
 
   useEffect(() => {
-    // Only load GPS data once
     if (!hasLoadedData.current) {
       loadGPSData();
       hasLoadedData.current = true;
     }
   }, []);
 
+  // Update road name when position changes
+  useEffect(() => {
+    const updateRoadName = async () => {
+      if (gpsData.length > 0 && currentIndex < gpsData.length) {
+        const point = gpsData[currentIndex];
+        const roadName = await GeocodingService.getRoadName(point.lat, point.lon);
+        setCurrentRoadName(roadName || '');
+      }
+    };
+
+    updateRoadName();
+  }, [currentIndex, gpsData]);
+
   const loadGPSData = async () => {
     try {
       setLoading(true);
       
-      // Try to load GPS data from saved session
       const date = params.date as string;
       const fileName = params.fileName as string;
       let data: GPSPoint[] = [];
@@ -124,12 +134,11 @@ export default function TrackReplayScreen() {
         
         if (gpsDataStr) {
           const gpsCoords = JSON.parse(gpsDataStr);
-          // Convert GPSCoordinate[] to GPSPoint[]
           data = gpsCoords.map((coord: any, index: number) => ({
             lat: coord.latitude,
             lon: coord.longitude,
             speed: coord.speed || 0,
-            gForce: 0, // Calculate from speed changes if available
+            gForce: 0,
             timestamp: coord.timestamp,
           }));
           
@@ -137,21 +146,18 @@ export default function TrackReplayScreen() {
         }
       }
       
-      // Fallback to mock data if no GPS data found
       if (data.length === 0) {
         console.log('[TrackReplay] Using mock GPS data');
         data = generateMockGPSData();
       }
       
-      // Performance optimization: downsample if too many points
       const displayData = downsamplePoints(data, 200);
       setGpsData(displayData);
 
-      // Calculate bounds with padding
       if (displayData.length > 0) {
         const lats = displayData.map(p => p.lat);
         const lons = displayData.map(p => p.lon);
-        const padding = 0.0005; // Add 10% padding
+        const padding = 0.0005;
         
         setMapBounds({
           minLat: Math.min(...lats) - padding,
@@ -162,7 +168,6 @@ export default function TrackReplayScreen() {
       }
     } catch (error) {
       console.error('[TrackReplay] Error loading GPS data:', error);
-      // Fallback to mock data
       const data = generateMockGPSData();
       setGpsData(data);
       
@@ -206,7 +211,6 @@ export default function TrackReplayScreen() {
   };
 
   const getColorForGForce = (gForce: number): string => {
-    // Blue (low) → Cyan → Green → Yellow → Red (high)
     if (gForce < 0.5) return '#0080FF';
     if (gForce < 1.0) return '#00D4FF';
     if (gForce < 1.5) return '#00FF88';
@@ -214,7 +218,6 @@ export default function TrackReplayScreen() {
     return '#FF0055';
   };
 
-  // Memoize path string generation for performance
   const pathData = useMemo(() => {
     if (gpsData.length === 0) return '';
     
@@ -228,7 +231,6 @@ export default function TrackReplayScreen() {
       .join(' ');
   }, [gpsData, mapBounds]);
 
-  // Memoize current path (up to playback position) for performance
   const currentPathData = useMemo(() => {
     if (gpsData.length === 0 || currentIndex === 0) return '';
     
@@ -261,7 +263,7 @@ export default function TrackReplayScreen() {
     router.back();
   };
 
-  // Premium gate
+  // ✅ Premium check
   if (!profile?.premium) {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -300,6 +302,7 @@ export default function TrackReplayScreen() {
     );
   }
 
+  // ✅ Main render (after premium check passes)
   const currentPoint = gpsData[currentIndex];
   const currentCoords = currentPoint ? convertToCanvasCoords(currentPoint.lat, currentPoint.lon) : { x: 0, y: 0 };
 
@@ -309,199 +312,206 @@ export default function TrackReplayScreen() {
         <MaterialCommunityIcons name="arrow-left" size={28} color={colors.text} />
       </TouchableOpacity>
 
-      <View style={styles.header}>
-        <Text style={[styles.title, { color: colors.text }]}>Track Replay</Text>
-        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>GPS Path Visualization</Text>
-      </View>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.header}>
+          <Text style={[styles.title, { color: colors.text }]}>Track Replay</Text>
+          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>GPS Path Visualization</Text>
+        </View>
 
-      <View style={[styles.canvasContainer, { backgroundColor: colors.card, borderColor: colors.border }]}>
-        {loading ? (
-          <View style={styles.placeholderContainer}>
-            <MaterialCommunityIcons name="loading" size={48} color={accentColor} />
-            <Text style={[styles.placeholderText, { color: colors.textSecondary }]}>
-              Loading GPS data...
-            </Text>
+        {/* Road Name Display */}
+        {currentRoadName && currentRoadName.length > 0 && (
+          <View style={[styles.roadNameBanner, { backgroundColor: accentColor + '15', borderColor: accentColor }]}>
+            <MaterialCommunityIcons name="map-marker-path" size={20} color={accentColor} />
+            <Text style={[styles.roadNameText, { color: accentColor }]}>{currentRoadName}</Text>
           </View>
-        ) : gpsData.length === 0 ? (
-          <View style={styles.placeholderContainer}>
-            <MaterialCommunityIcons name="map-marker-off" size={64} color={colors.textSecondary} />
-            <Text style={[styles.placeholderTitle, { color: colors.text }]}>No GPS Data</Text>
-            <Text style={[styles.placeholderText, { color: colors.textSecondary }]}>
-              This session doesn't have GPS tracking data
-            </Text>
-          </View>
-        ) : (
-          <Svg
-            width={width - 80}
-            height={400}
-            viewBox={`0 0 ${width - 80} 400`}
-            style={styles.svg}
-          >
-            <Defs>
-              <SvgGradient id="trackGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                <Stop offset="0%" stopColor={colors.textTertiary} stopOpacity="0.3" />
-                <Stop offset="100%" stopColor={colors.textTertiary} stopOpacity="0.1" />
-              </SvgGradient>
-            </Defs>
-
-            {/* Full track path (dimmed) */}
-            <Path
-              d={pathData}
-              stroke={colors.textTertiary}
-              strokeWidth={3}
-              strokeOpacity={0.2}
-              fill="none"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-
-            {/* Current path with G-force coloring */}
-            {currentIndex > 0 && (
-              <>
-                {gpsData.slice(0, currentIndex).map((point, i) => {
-                  if (i === 0) return null;
-                  
-                  const prevPoint = gpsData[i - 1];
-                  const start = convertToCanvasCoords(prevPoint.lat, prevPoint.lon);
-                  const end = convertToCanvasCoords(point.lat, point.lon);
-                  const color = getColorForGForce(point.gForce);
-                  
-                  return (
-                    <Path
-                      key={`segment-${i}`}
-                      d={`M ${start.x} ${start.y} L ${end.x} ${end.y}`}
-                      stroke={color}
-                      strokeWidth={4}
-                      fill="none"
-                      strokeLinecap="round"
-                    />
-                  );
-                })}
-              </>
-            )}
-
-            {/* Current position marker */}
-            {currentPoint && (
-              <G>
-                <Circle
-                  cx={currentCoords.x}
-                  cy={currentCoords.y}
-                  r={12}
-                  fill={accentColor}
-                  opacity={0.3}
-                />
-                <Circle
-                  cx={currentCoords.x}
-                  cy={currentCoords.y}
-                  r={6}
-                  fill={accentColor}
-                />
-              </G>
-            )}
-
-            {/* Start marker */}
-            {gpsData.length > 0 && (
-              <Circle
-                cx={convertToCanvasCoords(gpsData[0].lat, gpsData[0].lon).x}
-                cy={convertToCanvasCoords(gpsData[0].lat, gpsData[0].lon).y}
-                r={8}
-                fill="#00FF88"
-                stroke={colors.card}
-                strokeWidth={2}
-              />
-            )}
-
-            {/* End marker */}
-            {gpsData.length > 0 && (
-              <Circle
-                cx={convertToCanvasCoords(gpsData[gpsData.length - 1].lat, gpsData[gpsData.length - 1].lon).x}
-                cy={convertToCanvasCoords(gpsData[gpsData.length - 1].lat, gpsData[gpsData.length - 1].lon).y}
-                r={8}
-                fill="#FF0055"
-                stroke={colors.card}
-                strokeWidth={2}
-              />
-            )}
-          </Svg>
         )}
-      </View>
 
-      {currentPoint && (
-        <View style={[styles.statsContainer, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          <View style={styles.statItem}>
-            <MaterialCommunityIcons name="speedometer" size={24} color={accentColor} />
-            <Text style={[styles.statValue, { color: colors.text }]}>
-              {currentPoint.speed.toFixed(0)} km/h
-            </Text>
-            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Speed</Text>
-          </View>
-
-          <View style={styles.statItem}>
-            <MaterialCommunityIcons name="arrow-up-bold" size={24} color={getColorForGForce(currentPoint.gForce)} />
-            <Text style={[styles.statValue, { color: colors.text }]}>
-              {currentPoint.gForce.toFixed(2)}g
-            </Text>
-            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>G-Force</Text>
-          </View>
-
-          <View style={styles.statItem}>
-            <MaterialCommunityIcons name="map-marker" size={24} color={accentColor} />
-            <Text style={[styles.statValue, { color: colors.text }]}>
-              {currentIndex + 1}/{gpsData.length}
-            </Text>
-            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Position</Text>
-          </View>
-        </View>
-      )}
-
-      <View style={styles.controls}>
-        <TouchableOpacity
-          style={[styles.controlButton, { backgroundColor: colors.card, borderColor: colors.border }]}
-          onPress={handleReset}
-          activeOpacity={0.8}
-        >
-          <MaterialCommunityIcons name="restart" size={28} color={colors.text} />
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.playButton}
-          onPress={handlePlayPause}
-          activeOpacity={0.8}
-        >
-          <LinearGradient
-            colors={[accentColor, colors.background]}
-            style={styles.playGradient}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-          >
-            <MaterialCommunityIcons
-              name={isPlaying ? 'pause' : 'play'}
-              size={36}
-              color={colors.text}
-            />
-          </LinearGradient>
-        </TouchableOpacity>
-
-        <View style={[styles.controlButton, { backgroundColor: 'transparent', borderColor: 'transparent' }]} />
-      </View>
-
-      <View style={styles.legendContainer}>
-        <Text style={[styles.legendTitle, { color: colors.textSecondary }]}>G-Force Scale</Text>
-        <View style={styles.legendItems}>
-          {[
-            { label: '< 0.5g', color: '#0080FF' },
-            { label: '< 1.0g', color: '#00D4FF' },
-            { label: '< 1.5g', color: '#00FF88' },
-            { label: '< 2.0g', color: '#FFAA00' },
-            { label: '> 2.0g', color: '#FF0055' },
-          ].map((item, index) => (
-            <View key={index} style={styles.legendItem}>
-              <View style={[styles.legendColor, { backgroundColor: item.color }]} />
-              <Text style={[styles.legendLabel, { color: colors.textSecondary }]}>{item.label}</Text>
+        <View style={[styles.canvasContainer, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          {loading ? (
+            <View style={styles.placeholderContainer}>
+              <MaterialCommunityIcons name="loading" size={48} color={accentColor} />
+              <Text style={[styles.placeholderText, { color: colors.textSecondary }]}>
+                Loading GPS data...
+              </Text>
             </View>
-          ))}
+          ) : gpsData.length === 0 ? (
+            <View style={styles.placeholderContainer}>
+              <MaterialCommunityIcons name="map-marker-off" size={64} color={colors.textSecondary} />
+              <Text style={[styles.placeholderTitle, { color: colors.text }]}>No GPS Data</Text>
+              <Text style={[styles.placeholderText, { color: colors.textSecondary }]}>
+                This session doesn't have GPS tracking data
+              </Text>
+            </View>
+          ) : (
+            <Svg
+              width={width - 80}
+              height={400}
+              viewBox={`0 0 ${width - 80} 400`}
+              style={styles.svg}
+            >
+              {/* Full track path (dimmed) */}
+              <Path
+                d={pathData}
+                stroke={colors.textTertiary}
+                strokeWidth={3}
+                strokeOpacity={0.2}
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+
+              {/* Current path with G-force coloring */}
+              {currentIndex > 0 && (
+                <>
+                  {gpsData.slice(0, currentIndex).map((point, i) => {
+                    if (i === 0) return null;
+                    
+                    const prevPoint = gpsData[i - 1];
+                    const start = convertToCanvasCoords(prevPoint.lat, prevPoint.lon);
+                    const end = convertToCanvasCoords(point.lat, point.lon);
+                    const color = getColorForGForce(point.gForce);
+                    
+                    return (
+                      <Path
+                        key={`segment-${i}`}
+                        d={`M ${start.x} ${start.y} L ${end.x} ${end.y}`}
+                        stroke={color}
+                        strokeWidth={4}
+                        fill="none"
+                        strokeLinecap="round"
+                      />
+                    );
+                  })}
+                </>
+              )}
+
+              {/* Current position marker */}
+              {currentPoint && (
+                <G>
+                  <Circle
+                    cx={currentCoords.x}
+                    cy={currentCoords.y}
+                    r={12}
+                    fill={accentColor}
+                    opacity={0.3}
+                  />
+                  <Circle
+                    cx={currentCoords.x}
+                    cy={currentCoords.y}
+                    r={6}
+                    fill={accentColor}
+                  />
+                </G>
+              )}
+
+              {/* Start marker */}
+              {gpsData.length > 0 && (
+                <Circle
+                  cx={convertToCanvasCoords(gpsData[0].lat, gpsData[0].lon).x}
+                  cy={convertToCanvasCoords(gpsData[0].lat, gpsData[0].lon).y}
+                  r={8}
+                  fill="#00FF88"
+                  stroke={colors.card}
+                  strokeWidth={2}
+                />
+              )}
+
+              {/* End marker */}
+              {gpsData.length > 0 && (
+                <Circle
+                  cx={convertToCanvasCoords(gpsData[gpsData.length - 1].lat, gpsData[gpsData.length - 1].lon).x}
+                  cy={convertToCanvasCoords(gpsData[gpsData.length - 1].lat, gpsData[gpsData.length - 1].lon).y}
+                  r={8}
+                  fill="#FF0055"
+                  stroke={colors.card}
+                  strokeWidth={2}
+                />
+              )}
+            </Svg>
+          )}
         </View>
-      </View>
+
+        {currentPoint && (
+          <View style={[styles.statsContainer, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <View style={styles.statItem}>
+              <MaterialCommunityIcons name="speedometer" size={24} color={accentColor} />
+              <Text style={[styles.statValue, { color: colors.text }]}>
+                {safeFormat(currentPoint.speed, 0)} km/h
+              </Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Speed</Text>
+            </View>
+
+            <View style={styles.statItem}>
+              <MaterialCommunityIcons name="arrow-up-bold" size={24} color={getColorForGForce(currentPoint.gForce)} />
+              <Text style={[styles.statValue, { color: colors.text }]}>
+                {safeFormat(currentPoint.gForce, 2)}g
+              </Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>G-Force</Text>
+            </View>
+
+            <View style={styles.statItem}>
+              <MaterialCommunityIcons name="map-marker" size={24} color={accentColor} />
+              <Text style={[styles.statValue, { color: colors.text }]}>
+                {currentIndex + 1}/{gpsData.length}
+              </Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Position</Text>
+            </View>
+          </View>
+        )}
+
+        <View style={styles.controls}>
+          <TouchableOpacity
+            style={[styles.controlButton, { backgroundColor: colors.card, borderColor: colors.border }]}
+            onPress={handleReset}
+            activeOpacity={0.8}
+          >
+            <MaterialCommunityIcons name="restart" size={28} color={colors.text} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.playButton}
+            onPress={handlePlayPause}
+            activeOpacity={0.8}
+          >
+            <LinearGradient
+              colors={[accentColor, colors.background]}
+              style={styles.playGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+            >
+              <MaterialCommunityIcons
+                name={isPlaying ? 'pause' : 'play'}
+                size={36}
+                color={colors.text}
+              />
+            </LinearGradient>
+          </TouchableOpacity>
+
+          <View style={[styles.controlButton, { backgroundColor: 'transparent', borderColor: 'transparent' }]} />
+        </View>
+
+        <View style={styles.legendContainer}>
+          <Text style={[styles.legendTitle, { color: colors.textSecondary }]}>G-Force Scale</Text>
+          <View style={styles.legendItems}>
+            {[
+              { label: '< 0.5g', color: '#0080FF' },
+              { label: '< 1.0g', color: '#00D4FF' },
+              { label: '< 1.5g', color: '#00FF88' },
+              { label: '< 2.0g', color: '#FFAA00' },
+              { label: '> 2.0g', color: '#FF0055' },
+            ].map((item, index) => (
+              <View key={index} style={styles.legendItem}>
+                <View style={[styles.legendColor, { backgroundColor: item.color }]} />
+                <Text style={[styles.legendLabel, { color: colors.textSecondary }]}>{item.label}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
+      </ScrollView>
     </View>
   );
 }
@@ -509,6 +519,12 @@ export default function TrackReplayScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: 100,
   },
   backButton: {
     position: 'absolute',
@@ -533,6 +549,22 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: FONT_SIZE.md,
     marginTop: SPACING.xs,
+  },
+  roadNameBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: SPACING.lg,
+    marginBottom: SPACING.md,
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.sm,
+    borderRadius: BORDER_RADIUS.md,
+    borderWidth: 2,
+    gap: SPACING.sm,
+  },
+  roadNameText: {
+    fontSize: FONT_SIZE.md,
+    fontWeight: '600',
+    flex: 1,
   },
   canvasContainer: {
     marginHorizontal: SPACING.lg,
@@ -559,10 +591,6 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZE.md,
     textAlign: 'center',
     marginTop: SPACING.sm,
-  },
-  placeholderSubtext: {
-    fontSize: FONT_SIZE.sm,
-    marginTop: SPACING.md,
   },
   statsContainer: {
     flexDirection: 'row',

@@ -251,7 +251,7 @@ export default function GroupDetailScreen() {
                     )}
                   </View>
 
-                  <UserAvatar name={member.displayName} size={48} uri={member.avatarURI} />
+                  <UserAvatar name={member.displayName} size={48} uri={member.avatarURI ?? null} />
 
                   <View style={styles.memberInfo}>
                     <Text style={[styles.memberName, { color: colors.text }]}>

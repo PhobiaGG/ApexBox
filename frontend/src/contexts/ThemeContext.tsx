@@ -16,6 +16,7 @@ interface ThemeColors {
   cyan: string;
   magenta: string;
   lime: string;
+  orange: string;
   error: string;
 }
 
@@ -38,6 +39,7 @@ const DARK_COLORS: ThemeColors = {
   cyan: '#00D4FF',
   magenta: '#FF00FF',
   lime: '#00FF88',
+  orange: '#FF8800',
   error: '#FF4444',
 };
 
@@ -51,6 +53,7 @@ const LIGHT_COLORS_THEME: ThemeColors = {
   cyan: '#00A8CC',
   magenta: '#CC00CC',
   lime: '#00CC66',
+  orange: '#FF8800',
   error: '#CC0000',
 };
 

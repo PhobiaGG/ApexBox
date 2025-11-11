@@ -1,31 +1,35 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  signOut,
-  onAuthStateChanged,
-  User,
-  updateProfile,
-  sendPasswordResetEmail,
-} from 'firebase/auth';
-import {
-  doc,
-  setDoc,
-  getDoc,
-  updateDoc,
-  collection,
-  query,
-  where,
-  getDocs,
-  arrayUnion,
-  arrayRemove,
-  deleteDoc,
+
+// Firebase compat imports for auth
+import type firebase from 'firebase/compat/app';
+import 'firebase/compat/auth';
+
+// Keep modular imports for Firestore and Storage (they work fine)
+import { 
+  doc, 
+  setDoc, 
+  getDoc, 
+  updateDoc, 
+  collection, 
+  query, 
+  where, 
+  getDocs, 
+  arrayUnion, 
+  arrayRemove, 
+  deleteDoc, 
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { auth, db, storage } from '../config/firebase';
+
+// Import from firebase config
+import { auth, db, storage, app } from '../config/firebase'; 
 import * as Haptics from 'expo-haptics';
+
+// Use compat User type
+type User = firebase.User;
+
+// --- INTERFACES AND TYPES ---
 
 export interface CarData {
   id: string;
@@ -34,6 +38,9 @@ export interface CarData {
   year: string;
   nickname: string;
   isActive: boolean;
+  createdAt?: number;
+  color?: string;
+  upgrades?: string;
 }
 
 export interface CrewMember {
@@ -63,18 +70,22 @@ export interface UserProfile {
   garage?: CarData[];
   friendId?: string;
   crewIds?: string[];
-  state?: string; // US state code (e.g., "CA", "NY", "TX")
+  state?: string; 
+  carModel?: string; 
+  carYear?: string; 
 }
 
 interface AuthContextType {
   user: User | null;
   profile: UserProfile | null;
+  initializing: boolean;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, displayName: string) => Promise<void>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   updateUsername: (newName: string) => Promise<void>;
+  updateUserProfileDoc: (updates: { carModel?: string, carYear?: string }) => Promise<void>;
   uploadAvatar: (uri: string) => Promise<void>;
   updateUserState: (stateCode: string) => Promise<void>;
   addCar: (car: Omit<CarData, 'id' | 'isActive'>) => Promise<void>;
@@ -89,6 +100,7 @@ interface AuthContextType {
   addMemberToCrew: (crewId: string, memberFriendId: string) => Promise<void>;
   removeMemberFromCrew: (crewId: string, memberUid: string) => Promise<void>;
   upgradeToPremium: () => Promise<void>;
+  deleteAccount: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -99,7 +111,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+    // Use compat syntax for onAuthStateChanged
+    const unsubscribe = auth.onAuthStateChanged(async (firebaseUser) => {
       setUser(firebaseUser);
       if (firebaseUser) {
         await loadUserProfile(firebaseUser.uid);
@@ -121,12 +134,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const data = userDoc.data();
         console.log('[Auth] Profile loaded successfully');
         
-        // Load garage
         console.log('[Auth] Loading garage for user:', uid);
         const garage = await loadGarage(uid);
         console.log(`[Auth] Loaded ${garage.length} cars from garage`);
         
-        // Ensure friendId exists
         let friendId = data.friendId;
         if (!friendId) {
           friendId = generateFriendId();
@@ -139,11 +150,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           email: data.email,
           displayName: data.displayName,
           avatarURI: data.avatarURI,
-          premium: data.premium || false,
+          premium: data.premium || true,
           garage,
           friendId,
           crewIds: data.crewIds || [],
           state: data.state,
+          carModel: data.carModel,
+          carYear: data.carYear,
         });
         console.log('[Auth] User data loaded successfully');
       }
@@ -184,7 +197,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      // Compat syntax
+      await auth.signInWithEmailAndPassword(email, password);
     } catch (error: any) {
       console.error('[Auth] Login error:', error);
       throw new Error(error.message);
@@ -193,12 +207,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signUp = async (email: string, password: string, displayName: string) => {
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      await updateProfile(userCredential.user, { displayName });
+      // Compat syntax
+      const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+      await userCredential.user?.updateProfile({ displayName });
       
       const friendId = generateFriendId();
       
-      await setDoc(doc(db, 'users', userCredential.user.uid), {
+      await setDoc(doc(db, 'users', userCredential.user!.uid), {
         email,
         displayName,
         premium: false,
@@ -214,7 +229,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOutUser = async () => {
     try {
-      await signOut(auth);
+      // Compat syntax
+      await auth.signOut();
       setProfile(null);
     } catch (error: any) {
       console.error('[Auth] Logout error:', error);
@@ -224,7 +240,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const resetPassword = async (email: string) => {
     try {
-      await sendPasswordResetEmail(auth, email);
+      // Compat syntax
+      await auth.sendPasswordResetEmail(email);
     } catch (error: any) {
       console.error('[Auth] Reset password error:', error);
       throw new Error(error.message);
@@ -235,22 +252,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!user) throw new Error('No user logged in');
     
     try {
-      // Update Firebase Auth profile
-      await updateProfile(user, { displayName: newName });
+      // Compat syntax
+      await user.updateProfile({ displayName: newName });
       
-      // Update user profile doc
       await updateDoc(doc(db, 'users', user.uid), { displayName: newName });
       
-      // Update leaderboard entries (if exists, using setDoc with merge)
       try {
         const leaderboardRef = doc(db, 'leaderboards', user.uid);
         await setDoc(leaderboardRef, { displayName: newName }, { merge: true });
         console.log('[Auth] ✅ Updated leaderboard entry');
       } catch (leaderboardError) {
-        console.log('[Auth] No leaderboard entry to update (will create on first session)');
+        console.log('[Auth] No leaderboard entry to update');
       }
       
-      // Update local state
       if (profile) {
         setProfile({ ...profile, displayName: newName });
       }
@@ -262,30 +276,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const updateUserProfileDoc = async (updates: { carModel?: string, carYear?: string }) => {
+    if (!user) throw new Error("No user logged in");
+    try {
+      await updateDoc(doc(db, 'users', user.uid), updates);
+      if (profile) {
+        setProfile({ ...profile, ...updates });
+      }
+    } catch (error: any) {
+      console.error("[Auth] Update profile error:", error);
+      throw new Error(error.message);
+    }
+  };
+
   const uploadAvatar = async (uri: string) => {
     if (!user) throw new Error('No user logged in');
     
     try {
-      // Upload image to storage
       const response = await fetch(uri);
       const blob = await response.blob();
       const storageRef = ref(storage, `avatars/${user.uid}`);
       await uploadBytes(storageRef, blob);
       const downloadURL = await getDownloadURL(storageRef);
       
-      // Update user profile doc (use avatarURI to match interface)
       await updateDoc(doc(db, 'users', user.uid), { avatarURI: downloadURL });
       
-      // Update leaderboard entries (if exists, using setDoc with merge)
       try {
         const leaderboardRef = doc(db, 'leaderboards', user.uid);
         await setDoc(leaderboardRef, { avatarURI: downloadURL }, { merge: true });
         console.log('[Auth] ✅ Updated leaderboard entry');
       } catch (leaderboardError) {
-        console.log('[Auth] No leaderboard entry to update (will create on first session)');
+        console.log('[Auth] No leaderboard entry to update');
       }
       
-      // Update local state
       if (profile) {
         setProfile({ ...profile, avatarURI: downloadURL });
       }
@@ -313,24 +336,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         createdAt: Date.now(),
       };
       
-      // Optimistic update - add to UI immediately
       if (profile) {
         const updatedGarage = [...(profile.garage || []), newCar];
         setProfile({ ...profile, garage: updatedGarage });
       }
       
-      // Save to Firebase
       await setDoc(newCarRef, {
         ...car,
         isActive: isFirstCar,
         createdAt: Date.now(),
       });
       
-      // Don't reload on success - optimistic update is correct
-      
     } catch (error: any) {
       console.error('[Auth] Add car error:', error);
-      // Rollback on error
       if (profile) {
         const freshGarage = await loadGarage(user.uid);
         setProfile({ ...profile, garage: freshGarage });
@@ -343,7 +361,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!user) throw new Error('No user logged in');
     
     try {
-      // Optimistic update - update UI immediately
       if (profile) {
         const updatedGarage = profile.garage?.map(car => 
           car.id === carId ? { ...car, ...updates } : car
@@ -351,14 +368,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setProfile({ ...profile, garage: updatedGarage });
       }
       
-      // Update Firebase
       await updateDoc(doc(db, 'users', user.uid, 'garage', carId), updates);
-      
-      // Don't reload on success - optimistic update is correct
       
     } catch (error: any) {
       console.error('[Auth] Update car error:', error);
-      // Rollback on error
       if (profile) {
         const freshGarage = await loadGarage(user.uid);
         setProfile({ ...profile, garage: freshGarage });
@@ -375,12 +388,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log('[Auth] Car ID to delete:', carId);
       console.log('[Auth] Current garage count:', profile?.garage?.length || 0);
       
-      // IMPORTANT: Delete from Firebase FIRST before updating UI
-      // This ensures the delete operation completes successfully
       await deleteDoc(doc(db, 'users', user.uid, 'garage', carId));
       console.log('[Auth] ✅ Firebase delete successful');
       
-      // Now update UI to reflect the deletion
       if (profile && profile.garage) {
         const updatedGarage = profile.garage.filter(car => car.id !== carId);
         console.log('[Auth] Updated garage count:', updatedGarage.length);
@@ -392,9 +402,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
     } catch (error: any) {
       console.error('[Auth] ❌ Delete car error:', error);
-      console.error('[Auth] Error details:', error.code, error.message);
       
-      // Rollback on error - reload from Firebase
       if (profile && user) {
         console.log('[Auth] Rolling back - reloading garage from Firebase');
         const freshGarage = await loadGarage(user.uid);
@@ -409,7 +417,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!user) throw new Error('No user logged in');
     
     try {
-      // Optimistic update - update UI immediately
       if (profile) {
         const updatedGarage = profile.garage?.map(car => ({
           ...car,
@@ -418,7 +425,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setProfile({ ...profile, garage: updatedGarage });
       }
       
-      // Update Firebase
       const garageRef = collection(db, 'users', user.uid, 'garage');
       const garageSnap = await getDocs(garageRef);
       
@@ -431,11 +437,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       await Promise.all(batch);
       
-      // Don't reload on success - optimistic update is correct
-      
     } catch (error: any) {
       console.error('[Auth] Set active car error:', error);
-      // Rollback on error
       if (profile) {
         const freshGarage = await loadGarage(user.uid);
         setProfile({ ...profile, garage: freshGarage });
@@ -449,21 +452,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return profile.garage.find(car => car.isActive) || null;
   };
 
-  /**
-   * Update user's state (for leaderboard filtering)
-   */
   const updateUserState = async (stateCode: string): Promise<void> => {
     if (!user) throw new Error('No user logged in');
     
     try {
       console.log('[Auth] Updating user state to:', stateCode);
       
-      // Update Firebase
       await updateDoc(doc(db, 'users', user.uid), {
         state: stateCode,
       });
       
-      // Update local profile
       if (profile) {
         setProfile({ ...profile, state: stateCode });
       }
@@ -475,77 +473,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  /**
-   * Clean up duplicate cars from Firebase
-   * This is a utility function to fix data inconsistencies
-   */
-  const cleanupDuplicateCars = async (): Promise<void> => {
-    if (!user) return;
-    
-    try {
-      console.log('[Auth] ======= CLEANING UP DUPLICATE CARS =======');
-      
-      const garage = await loadGarage(user.uid);
-      const ids = garage.map(c => c.id);
-      const uniqueIds = [...new Set(ids)];
-      
-      if (ids.length === uniqueIds.length) {
-        console.log('[Auth] No duplicates found');
-        return;
-      }
-      
-      console.log('[Auth] Found duplicates, cleaning up...');
-      
-      // Delete all cars
-      for (const car of garage) {
-        await deleteDoc(doc(db, 'users', user.uid, 'garage', car.id));
-      }
-      
-      // Re-add unique cars only
-      const uniqueCars = garage.filter((car, index, self) => 
-        index === self.findIndex(c => c.id === car.id)
-      );
-      
-      for (const car of uniqueCars) {
-        await setDoc(doc(db, 'users', user.uid, 'garage', car.id), {
-          make: car.make,
-          model: car.model,
-          year: car.year,
-          nickname: car.nickname,
-          isActive: car.isActive,
-          createdAt: car.createdAt || Date.now(),
-        });
-      }
-      
-      console.log('[Auth] ✅ Duplicates cleaned up');
-      
-      // Reload garage
-      const freshGarage = await loadGarage(user.uid);
-      if (profile) {
-        setProfile({ ...profile, garage: freshGarage });
-      }
-    } catch (error) {
-      console.error('[Auth] Error cleaning up duplicates:', error);
-    }
-  };
-
-  // CREW FUNCTIONS
   const createCrew = async (name: string, description: string): Promise<string> => {
     if (!user) throw new Error('No user logged in');
     
     try {
       console.log('[Auth] ======= CREATING CREW =======');
-      console.log('[Auth] Name:', name);
-      console.log('[Auth] Description:', description);
-      console.log('[Auth] User ID:', user.uid);
       
-      // Generate unique crew code
       const crewCode = generateCrewCode();
-      console.log('[Auth] Generated crew code:', crewCode);
-      
-      // Create crew document with auto-generated ID
       const crewRef = doc(collection(db, 'crews'));
-      console.log('[Auth] Crew ID:', crewRef.id);
       
       const crewData = {
         name,
@@ -556,35 +491,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         createdAt: Date.now(),
       };
       
-      console.log('[Auth] Saving crew to Firebase...');
       await setDoc(crewRef, crewData);
-      console.log('[Auth] ✅ Crew saved to Firebase');
       
-      // Add crew ID to user's crewIds array
-      console.log('[Auth] Updating user crewIds...');
       await updateDoc(doc(db, 'users', user.uid), {
         crewIds: arrayUnion(crewRef.id),
       });
-      console.log('[Auth] ✅ User crewIds updated');
       
-      // Update local profile
       if (profile) {
         const updatedCrewIds = [...(profile.crewIds || []), crewRef.id];
         setProfile({
           ...profile,
           crewIds: updatedCrewIds,
         });
-        console.log('[Auth] ✅ Profile updated with new crew');
       }
       
       console.log('[Auth] ======= CREW CREATED SUCCESSFULLY =======');
-      console.log('[Auth] Crew Code:', crewCode);
       
       return crewCode;
     } catch (error: any) {
       console.error('[Auth] ❌ Create crew error:', error);
-      console.error('[Auth] Error code:', error.code);
-      console.error('[Auth] Error message:', error.message);
       throw new Error(error.message || 'Failed to create crew');
     }
   };
@@ -593,7 +518,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!user) throw new Error('No user logged in');
     
     try {
-      // Find crew by code
       const crewsQuery = query(collection(db, 'crews'), where('code', '==', crewCode.toUpperCase()));
       const crewsSnap = await getDocs(crewsQuery);
       
@@ -604,17 +528,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const crewDoc = crewsSnap.docs[0];
       const crewData = crewDoc.data();
       
-      // Check if already a member
       if (crewData.memberIds.includes(user.uid)) {
         throw new Error('You are already a member of this crew.');
       }
       
-      // Add user to crew
       await updateDoc(crewDoc.ref, {
         memberIds: arrayUnion(user.uid),
       });
       
-      // Add crew to user's crewIds
       await updateDoc(doc(db, 'users', user.uid), {
         crewIds: arrayUnion(crewDoc.id),
       });
@@ -644,28 +565,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       const crewData = crewDoc.data();
       
-      // If user is admin and there are other members, transfer admin or delete crew
       if (crewData.adminId === user.uid) {
         const otherMembers = crewData.memberIds.filter((id: string) => id !== user.uid);
         
         if (otherMembers.length > 0) {
-          // Transfer admin to first member
           await updateDoc(crewRef, {
             adminId: otherMembers[0],
             memberIds: arrayRemove(user.uid),
           });
         } else {
-          // Delete crew if no other members
           await deleteDoc(crewRef);
         }
       } else {
-        // Just remove user from crew
         await updateDoc(crewRef, {
           memberIds: arrayRemove(user.uid),
         });
       }
       
-      // Remove crew from user's crewIds
       await updateDoc(doc(db, 'users', user.uid), {
         crewIds: arrayRemove(crewId),
       });
@@ -713,7 +629,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!user) throw new Error('No user logged in');
     
     try {
-      // Find user by friendId
       const usersQuery = query(collection(db, 'users'), where('friendId', '==', memberFriendId));
       const usersSnap = await getDocs(usersQuery);
       
@@ -724,12 +639,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const memberDoc = usersSnap.docs[0];
       const memberId = memberDoc.id;
       
-      // Add to crew
       await updateDoc(doc(db, 'crews', crewId), {
         memberIds: arrayUnion(memberId),
       });
       
-      // Add crew to member's crewIds
       await updateDoc(doc(db, 'users', memberId), {
         crewIds: arrayUnion(crewId),
       });
@@ -760,8 +673,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!user) throw new Error('No user logged in');
     
     try {
-      // For now, just set premium to true in Firestore
-      // In production, this would be triggered by successful in-app purchase
       await updateDoc(doc(db, 'users', user.uid), {
         premium: true,
       });
@@ -777,20 +688,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const deleteAccount = async () => {
+    if (!user) throw new Error("No user logged in");
+    try {
+      await deleteDoc(doc(db, 'users', user.uid));
+      
+      // Compat syntax
+      await user.delete();
+      
+      setUser(null);
+      setProfile(null);
+    } catch (error: any) {
+      console.error("[Auth] Delete account error:", error);
+      if (error.code === 'auth/requires-recent-login') {
+        throw new Error('This is a sensitive action. Please log out and log back in to delete your account.');
+      }
+      throw new Error(error.message);
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
         user,
         profile,
         loading,
+        initializing: loading,
         signIn,
         signUp,
         signOut: signOutUser,
         resetPassword,
         updateUsername,
+        updateUserProfileDoc,
         uploadAvatar,
         updateUserState,
-        // Car management
         addCar,
         updateCar,
         deleteCar,
@@ -803,6 +734,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         addMemberToCrew,
         removeMemberFromCrew,
         upgradeToPremium,
+        deleteAccount,
       }}
     >
       {children}

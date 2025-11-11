@@ -143,7 +143,7 @@ export default function ForgotPasswordScreen() {
                   <ActivityIndicator color={COLORS.text} />
                 ) : (
                   <>
-                    <MaterialCommunityIcons name="email-send" size={24} color={COLORS.text} />
+                    <MaterialCommunityIcons name="send" size={24} color={COLORS.text} />
                     <Text style={styles.buttonText}>Send Reset Link</Text>
                   </>
                 )}

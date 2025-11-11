@@ -52,8 +52,7 @@ export default function GarageScreen() {
     try {
       if (editingCar) {
         // Update existing car
-        await deleteCar(editingCar.id);
-        await addCar({ ...carData, id: editingCar.id });
+        await updateCar(editingCar.id, carData);
         setEditingCar(null);
       } else {
         // Add new car
@@ -422,6 +421,13 @@ const styles = StyleSheet.create({
   },
   carInfo: {
     flex: 1,
+  },
+  // ADD THIS BLOCK
+  carFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: SPACING.md,
   },
   actionButtons: {
     flexDirection: 'row',

@@ -29,7 +29,19 @@ import LeaderboardService from '../services/LeaderboardService';
 export default function SettingsScreen() {
   const { settings, updateUnits, toggleDeveloperMode, resetSettings } = useSettings();
   const { mode, colors, accentColor, setAccentColor, getCurrentAccent, toggleMode } = useTheme();
-  const { profile, updateUsername, uploadAvatar, addCar, setActiveCar, deleteCar, signOut, updateUserState } = useAuth();
+  // Fixed code
+  const { 
+    profile, 
+    updateUsername, 
+    uploadAvatar, 
+    addCar, 
+    setActiveCar, 
+    deleteCar, 
+    signOut, 
+    updateUserState,
+    updateUserProfileDoc: updateProfile, // <-- FIX 1: Alias this to 'updateProfile'
+    deleteAccount                      // <-- FIX 2: Add this
+  } = useAuth();
   const { forgetDevice } = useBle();
 
   const garage = profile?.garage || [];
@@ -224,7 +236,7 @@ export default function SettingsScreen() {
             
             <View style={styles.profileHeader}>
               <UserAvatar 
-                uri={profile.avatarURI} 
+                uri={profile.avatarURI ?? null} 
                 name={profile.displayName} 
                 size={80}
                 borderColor={accentColorValue}
@@ -962,11 +974,6 @@ const styles = StyleSheet.create({
   developerText: {
     fontSize: FONT_SIZE.xs,
     fontWeight: 'bold',
-  },
-  settingLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
   },
   connectivityHint: {
     fontSize: FONT_SIZE.xs,

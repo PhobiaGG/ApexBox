@@ -42,6 +42,7 @@ interface Crew {
   code: string;
   adminId: string;
   members: CrewMember[];
+  memberIds: string[];
   createdAt: number;
 }
 
@@ -476,7 +477,7 @@ export default function GroupsScreen() {
                             #{index + 1}
                           </Text>
                         )}
-                        <UserAvatar name={member.displayName} size={40} uri={member.avatarURI} />
+                        <UserAvatar name={member.displayName} size={40} uri={member.avatarURI ?? null} />
                         <View style={styles.memberInfo}>
                           <Text style={[styles.memberName, { color: colors.text }]}>
                             {member.displayName}
@@ -673,7 +674,7 @@ export default function GroupsScreen() {
                         <Text style={[styles.rankNumber, { color: colors.textSecondary }]}>#{index + 1}</Text>
                       )}
 
-                      <UserAvatar name={member.displayName} size={44} uri={member.avatarURI} />
+                      <UserAvatar name={member.displayName} size={44} uri={member.avatarURI ?? null} />
 
                       <View style={styles.memberInfo}>
                         <Text style={[styles.memberName, { color: colors.text }]}>
@@ -1000,6 +1001,18 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: SPACING.md,
   },
+  content: {
+    paddingHorizontal: SPACING.lg,
+    paddingBottom: 100,
+  },
+  leaderboardCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: SPACING.md,
+    borderRadius: BORDER_RADIUS.lg,
+    marginBottom: SPACING.md,
+    gap: SPACING.sm,
+  },
   // Global Leaderboard Styles
   loadingContainer: {
     flex: 1,
@@ -1093,11 +1106,6 @@ const styles = StyleSheet.create({
   crewLeaderboardContent: {
     paddingHorizontal: SPACING.lg,
     paddingBottom: 100,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: SPACING.lg,
   },
   leaderboardLeft: {
     flexDirection: 'row',

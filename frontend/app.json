@@ -2,14 +2,13 @@
   "expo": {
     "name": "ApexBox Companion",
     "slug": "apexbox-companion",
-    "version": "1.0.0",
+    "version": "3.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "apexbox",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
-    "privacy": "public",
-    "description": "Track your vehicle performance with real-time telemetry, GPS-based track replays, and compete with friends on leaderboards. ApexBox Companion connects to your OBD-II device for live data visualization.",
+    "description": "Track your vehicle performance with real-time telemetry, GPS-based track replays, and compete with friends on leaderboards. ApexBox Companion connects to your OBD-II performance tracker device for live data visualization.",
     "splash": {
       "image": "./assets/images/icon.png",
       "resizeMode": "contain",
@@ -19,7 +18,6 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.apexbox.companion",
       "buildNumber": "1",
-      "appStoreUrl": "https://apps.apple.com/app/apexbox-companion/idXXXXXXXXXX",
       "requireFullScreen": false,
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "ApexBox tracks your location during performance sessions to create track replays and analyze your driving data.",
@@ -27,10 +25,14 @@
         "NSCameraUsageDescription": "ApexBox needs camera access to take profile pictures for your account.",
         "NSPhotoLibraryUsageDescription": "ApexBox needs photo access to set your profile picture and save session screenshots.",
         "ITSAppUsesNonExemptEncryption": false,
-        "UIBackgroundModes": ["location"]
+        "UIBackgroundModes": [
+          "location",
+          "bluetooth-central"
+        ]
       },
       "config": {
-        "usesNonExemptEncryption": false
+        "usesNonExemptEncryption": false,
+        "googleMapsApiKey": "AIzaSyB9Ad6Vh7sGphsF4TRQth5hNI481V2pN6Q"
       }
     },
     "android": {
@@ -39,22 +41,23 @@
         "backgroundColor": "#0A0A0A"
       },
       "package": "com.apexbox.companion",
-      "versionCode": 1,
+      "versionCode": 35,
       "playStoreUrl": "https://play.google.com/store/apps/details?id=com.apexbox.companion",
       "permissions": [
         "ACCESS_FINE_LOCATION",
-        "ACCESS_COARSE_LOCATION",
-        "BLUETOOTH",
-        "BLUETOOTH_ADMIN",
-        "BLUETOOTH_CONNECT",
-        "BLUETOOTH_SCAN",
+        "ACCESS_BACKGROUND_LOCATION",
         "CAMERA",
         "READ_EXTERNAL_STORAGE",
         "WRITE_EXTERNAL_STORAGE",
-        "ACCESS_BACKGROUND_LOCATION"
+        "com.google.android.gms.permission.AD_ID"
       ],
       "edgeToEdgeEnabled": true,
-      "blockedPermissions": []
+      "blockedPermissions": [],
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyB9Ad6Vh7sGphsF4TRQth5hNI481V2pN6Q"
+        }
+      }
     },
     "web": {
       "bundler": "metro",
@@ -64,12 +67,9 @@
     "plugins": [
       "expo-router",
       [
-        "expo-splash-screen",
+        "expo-location",
         {
-          "image": "./assets/images/icon.png",
-          "imageWidth": 200,
-          "resizeMode": "contain",
-          "backgroundColor": "#0A0A0A"
+          "locationAlwaysAndWhenInUsePermission": "ApexBox uses your location in the background to log precise track data and timing during performance sessions."
         }
       ],
       [
@@ -79,15 +79,22 @@
             "deploymentTarget": "15.1"
           },
           "android": {
-            "compileSdkVersion": 34,
-            "targetSdkVersion": 34,
-            "minSdkVersion": 23
+            "compileSdkVersion": 35,
+            "targetSdkVersion": 35,
+            "minSdkVersion": 24
           }
         }
       ]
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "96c9bbfa-05bb-4c71-ad52-073de524f6de"
+      }
+    },
+    "owner": "jaidenjames"
   }
 }

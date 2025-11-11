@@ -1,333 +1,316 @@
-import { Platform, PermissionsAndroid } from 'react-native';
-import { BleDevice, BleStatus } from './MockBleService';
-import { TelemetryData, generateRealisticTelemetry } from '../utils/telemetry';
+// src/services/RealBleService.ts
+import { BleManager, Device, Characteristic } from 'react-native-ble-plx';
+import { PermissionsAndroid, Platform } from 'react-native';
 
-// Conditional import for BLE - will be null in Expo Go
-let BleManager: any = null;
-let Device: any = null;
-let Characteristic: any = null;
+// ApexBox BLE Service UUIDs
+const APEXBOX_SERVICE_UUID = '4fafc201-1fb5-459e-8fcc-c5c9c331914b';
+const TELEMETRY_CHAR_UUID = 'beb5483e-36e1-4688-b7f5-ea07361b26a8';
 
-try {
-  const ble = require('react-native-ble-plx');
-  BleManager = ble.BleManager;
-  Device = ble.Device;
-  Characteristic = ble.Characteristic;
-} catch (e) {
-  console.log('[RealBleService] BLE library not available (Expo Go or web)');
+export interface BleDevice {
+  id: string;
+  name: string;
+  signal: 'excellent' | 'good' | 'fair' | 'weak';
+  rssi?: number;
 }
 
-// ApexBox ESP32 BLE Service UUIDs
-const SERVICE_UUID = '0000ffe0-0000-1000-8000-00805f9b34fb';
-const TELEMETRY_CHAR_UUID = '0000ffe1-0000-1000-8000-00805f9b34fb';
-const COMMAND_CHAR_UUID = '0000ffe2-0000-1000-8000-00805f9b34fb';
+export interface BleStatus {
+  isScanning: boolean;
+  isConnected: boolean;
+  connectedDevice: BleDevice | null;
+  error: string | null;
+}
+
+// Telemetry data from ESP32
+export interface TelemetryData {
+  speed: number;           // GPS speed in MPH
+  rpm: number;             // Engine RPM from OBD
+  obdSpeed: number;        // Speed from OBD in KPH
+  temperature: number;     // Temperature in Celsius (renamed from temp)
+  humidity: number;
+  pressure: number;        // Pressure in hPa
+  altitude: number;        // Altitude in feet
+  heading: number;         // Compass heading
+  pitch: number;
+  roll: number;
+  lux: number;
+  gas: number;
+  satellites: number;
+  latitude: number;        // GPS lat (renamed from lat)
+  longitude: number;       // GPS lon (renamed from lon)
+  obdConnected: boolean;
+  gForce: number;          // Calculated from acceleration
+}
+
+export type TelemetryCallback = (data: TelemetryData) => void;
 
 class RealBleService {
-  private manager: any | null = null;
-  private connectedDevice: any | null = null;
-  private telemetryListeners: ((data: TelemetryData) => void)[] = [];
+  private manager: BleManager;
+  private device: Device | null = null;
+  private characteristic: Characteristic | null = null;
+  private telemetryCallbacks: Set<TelemetryCallback> = new Set();
   private status: BleStatus = {
     isScanning: false,
     isConnected: false,
     connectedDevice: null,
     error: null,
   };
-  private useMockMode: boolean = false;
 
   constructor() {
-    // Check if we're in Expo Go environment (no native modules)
-    if (Platform.OS === 'web' || !BleManager) {
-      console.log('[RealBleService] BLE not available (web or Expo Go), using mock mode');
-      this.useMockMode = true;
-      this.manager = null;
-      return;
-    }
-    
-    try {
-      this.manager = new BleManager();
-      console.log('[RealBleService] BLE Manager initialized successfully');
-    } catch (error) {
-      console.log('[RealBleService] BLE Manager creation failed (Expo Go environment), using mock mode');
-      this.useMockMode = true;
-      this.manager = null;
-    }
+    this.manager = new BleManager();
+    console.log('[RealBleService] Initialized');
   }
 
-  // Request necessary permissions for BLE
   async requestPermissions(): Promise<boolean> {
-    if (Platform.OS === 'android') {
-      if (Platform.Version >= 31) {
-        // Android 12+
+    if (Platform.OS === 'android' && Platform.Version >= 31) {
+      try {
         const granted = await PermissionsAndroid.requestMultiple([
           PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN,
           PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT,
           PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
         ]);
 
-        return (
-          granted['android.permission.BLUETOOTH_SCAN'] === PermissionsAndroid.RESULTS.GRANTED &&
-          granted['android.permission.BLUETOOTH_CONNECT'] === PermissionsAndroid.RESULTS.GRANTED &&
-          granted['android.permission.ACCESS_FINE_LOCATION'] === PermissionsAndroid.RESULTS.GRANTED
+        const allGranted = Object.values(granted).every(
+          (status) => status === PermissionsAndroid.RESULTS.GRANTED
         );
-      } else {
-        // Android < 12
-        const granted = await PermissionsAndroid.request(
-          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
-        );
-        return granted === PermissionsAndroid.RESULTS.GRANTED;
+
+        if (!allGranted) {
+          console.log('[RealBleService] Not all permissions granted');
+          return false;
+        }
+      } catch (err) {
+        console.error('[RealBleService] Permission error:', err);
+        return false;
       }
     }
-    return true; // iOS doesn't need runtime permissions for BLE
+    return true;
   }
 
-  // Scan for ApexBox devices
   async scan(): Promise<BleDevice[]> {
-    try {
-      // If BLE not available or already in mock mode, return mock devices
-      if (!this.manager || this.useMockMode) {
-        console.log('[RealBleService] Using mock mode for scan');
-        this.useMockMode = true;
-        return this.getMockDevices();
-      }
+    const hasPermission = await this.requestPermissions();
+    if (!hasPermission) {
+      console.log('[RealBleService] Permissions not granted');
+      return [];
+    }
 
-      const hasPermission = await this.requestPermissions();
-      if (!hasPermission) {
-        console.warn('[RealBleService] BLE permissions not granted, using mock mode');
-        this.useMockMode = true;
-        return this.getMockDevices();
-      }
-
+    return new Promise((resolve) => {
+      const foundDevices: BleDevice[] = [];
       this.status.isScanning = true;
       this.status.error = null;
 
-      const devices: BleDevice[] = [];
-      const seenIds = new Set<string>();
+      console.log('[RealBleService] Starting scan...');
 
-      return new Promise((resolve) => {
-        // Scan for 5 seconds
-        this.manager!.startDeviceScan(null, null, (error, device) => {
+      this.manager.startDeviceScan(
+        [APEXBOX_SERVICE_UUID],
+        { allowDuplicates: false },
+        (error, device) => {
           if (error) {
             console.error('[RealBleService] Scan error:', error);
             this.status.error = error.message;
-            this.useMockMode = true;
-            resolve(this.getMockDevices());
+            this.status.isScanning = false;
             return;
           }
 
-          if (device && device.name && device.name.startsWith('ApexBox')) {
-            if (!seenIds.has(device.id)) {
-              seenIds.add(device.id);
-              devices.push({
-                id: device.id,
-                name: device.name,
-                rssi: device.rssi || -70,
-              });
+          if (device && device.name && device.name.includes('ApexBox')) {
+            console.log('[RealBleService] Found:', device.name, device.rssi);
+            
+            const rssi = device.rssi || -100;
+            let signal: 'excellent' | 'good' | 'fair' | 'weak' = 'weak';
+            if (rssi > -60) signal = 'excellent';
+            else if (rssi > -70) signal = 'good';
+            else if (rssi > -80) signal = 'fair';
+
+            const bleDevice: BleDevice = {
+              id: device.id,
+              name: device.name,
+              signal,
+              rssi,
+            };
+
+            // Add if not already in list
+            if (!foundDevices.find(d => d.id === device.id)) {
+              foundDevices.push(bleDevice);
             }
           }
-        });
+        }
+      );
 
-        setTimeout(() => {
-          this.manager!.stopDeviceScan();
-          this.status.isScanning = false;
-
-          if (devices.length === 0) {
-            console.warn('[RealBleService] No real devices found, using mock mode');
-            this.useMockMode = true;
-            resolve(this.getMockDevices());
-          } else {
-            resolve(devices);
-          }
-        }, 5000);
-      });
-    } catch (error: any) {
-      console.error('[RealBleService] Scan failed:', error);
-      this.status.isScanning = false;
-      this.status.error = error.message;
-      this.useMockMode = true;
-      return this.getMockDevices();
-    }
+      // Stop after 10 seconds
+      setTimeout(() => {
+        this.manager.stopDeviceScan();
+        this.status.isScanning = false;
+        console.log('[RealBleService] Scan complete. Found:', foundDevices.length);
+        resolve(foundDevices);
+      }, 10000);
+    });
   }
 
-  // Connect to a device
-  async connect(device: BleDevice): Promise<void> {
+  async connect(device: BleDevice): Promise<boolean> {
     try {
-      if (this.useMockMode || !this.manager) {
-        console.log('[RealBleService] Using mock connection');
-        this.status.isConnected = true;
-        this.status.connectedDevice = device;
-        this.startMockTelemetry();
-        return;
+      console.log('[RealBleService] Connecting to:', device.name);
+      this.status.error = null;
+
+      // Stop scanning
+      if (this.status.isScanning) {
+        this.manager.stopDeviceScan();
+        this.status.isScanning = false;
       }
 
-      console.log('[RealBleService] Connecting to', device.name);
+      // Connect
+      this.device = await this.manager.connectToDevice(device.id);
+      console.log('[RealBleService] Connected');
 
-      const connectedDevice = await this.manager.connectToDevice(device.id, {
-        autoConnect: false,
-        requestMTU: 512,
-      });
+      // Discover services
+      await this.device.discoverAllServicesAndCharacteristics();
+      console.log('[RealBleService] Services discovered');
 
-      this.connectedDevice = connectedDevice;
+      // Get characteristic
+      const services = await this.device.services();
+      const apexBoxService = services.find(
+        s => s.uuid.toLowerCase() === APEXBOX_SERVICE_UUID.toLowerCase()
+      );
 
-      await connectedDevice.discoverAllServicesAndCharacteristics();
+      if (!apexBoxService) {
+        console.error('[RealBleService] Service not found');
+        this.status.error = 'ApexBox service not found';
+        return false;
+      }
 
+      const characteristics = await apexBoxService.characteristics();
+      this.characteristic = characteristics.find(
+        c => c.uuid.toLowerCase() === TELEMETRY_CHAR_UUID.toLowerCase()
+      ) || null;
+
+      if (!this.characteristic) {
+        console.error('[RealBleService] Characteristic not found');
+        this.status.error = 'Telemetry characteristic not found';
+        return false;
+      }
+
+      console.log('[RealBleService] Characteristic found');
+
+      // Subscribe to notifications
+      await this.subscribeToTelemetry();
+
+      // Update status
       this.status.isConnected = true;
       this.status.connectedDevice = device;
 
-      // Start monitoring telemetry characteristic
-      this.startTelemetryMonitoring();
+      // Setup disconnect handler
+      this.device.onDisconnected((error, device) => {
+        console.log('[RealBleService] Disconnected:', device?.id);
+        if (error) {
+          console.error('[RealBleService] Disconnect error:', error);
+        }
+        this.device = null;
+        this.characteristic = null;
+        this.status.isConnected = false;
+        this.status.connectedDevice = null;
+      });
 
-      console.log('[RealBleService] Connected successfully');
+      return true;
     } catch (error: any) {
-      console.error('[RealBleService] Connect error:', error);
-      this.status.error = error.message;
-      throw error;
-    }
-  }
-
-  // Disconnect from device
-  async disconnect(): Promise<void> {
-    try {
-      if (this.connectedDevice && this.manager) {
-        await this.manager.cancelDeviceConnection(this.connectedDevice.id);
-        this.connectedDevice = null;
-      }
-
+      console.error('[RealBleService] Connection error:', error);
+      this.status.error = error.message || 'Connection failed';
       this.status.isConnected = false;
       this.status.connectedDevice = null;
-      this.useMockMode = false;
-
-      console.log('[RealBleService] Disconnected');
-    } catch (error: any) {
-      console.error('[RealBleService] Disconnect error:', error);
-      throw error;
+      return false;
     }
   }
 
-  // Send command to device
-  async sendCommand(command: string): Promise<void> {
-    try {
-      if (this.useMockMode) {
-        console.log('[RealBleService] Mock command:', command);
+  private async subscribeToTelemetry() {
+    if (!this.characteristic) return;
+
+    console.log('[RealBleService] Subscribing to telemetry...');
+
+    this.characteristic.monitor((error, characteristic) => {
+      if (error) {
+        console.error('[RealBleService] Monitor error:', error);
         return;
       }
 
-      if (!this.connectedDevice) {
-        throw new Error('No device connected');
-      }
+      if (characteristic?.value) {
+        try {
+          const rawData = atob(characteristic.value);
+          const jsonData = JSON.parse(rawData);
+          
+          // Map ESP32 data to TelemetryData format
+          const telemetry: TelemetryData = {
+            speed: jsonData.speed || 0,
+            rpm: jsonData.rpm || 0,
+            obdSpeed: jsonData.obdSpeed || 0,
+            temperature: jsonData.temp || 0,
+            humidity: jsonData.humidity || 0,
+            pressure: jsonData.pressure || 0,
+            altitude: jsonData.altitude || 0,
+            heading: jsonData.heading || 0,
+            pitch: jsonData.pitch || 0,
+            roll: jsonData.roll || 0,
+            lux: jsonData.lux || 0,
+            gas: jsonData.gas || 0,
+            satellites: jsonData.satellites || 0,
+            latitude: jsonData.lat || 0,
+            longitude: jsonData.lon || 0,
+            obdConnected: jsonData.obdConnected || false,
+            gForce: 0, // Calculate from acceleration if needed
+          };
 
-      const commandData = Buffer.from(command, 'utf-8').toString('base64');
-
-      await this.connectedDevice.writeCharacteristicWithResponseForService(
-        SERVICE_UUID,
-        COMMAND_CHAR_UUID,
-        commandData
-      );
-
-      console.log('[RealBleService] Command sent:', command);
-    } catch (error: any) {
-      console.error('[RealBleService] Send command error:', error);
-      throw error;
-    }
-  }
-
-  // Start monitoring telemetry data
-  private startTelemetryMonitoring() {
-    if (!this.connectedDevice) return;
-
-    this.connectedDevice
-      .monitorCharacteristicForService(
-        SERVICE_UUID,
-        TELEMETRY_CHAR_UUID,
-        (error, characteristic) => {
-          if (error) {
-            console.error('[RealBleService] Telemetry monitor error:', error);
-            return;
-          }
-
-          if (characteristic && characteristic.value) {
-            const telemetryData = this.parseTelemetry(characteristic.value);
-            this.notifyTelemetryListeners(telemetryData);
-          }
+          // Broadcast to all subscribers
+          this.telemetryCallbacks.forEach(callback => {
+            try {
+              callback(telemetry);
+            } catch (err) {
+              console.error('[RealBleService] Callback error:', err);
+            }
+          });
+        } catch (parseError) {
+          console.error('[RealBleService] Parse error:', parseError);
         }
-      )
-      .catch((error) => {
-        console.error('[RealBleService] Failed to start telemetry monitoring:', error);
-      });
+      }
+    });
   }
 
-  // Parse telemetry data from ESP32
-  private parseTelemetry(base64Data: string): TelemetryData {
-    try {
-      // Decode base64
-      const buffer = Buffer.from(base64Data, 'base64');
-
-      // Expected format: 20 bytes
-      // 0-3: speed (float)
-      // 4-7: gForceX (float)
-      // 8-11: gForceY (float)
-      // 12-15: gForceZ (float)
-      // 16-19: temperature (float)
-
-      const speed = buffer.readFloatLE(0);
-      const gForceX = buffer.readFloatLE(4);
-      const gForceY = buffer.readFloatLE(8);
-      const gForceZ = buffer.readFloatLE(12);
-      const temperature = buffer.readFloatLE(16);
-
-      // Calculate total G-force
-      const gForce = Math.sqrt(gForceX ** 2 + gForceY ** 2 + gForceZ ** 2);
-
-      return {
-        speed,
-        gForce,
-        gForceX,
-        gForceY,
-        gForceZ,
-        temperature,
-        altitude: 0, // Will be added via GPS
-        humidity: 0,
-        timestamp: Date.now(),
-      };
-    } catch (error) {
-      console.error('[RealBleService] Parse telemetry error:', error);
-      return generateRealisticTelemetry();
+  async disconnect() {
+    if (this.device) {
+      try {
+        console.log('[RealBleService] Disconnecting...');
+        await this.manager.cancelDeviceConnection(this.device.id);
+        this.device = null;
+        this.characteristic = null;
+        this.status.isConnected = false;
+        this.status.connectedDevice = null;
+      } catch (error) {
+        console.error('[RealBleService] Disconnect error:', error);
+      }
     }
   }
 
-  // Subscribe to telemetry updates
-  onTelemetry(listener: (data: TelemetryData) => void): () => void {
-    this.telemetryListeners.push(listener);
-    return () => {
-      this.telemetryListeners = this.telemetryListeners.filter((l) => l !== listener);
-    };
-  }
-
-  private notifyTelemetryListeners(data: TelemetryData) {
-    this.telemetryListeners.forEach((listener) => listener(data));
-  }
-
-  // Mock telemetry for testing/demo
-  private startMockTelemetry() {
-    const interval = setInterval(() => {
-      if (!this.status.isConnected) {
-        clearInterval(interval);
-        return;
-      }
-
-      const telemetryData = generateRealisticTelemetry();
-      this.notifyTelemetryListeners(telemetryData);
-    }, 100); // 10 Hz
-  }
-
-  // Get mock devices for fallback
-  private getMockDevices(): BleDevice[] {
-    return [
-      { id: 'mock-001', name: 'ApexBox-001', rssi: -65 },
-      { id: 'mock-002', name: 'ApexBox-002', rssi: -72 },
-    ];
+  async sendCommand(command: string): Promise<void> {
+    if (!this.status.isConnected) {
+      throw new Error('Not connected to any device');
+    }
+    
+    console.log('[RealBleService] Command sent (mock):', command);
+    // ESP32 doesn't have command support yet - just simulate
+    return Promise.resolve();
   }
 
   getStatus(): BleStatus {
-    return this.status;
+    return { ...this.status };
+  }
+
+  onTelemetry(callback: TelemetryCallback): () => void {
+    this.telemetryCallbacks.add(callback);
+    console.log('[RealBleService] Subscriber added. Total:', this.telemetryCallbacks.size);
+
+    return () => {
+      this.telemetryCallbacks.delete(callback);
+      console.log('[RealBleService] Subscriber removed');
+    };
+  }
+
+  destroy() {
+    this.disconnect();
+    this.manager.destroy();
   }
 }
 

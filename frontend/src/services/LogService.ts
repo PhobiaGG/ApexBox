@@ -1,182 +1,176 @@
-import * as FileSystem from 'expo-file-system';
-import { parseCSV, calculateStats, TelemetrySample, SessionStats } from '../utils/csv';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Asset } from 'expo-asset';
 
-export interface SessionMetadata {
+interface SessionFile {
   date: string;
-  time: string;
   fileName: string;
-  filePath: string;
-  stats?: SessionStats;
 }
 
-// No mock data - all sessions from user's real data
+interface SessionData {
+  samples: any[];
+  duration: number;
+  maxSpeed: number;
+  maxGForce: number;
+  timestamp: string;
+}
 
-// No mock CSV data - all data from AsyncStorage or Firebase
+// ✅ Helper to sanitize data for JSON
+const sanitizeForJSON = (obj: any): any => {
+  return JSON.parse(
+    JSON.stringify(obj, (key, value) => {
+      // Replace NaN and Infinity with valid numbers
+      if (typeof value === 'number') {
+        if (isNaN(value)) return 0;
+        if (!isFinite(value)) return 0;
+      }
+      return value;
+    })
+  );
+};
 
 class LogService {
-  private logsDir = FileSystem.documentDirectory + 'ApexBox_Logs/';
+  private cachedSessions: SessionFile[] | null = null;
+  private cachedLatestSession: SessionData | null = null;
 
-  async getSessionsByDate(): Promise<Record<string, SessionMetadata[]>> {
+  /**
+   * Get all sessions from AsyncStorage
+   */
+  async getSessions(): Promise<SessionFile[]> {
     try {
+      if (this.cachedSessions) {
+        return this.cachedSessions;
+      }
+
       console.log('[LogService] Getting sessions from AsyncStorage...');
-      
-      // Get all keys from AsyncStorage
-      const allKeys = await AsyncStorage.getAllKeys();
-      const sessionKeys = allKeys.filter(key => key.startsWith('session_'));
-      
-      console.log('[LogService] Found', sessionKeys.length, 'sessions');
-      
-      if (sessionKeys.length === 0) {
-        console.log('[LogService] No sessions found');
-        return {};
-      }
-      
-      // Group sessions by date
-      const sessionsByDate: Record<string, SessionMetadata[]> = {};
-      
-      for (const key of sessionKeys) {
-        // key format: "session_DATE/TIME.csv"
-        const sessionPath = key.replace('session_', '');
-        const [date, fileName] = sessionPath.split('/');
-        const time = fileName.replace('.csv', '');
-        
-        if (!sessionsByDate[date]) {
-          sessionsByDate[date] = [];
-        }
-        
-        sessionsByDate[date].push({
-          date,
-          time,
-          fileName,
-          filePath: sessionPath,
-        });
-      }
-      
-      // Sort sessions by time within each date
-      for (const date in sessionsByDate) {
-        sessionsByDate[date].sort((a, b) => a.time.localeCompare(b.time));
-      }
-      
-      console.log('[LogService] Organized sessions by date:', Object.keys(sessionsByDate));
-      return sessionsByDate;
-    } catch (error) {
-      console.error('[LogService] Error reading sessions:', error);
-      return {};
-    }
-  }
+      const keys = await AsyncStorage.getAllKeys();
+      const sessionKeys = keys.filter(key => key.startsWith('session_'));
 
-  async getSessionData(session: SessionMetadata): Promise<TelemetrySample[]> {
-    try {
-      console.log('[LogService] Reading session:', session.date, session.fileName);
-      
-      // Get CSV data from AsyncStorage
-      const sessionKey = `session_${session.filePath}`;
-      const content = await AsyncStorage.getItem(sessionKey);
-      
-      if (!content) {
-        console.log('[LogService] No data found for:', sessionKey);
-        return [];
+      const sessions: SessionFile[] = sessionKeys.map(key => {
+        const parts = key.replace('session_', '').split('/');
+        return {
+          date: parts[0],
+          fileName: parts[1],
+        };
+      });
+
+      // Sort by date descending (newest first)
+      sessions.sort((a, b) => {
+        const dateA = new Date(a.date).getTime();
+        const dateB = new Date(b.date).getTime();
+        return dateB - dateA;
+      });
+
+      this.cachedSessions = sessions;
+      console.log('[LogService] Found', sessions.length, 'sessions');
+
+      if (sessions.length === 0) {
+        console.log('[LogService] No sessions found');
       }
-      
-      console.log('[LogService] Found CSV data, parsing...');
-      return parseCSV(content);
+
+      return sessions;
     } catch (error) {
-      console.error('[LogService] Error reading session data:', error);
+      console.error('[LogService] Error getting sessions:', error);
       return [];
     }
   }
 
-  async getSessionStats(session: SessionMetadata): Promise<SessionStats | null> {
+  /**
+   * Get the latest session data
+   */
+  async getLatestSession(): Promise<SessionData | null> {
     try {
-      const samples = await this.getSessionData(session);
-      return calculateStats(samples);
-    } catch (error) {
-      console.error('[LogService] Error calculating stats:', error);
-      return null;
-    }
-  }
+      if (this.cachedLatestSession) {
+        return this.cachedLatestSession;
+      }
 
-  async getLatestSession(): Promise<{ session: SessionMetadata; samples: TelemetrySample[] } | null> {
-    try {
-      const sessionsByDate = await this.getSessionsByDate();
-      const dates = Object.keys(sessionsByDate).sort().reverse();
-      
-      if (dates.length === 0) return null;
+      const sessions = await this.getSessions();
+      if (sessions.length === 0) {
+        return null;
+      }
 
-      const latestDate = dates[0];
-      const sessions = sessionsByDate[latestDate];
-      
-      if (sessions.length === 0) return null;
+      const latestSession = sessions[0];
+      const sessionKey = `${latestSession.date}/${latestSession.fileName}`;
+      const dataStr = await AsyncStorage.getItem(`session_${sessionKey}`);
 
-      const latestSession = sessions[sessions.length - 1];
-      const samples = await this.getSessionData(latestSession);
+      if (!dataStr) {
+        return null;
+      }
 
-      return { session: latestSession, samples };
+      try {
+        const data = JSON.parse(dataStr);
+        this.cachedLatestSession = data;
+        return data;
+      } catch (parseError) {
+        console.error('[LogService] Error parsing latest session:', parseError);
+        // Delete corrupted data
+        await AsyncStorage.removeItem(`session_${sessionKey}`);
+        return null;
+      }
     } catch (error) {
       console.error('[LogService] Error getting latest session:', error);
       return null;
     }
   }
 
-  async rescan(): Promise<void> {
-    console.log('[LogService] Rescanning logs...');
-    await AsyncStorage.removeItem('sessions_cache');
-    await this.getSessionsByDate();
-  }
-
-  async clearCache(): Promise<void> {
-    console.log('[LogService] Clearing cache...');
-    await AsyncStorage.removeItem('sessions_cache');
-  }
-
   /**
-   * Save a new session with telemetry and GPS data
+   * Save a new session
    */
   async saveSession(
-    telemetryData: TelemetrySample[],
+    samples: any[],
     gpsCoordinates: any[],
     duration: number
   ): Promise<string> {
     try {
       const now = new Date();
-      const dateStr = now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).replace(/ /g, '');
-      const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }).replace(/\s/g, '').replace(':', '.');
+      const dateStr = now.toLocaleDateString('en-US', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+      }).replace(/\s/g, '');
+      
+      const timeStr = now.toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+      }).replace(/:/g, '.').replace(/\s/g, '');
       
       const fileName = `${timeStr}.csv`;
       const sessionKey = `${dateStr}/${fileName}`;
       
       console.log('[LogService] Saving session:', sessionKey);
+
+      // ✅ Sanitize samples to remove NaN/Infinity
+      const cleanSamples = samples.map(s => sanitizeForJSON(s));
       
-      // Create CSV content
-      const headers = 'timestamp_ms,speed,g_force,temp,humidity,lux,altitude';
-      const rows = telemetryData.map(sample => 
-        `${sample.timestamp_ms},${sample.speed},${sample.g_force},${sample.temperature},${sample.humidity || 0},${sample.lux || 0},${sample.altitude}`
-      ).join('\n');
+      // Calculate stats from clean data
+      const speeds = cleanSamples.map(s => s.speed || 0).filter(v => isFinite(v));
+      const gForces = cleanSamples.map(s => s.g_force || 0).filter(v => isFinite(v));
       
-      const csvContent = `${headers}\n${rows}`;
+      const maxSpeed = speeds.length > 0 ? Math.max(...speeds) : 0;
+      const maxGForce = gForces.length > 0 ? Math.max(...gForces) : 0;
       
-      // Save to AsyncStorage (for demo - in production would save to Firebase)
-      await AsyncStorage.setItem(`session_${sessionKey}`, csvContent);
+      // ✅ Create clean metadata
+      const metadata = sanitizeForJSON({
+        samples: cleanSamples,
+        duration,
+        maxSpeed,
+        maxGForce,
+        timestamp: now.toISOString(),
+      });
+
+      // Save session metadata
+      await AsyncStorage.setItem(`session_${sessionKey}`, JSON.stringify(metadata));
       
-      // Save GPS data separately
-      if (gpsCoordinates.length > 0) {
-        await AsyncStorage.setItem(`gps_${sessionKey}`, JSON.stringify(gpsCoordinates));
-        console.log('[LogService] Saved GPS data:', gpsCoordinates.length, 'points');
+      // Save GPS coordinates if available
+      if (gpsCoordinates && gpsCoordinates.length > 0) {
+        const cleanCoordinates = sanitizeForJSON(gpsCoordinates);
+        await AsyncStorage.setItem(`gps_${sessionKey}`, JSON.stringify(cleanCoordinates));
+        console.log('[LogService] Saved GPS data:', cleanCoordinates.length, 'points');
       }
       
-      // Save metadata
-      const metadata: SessionMetadata = {
-        date: dateStr,
-        time: timeStr,
-        fileName,
-        filePath: sessionKey,
-        stats: calculateStats(telemetryData),
-      };
-      
-      // Update cache
-      await this.clearCache();
+      // Clear cache
+      console.log('[LogService] Clearing cache...');
+      this.cachedSessions = null;
+      this.cachedLatestSession = null;
       
       console.log('[LogService] Session saved successfully:', sessionKey);
       return sessionKey;
@@ -187,49 +181,23 @@ class LogService {
   }
 
   /**
-   * Get GPS data for a session
+   * Delete a session
    */
-  async getSessionGPS(session: SessionMetadata): Promise<any[]> {
+  async deleteSession(date: string, fileName: string): Promise<void> {
     try {
-      console.log('[LogService] Reading GPS data for:', session.date, session.fileName);
-      
-      // Get GPS data from AsyncStorage
-      const gpsKey = `gps_${session.filePath}`;
-      const gpsData = await AsyncStorage.getItem(gpsKey);
-      
-      if (!gpsData) {
-        console.log('[LogService] No GPS data found for:', gpsKey);
-        return [];
-      }
-      
-      console.log('[LogService] Found GPS data, parsing...');
-      return JSON.parse(gpsData);
-    } catch (error) {
-      console.error('[LogService] Error reading GPS data:', error);
-      return [];
-    }
-  }
+      const sessionKey = `${date}/${fileName}`;
+      console.log('[LogService] Deleting session:', sessionKey);
 
-  /**
-   * Delete a session (removes from local storage and optionally from ApexBox SD card)
-   */
-  async deleteSession(session: SessionMetadata): Promise<void> {
-    try {
-      console.log('[LogService] Deleting session:', session.filePath);
-      
-      // Delete CSV data from AsyncStorage
-      const sessionKey = `session_${session.filePath}`;
-      await AsyncStorage.removeItem(sessionKey);
-      console.log('[LogService] Deleted session data:', sessionKey);
-      
-      // Delete GPS data if exists
-      const gpsKey = `gps_${session.filePath}`;
-      await AsyncStorage.removeItem(gpsKey);
-      console.log('[LogService] Deleted GPS data:', gpsKey);
-      
-      // Clear cache to force refresh
-      await this.clearCache();
-      
+      await AsyncStorage.multiRemove([
+        `session_${sessionKey}`,
+        `gps_${sessionKey}`,
+        `telemetry_${sessionKey}`,
+      ]);
+
+      // Clear cache
+      this.cachedSessions = null;
+      this.cachedLatestSession = null;
+
       console.log('[LogService] Session deleted successfully');
     } catch (error) {
       console.error('[LogService] Error deleting session:', error);
@@ -238,20 +206,47 @@ class LogService {
   }
 
   /**
-   * Send command to ApexBox to delete file from SD card
+   * Clear all cached data
    */
-  async deleteFromApexBox(session: SessionMetadata, sendCommand: (cmd: string) => Promise<void>): Promise<void> {
+  clearCache(): void {
+    this.cachedSessions = null;
+    this.cachedLatestSession = null;
+  }
+
+  /**
+   * Clear corrupted sessions
+   */
+  async clearCorruptedSessions(): Promise<void> {
     try {
-      console.log('[LogService] Sending delete command to ApexBox for:', session.filePath);
+      console.log('[LogService] Checking for corrupted sessions...');
+      const keys = await AsyncStorage.getAllKeys();
+      const sessionKeys = keys.filter(key => key.startsWith('session_'));
       
-      // Send delete command to ApexBox (format: DELETE:DATE/FILENAME.csv)
-      const deleteCmd = `DELETE:${session.filePath}`;
-      await sendCommand(deleteCmd);
+      let removedCount = 0;
       
-      console.log('[LogService] Delete command sent to ApexBox');
+      for (const key of sessionKeys) {
+        try {
+          const data = await AsyncStorage.getItem(key);
+          if (data) {
+            JSON.parse(data); // Test if it's valid JSON
+          }
+        } catch {
+          // Delete corrupted session
+          console.log('[LogService] Removing corrupted session:', key);
+          await AsyncStorage.removeItem(key);
+          await AsyncStorage.removeItem(key.replace('session_', 'gps_'));
+          removedCount++;
+        }
+      }
+      
+      if (removedCount > 0) {
+        console.log(`[LogService] Removed ${removedCount} corrupted session(s)`);
+        this.clearCache();
+      } else {
+        console.log('[LogService] No corrupted sessions found');
+      }
     } catch (error) {
-      console.error('[LogService] Error sending delete command to ApexBox:', error);
-      throw error;
+      console.error('[LogService] Error clearing corrupted sessions:', error);
     }
   }
 }

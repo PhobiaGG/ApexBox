@@ -1,350 +1,317 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Alert,
   RefreshControl,
+  Alert,
 } from 'react-native';
-import { COLORS, SPACING, FONT_SIZE, BORDER_RADIUS } from '../constants/theme';
+import { useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLogs } from '../contexts/LogsContext';
-import { useBle } from '../contexts/BleContext';
-import { useSettings } from '../contexts/SettingsContext';
-import { useRouter } from 'expo-router';
-import { convertSpeed, getSpeedUnit } from '../utils/format';
+import { useTheme } from '../contexts/ThemeContext';
+import { useAuth } from '../contexts/AuthContext';
+import { SPACING, FONT_SIZE, BORDER_RADIUS } from '../constants/theme';
 import * as Haptics from 'expo-haptics';
-import Sparkline from '../components/Sparkline';
-import LogService, { SessionMetadata } from '../services/LogService';
-import { LogCardSkeleton } from '../components/LoadingSkeleton';
-import EmptyState from '../components/EmptyState';
-import ErrorHandler from '../utils/errorHandler';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-type SortMode = 'date' | 'peakSpeed' | 'duration';
+interface SessionListItem {
+  date: string;
+  fileName: string;
+  duration: number;
+  maxSpeed: number;
+  maxGForce: number;
+  hasGPS: boolean;
+}
 
 export default function LogsScreen() {
-  const { sessionsByDate, isLoading, rescan } = useLogs();
-  const { status, sendCommand } = useBle();
-  const { settings } = useSettings();
   const router = useRouter();
-  const isMetric = settings.units?.isMetric ?? true; // Default to metric if undefined
-  
-  console.log('[LogsScreen] Settings:', settings.units, 'isMetric:', isMetric);
-  console.log('[LogsScreen] Test conversion: 100 km/h =', convertSpeed(100, isMetric), isMetric ? 'km/h' : 'mph');
-  const [expandedDates, setExpandedDates] = useState<Set<string>>(new Set());
+  const { sessions, isLoading, rescan, deleteSession } = useLogs();
+  const { colors, getCurrentAccent } = useTheme();
+  const { profile } = useAuth();
+  const accentColor = getCurrentAccent();
+
   const [refreshing, setRefreshing] = useState(false);
-  const [sortMode, setSortMode] = useState<SortMode>('date');
-  const [deletingSession, setDeletingSession] = useState<string | null>(null);
+  const [sessionsList, setSessionsList] = useState<SessionListItem[]>([]);
 
-  const dates = Object.keys(sessionsByDate).sort().reverse();
+  useEffect(() => {
+    // ✅ Only load if sessions exists and is an array
+    if (sessions && Array.isArray(sessions)) {
+      loadSessionsList();
+    } else {
+      setSessionsList([]);
+    }
+  }, [sessions]);
 
-  const toggleDate = async (date: string) => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setExpandedDates(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(date)) {
-        newSet.delete(date);
-      } else {
-        newSet.add(date);
+  const loadSessionsList = async () => {
+    try {
+      const list: SessionListItem[] = [];
+
+      // ✅ Double-check sessions is valid before iterating
+      if (!sessions || !Array.isArray(sessions) || sessions.length === 0) {
+        console.log('[LogsScreen] No sessions to load');
+        setSessionsList([]);
+        return;
       }
-      return newSet;
-    });
+
+      console.log('[LogsScreen] Loading metadata for', sessions.length, 'sessions');
+
+      for (const session of sessions) {
+        try {
+          const sessionKey = `${session.date}/${session.fileName}`;
+          
+          // Load session metadata
+          const metadataStr = await AsyncStorage.getItem(`session_${sessionKey}`);
+          if (metadataStr) {
+            const metadata = JSON.parse(metadataStr);
+            
+            // Check if GPS data exists
+            const gpsDataStr = await AsyncStorage.getItem(`gps_${sessionKey}`);
+            const hasGPS = gpsDataStr !== null && gpsDataStr !== 'null' && JSON.parse(gpsDataStr).length > 0;
+            
+            list.push({
+              date: session.date,
+              fileName: session.fileName,
+              duration: metadata.duration || 0,
+              maxSpeed: metadata.maxSpeed || 0,
+              maxGForce: metadata.maxGForce || 0,
+              hasGPS,
+            });
+          }
+        } catch (sessionError) {
+          console.warn('[LogsScreen] Error loading session:', session.fileName, sessionError);
+          // Continue with next session
+        }
+      }
+
+      console.log('[LogsScreen] Loaded', list.length, 'sessions with metadata');
+      setSessionsList(list);
+    } catch (error) {
+      console.error('[LogsScreen] Error loading sessions list:', error);
+      // ✅ Set empty list on error to prevent cascading failures
+      setSessionsList([]);
+    }
   };
 
-  const handleSessionPress = async (date: string, fileName: string) => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    router.push({
-      pathname: '/session-detail',
-      params: { date, fileName },
-    });
-  };
-
-  const handleRescan = async () => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    await rescan();
-    await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    Alert.alert('Rescan Complete', 'Logs directory has been rescanned');
-  };
-
-  const onRefresh = async () => {
+  const handleRefresh = async () => {
     setRefreshing(true);
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     await rescan();
-    await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    await loadSessionsList();
     setRefreshing(false);
   };
 
-  const handleDeleteSession = (session: SessionMetadata) => {
-    const isConnected = status === 'connected';
-    
-    const message = isConnected
-      ? `Delete this session?\n\nThis will remove:\n• Local app data\n• Files from ApexBox SD card\n\nThis action cannot be undone.`
-      : `Delete this session?\n\n⚠️ ApexBox is not connected.\n\nThis will only remove the local app data. The file will remain on the ApexBox SD card until you connect and delete it manually.\n\nContinue?`;
-
+  const handleDeleteSession = async (session: SessionListItem) => {
     Alert.alert(
       'Delete Session',
-      message,
+      'Are you sure you want to delete this session? This action cannot be undone.',
       [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-          onPress: () => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light),
-        },
+        { text: 'Cancel', style: 'cancel' },
         {
           text: 'Delete',
           style: 'destructive',
           onPress: async () => {
-            await performDelete(session, isConnected);
+            await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            await deleteSession(session.date, session.fileName);
+            await loadSessionsList();
           },
         },
       ]
     );
   };
 
-  const performDelete = async (session: SessionMetadata, isConnected: boolean) => {
-    try {
-      setDeletingSession(session.fileName);
-      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-
-      // Delete from local storage
-      await LogService.deleteSession(session);
-
-      // If connected to ApexBox, also delete from SD card
-      if (isConnected) {
-        try {
-          await LogService.deleteFromApexBox(session, sendCommand);
-        } catch (error) {
-          console.error('[LogsScreen] Error deleting from ApexBox:', error);
-          // Continue even if ApexBox deletion fails
-        }
-      }
-
-      // Refresh the logs list
-      await rescan();
-
-      const successMessage = isConnected
-        ? 'Session deleted from app and ApexBox'
-        : 'Session deleted from app (ApexBox not connected)';
-      
-      await ErrorHandler.success(successMessage);
-    } catch (error) {
-      console.error('[LogsScreen] Error deleting session:', error);
-      ErrorHandler.handle(error, {
-        label: 'Try Again',
-        onPress: () => performDelete(session, isConnected)
-      });
-    } finally {
-      setDeletingSession(null);
-    }
+  const formatDuration = (seconds: number): string => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}m ${secs}s`;
   };
 
-  // Show loading skeletons while loading
-  if (isLoading) {
-    return (
-      <View style={styles.container}>
-        <LinearGradient colors={[COLORS.background, '#0F0F0F']} style={styles.gradient}>
-          <View style={styles.header}>
-            <Text style={styles.title}>Session Logs</Text>
-            <TouchableOpacity onPress={handleRescan} style={styles.headerButton}>
-              <MaterialCommunityIcons name="refresh" size={24} color={COLORS.cyan} />
-            </TouchableOpacity>
-          </View>
-          <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-            <LogCardSkeleton />
-            <LogCardSkeleton />
-            <LogCardSkeleton />
-            <LogCardSkeleton />
-          </ScrollView>
-        </LinearGradient>
-      </View>
-    );
-  }
+  const formatDate = (dateStr: string): string => {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
+  };
 
-  // Show empty state if no sessions
-  if (dates.length === 0) {
-    return (
-      <View style={styles.container}>
-        <LinearGradient colors={[COLORS.background, '#0F0F0F']} style={styles.gradient}>
-          <View style={styles.header}>
-            <Text style={styles.title}>Session Logs</Text>
-            <TouchableOpacity onPress={handleRescan} style={styles.headerButton}>
-              <MaterialCommunityIcons name="refresh" size={24} color={COLORS.cyan} />
-            </TouchableOpacity>
-          </View>
-          <EmptyState
-            icon="file-document-outline"
-            title="No Sessions Yet"
-            message="Start recording by connecting your ApexBox and tapping 'Start Analysis' on the Dashboard"
-            actionLabel="Refresh"
-            onAction={handleRescan}
-            accentColor={COLORS.cyan}
-          />
-        </LinearGradient>
-      </View>
-    );
-  }
+  const formatTime = (dateStr: string): string => {
+    const date = new Date(dateStr);
+    return date.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+    });
+  };
 
   return (
-    <View style={styles.container}>
-      <LinearGradient colors={[COLORS.background, '#0F0F0F']} style={styles.gradient}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Session Logs</Text>
-          <TouchableOpacity onPress={handleRescan} style={styles.headerButton}>
-            <MaterialCommunityIcons name="refresh" size={24} color={COLORS.cyan} />
-          </TouchableOpacity>
-        </View>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={[styles.title, { color: colors.text }]}>Session Logs</Text>
+        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+          {sessionsList.length} {sessionsList.length === 1 ? 'session' : 'sessions'}
+        </Text>
+        {profile?.premium && (
+          <View style={[styles.proBadge, { backgroundColor: accentColor }]}>
+            <MaterialCommunityIcons name="crown" size={14} color={colors.background} />
+            <Text style={[styles.proBadgeText, { color: colors.background }]}>PRO</Text>
+          </View>
+        )}
+      </View>
 
-        <ScrollView
-          style={styles.scrollView}
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-              tintColor={COLORS.cyan}
-              colors={[COLORS.cyan, COLORS.magenta, COLORS.lime]}
-            />
-          }
-        >
-          {dates.map(date => {
-            const isExpanded = expandedDates.has(date);
-            const sessions = sessionsByDate[date];
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            tintColor={accentColor}
+            colors={[accentColor]}
+          />
+        }
+      >
+        {isLoading ? (
+          <View style={styles.emptyContainer}>
+            <MaterialCommunityIcons name="loading" size={48} color={accentColor} />
+            <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
+              Loading sessions...
+            </Text>
+          </View>
+        ) : sessionsList.length === 0 ? (
+          <View style={styles.emptyContainer}>
+            <MaterialCommunityIcons name="file-document-outline" size={64} color={colors.textTertiary} />
+            <Text style={[styles.emptyTitle, { color: colors.text }]}>No Sessions Yet</Text>
+            <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
+              Start recording your first driving session from the Dashboard
+            </Text>
+          </View>
+        ) : (
+          sessionsList.map((session, index) => (
+            <TouchableOpacity
+              key={`${session.date}-${session.fileName}-${index}`}
+              style={[styles.sessionCard, { backgroundColor: colors.card, borderColor: colors.border }]}
+              onPress={async () => {
+                await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                router.push({
+                  pathname: '/session-details',
+                  params: {
+                    date: session.date,
+                    fileName: session.fileName,
+                  },
+                });
+              }}
+              activeOpacity={0.7}
+            >
+              {/* Session Header */}
+              <View style={styles.sessionHeader}>
+                <View style={styles.sessionHeaderLeft}>
+                  <MaterialCommunityIcons name="calendar" size={16} color={accentColor} />
+                  <Text style={[styles.sessionDate, { color: colors.text }]}>
+                    {formatDate(session.date)}
+                  </Text>
+                </View>
+                <Text style={[styles.sessionTime, { color: colors.textSecondary }]}>
+                  {formatTime(session.date)}
+                </Text>
+              </View>
 
-            return (
-              <View key={date} style={styles.dateSection}>
+              {/* Stats Row */}
+              <View style={styles.statsRow}>
+                <View style={styles.statItem}>
+                  <MaterialCommunityIcons name="timer" size={18} color={colors.cyan} />
+                  <Text style={[styles.statValue, { color: colors.text }]}>
+                    {formatDuration(session.duration)}
+                  </Text>
+                </View>
+
+                <View style={styles.statItem}>
+                  <MaterialCommunityIcons name="speedometer" size={18} color={colors.magenta} />
+                  <Text style={[styles.statValue, { color: colors.text }]}>
+                    {session.maxSpeed.toFixed(0)} MPH
+                  </Text>
+                </View>
+
+                <View style={styles.statItem}>
+                  <MaterialCommunityIcons name="arrow-up-bold" size={18} color={colors.lime} />
+                  <Text style={[styles.statValue, { color: colors.text }]}>
+                    {session.maxGForce.toFixed(2)}g
+                  </Text>
+                </View>
+              </View>
+
+              {/* GPS Badge */}
+              {session.hasGPS && (
+                <View style={styles.badgeContainer}>
+                  <View style={[styles.gpsBadge, { backgroundColor: colors.lime + '15' }]}>
+                    <MaterialCommunityIcons name="map-marker" size={14} color={colors.lime} />
+                    <Text style={[styles.gpsBadgeText, { color: colors.lime }]}>GPS Tracked</Text>
+                  </View>
+                </View>
+              )}
+
+              {/* Action Buttons */}
+              <View style={styles.actionRow}>
                 <TouchableOpacity
-                  style={styles.dateHeader}
-                  onPress={() => toggleDate(date)}
+                  style={[styles.actionButton, { borderColor: colors.border }]}
+                  onPress={async (e) => {
+                    e.stopPropagation();
+                    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                    router.push({
+                      pathname: '/session-details',
+                      params: {
+                        date: session.date,
+                        fileName: session.fileName,
+                      },
+                    });
+                  }}
                   activeOpacity={0.7}
                 >
-                  <View style={styles.dateLeft}>
-                    <MaterialCommunityIcons name="calendar" size={20} color={COLORS.cyan} />
-                    <Text style={styles.dateText}>{date}</Text>
-                    <View style={styles.badge}>
-                      <Text style={styles.badgeText}>{sessions.length}</Text>
-                    </View>
-                  </View>
-                  <MaterialCommunityIcons
-                    name={isExpanded ? 'chevron-up' : 'chevron-down'}
-                    size={24}
-                    color={COLORS.textSecondary}
-                  />
+                  <MaterialCommunityIcons name="eye" size={16} color={accentColor} />
+                  <Text style={[styles.actionButtonText, { color: accentColor }]}>View</Text>
                 </TouchableOpacity>
 
-                {isExpanded && (
-                  <View style={styles.sessionsList}>
-                    {sessions.map(session => {
-                      // Generate sparkline data with unit conversion
-                      const sparklineData = session.stats
-                        ? [
-                            convertSpeed(session.stats.avgSpeed * 0.7, isMetric),
-                            convertSpeed(session.stats.peakSpeed * 0.85, isMetric),
-                            convertSpeed(session.stats.peakSpeed, isMetric),
-                            convertSpeed(session.stats.peakSpeed * 0.9, isMetric),
-                            convertSpeed(session.stats.avgSpeed * 0.8, isMetric),
-                          ]
-                        : [];
-
-                      const isDeleting = deletingSession === session.fileName;
-
-                      return (
-                        <View key={session.fileName} style={styles.sessionItem}>
-                          <TouchableOpacity
-                            style={styles.sessionCard}
-                            onPress={() => handleSessionPress(date, session.fileName)}
-                            activeOpacity={0.7}
-                            disabled={isDeleting}
-                          >
-                            <LinearGradient
-                              colors={[COLORS.card, COLORS.background]}
-                              style={styles.sessionGradient}
-                            >
-                              <View style={styles.sessionHeader}>
-                                <View style={styles.sessionLeft}>
-                                  <MaterialCommunityIcons
-                                    name="timer-outline"
-                                    size={18}
-                                    color={COLORS.textSecondary}
-                                  />
-                                  <Text style={styles.sessionTime}>{session.time}</Text>
-                                </View>
-
-                                {session.stats && (
-                                  <View style={styles.sessionStats}>
-                                    <View style={styles.statChip}>
-                                      <MaterialCommunityIcons
-                                        name="speedometer"
-                                        size={14}
-                                        color={COLORS.cyan}
-                                      />
-                                      <Text style={[styles.statChipText, { color: COLORS.cyan }]}>
-                                        {convertSpeed(session.stats.peakSpeed, isMetric).toFixed(0)} {getSpeedUnit(isMetric)}
-                                      </Text>
-                                    </View>
-                                    <View style={styles.statChip}>
-                                      <MaterialCommunityIcons
-                                        name="clock-outline"
-                                        size={14}
-                                        color={COLORS.magenta}
-                                      />
-                                      <Text style={[styles.statChipText, { color: COLORS.magenta }]}>
-                                        {Math.floor(session.stats.duration)}s
-                                      </Text>
-                                    </View>
-                                  </View>
-                                )}
-                              </View>
-
-                              {sparklineData.length > 0 && (
-                                <View style={styles.sparklineContainer}>
-                                  <Sparkline
-                                    data={sparklineData}
-                                    width={280}
-                                    height={40}
-                                    color={COLORS.lime}
-                                    lineWidth={2}
-                                  />
-                                </View>
-                              )}
-
-                              <View style={styles.sessionFooter}>
-                                <Text style={styles.sessionHint}>Tap to view details</Text>
-                                <MaterialCommunityIcons
-                                  name="chevron-right"
-                                  size={18}
-                                  color={COLORS.textTertiary}
-                                />
-                              </View>
-                            </LinearGradient>
-                          </TouchableOpacity>
-
-                          {/* Delete Button */}
-                          <TouchableOpacity
-                            style={styles.deleteButton}
-                            onPress={() => handleDeleteSession(session)}
-                            disabled={isDeleting}
-                            activeOpacity={0.7}
-                          >
-                            <MaterialCommunityIcons
-                              name={isDeleting ? "loading" : "trash-can-outline"}
-                              size={20}
-                              color={isDeleting ? COLORS.textSecondary : COLORS.danger}
-                            />
-                          </TouchableOpacity>
-                        </View>
-                      );
-                    })}
-                  </View>
+                {session.hasGPS && profile?.premium && (
+                  <TouchableOpacity
+                    style={[styles.actionButton, { borderColor: colors.border }]}
+                    onPress={async (e) => {
+                      e.stopPropagation();
+                      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                      router.push({
+                        pathname: '/track-replay',
+                        params: {
+                          date: session.date,
+                          fileName: session.fileName,
+                        },
+                      });
+                    }}
+                    activeOpacity={0.7}
+                  >
+                    <MaterialCommunityIcons name="play" size={16} color={colors.cyan} />
+                    <Text style={[styles.actionButtonText, { color: colors.cyan }]}>Replay</Text>
+                  </TouchableOpacity>
                 )}
+
+                <TouchableOpacity
+                  style={[styles.actionButton, { borderColor: colors.border }]}
+                  onPress={(e) => {
+                    e.stopPropagation();
+                    handleDeleteSession(session);
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <MaterialCommunityIcons name="delete" size={16} color={colors.magenta} />
+                  <Text style={[styles.actionButtonText, { color: colors.magenta }]}>Delete</Text>
+                </TouchableOpacity>
               </View>
-            );
-          })}
-        </ScrollView>
-      </LinearGradient>
+            </TouchableOpacity>
+          ))
+        )}
+      </ScrollView>
     </View>
   );
 }
@@ -352,26 +319,34 @@ export default function LogsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
-  },
-  gradient: {
-    flex: 1,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
     paddingTop: 60,
     paddingHorizontal: SPACING.lg,
     paddingBottom: SPACING.md,
+    alignItems: 'center',
   },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: COLORS.text,
   },
-  headerButton: {
-    padding: SPACING.sm,
+  subtitle: {
+    fontSize: FONT_SIZE.md,
+    marginTop: SPACING.xs,
+  },
+  proBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: SPACING.sm,
+    paddingVertical: 4,
+    borderRadius: 10,
+    gap: 4,
+    marginTop: SPACING.sm,
+  },
+  proBadgeText: {
+    fontSize: FONT_SIZE.xs,
+    fontWeight: 'bold',
+    letterSpacing: 1,
   },
   scrollView: {
     flex: 1,
@@ -380,155 +355,94 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.lg,
     paddingBottom: 100,
   },
-  dateSection: {
-    marginBottom: SPACING.md,
-  },
-  dateHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: SPACING.md,
-    backgroundColor: COLORS.card,
-    borderRadius: BORDER_RADIUS.md,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-  dateLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: SPACING.sm,
-  },
-  dateText: {
-    fontSize: FONT_SIZE.md,
-    color: COLORS.text,
-    fontWeight: '600',
-  },
-  badge: {
-    backgroundColor: COLORS.cyan,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 12,
-    minWidth: 24,
-    alignItems: 'center',
-  },
-  badgeText: {
-    fontSize: FONT_SIZE.xs,
-    color: COLORS.background,
-    fontWeight: 'bold',
-  },
-  sessionsList: {
-    marginTop: SPACING.sm,
-    gap: SPACING.sm,
-  },
-  sessionItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: SPACING.sm,
-  },
-  sessionCard: {
-    flex: 1,
-    borderRadius: BORDER_RADIUS.md,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-  sessionGradient: {
-    flexDirection: 'column',
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.md,
-    borderRadius: BORDER_RADIUS.md,
-    gap: SPACING.sm,
-  },
-  deleteButton: {
-    width: 44,
-    height: 44,
-    borderRadius: BORDER_RADIUS.md,
-    backgroundColor: COLORS.card,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  sessionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  sessionLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: SPACING.sm,
-  },
-  sessionStats: {
-    flexDirection: 'row',
-    gap: SPACING.xs,
-  },
-  statChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: SPACING.sm,
-    paddingVertical: 4,
-    backgroundColor: COLORS.background,
-    borderRadius: 12,
-  },
-  statChipText: {
-    fontSize: FONT_SIZE.xs,
-    fontWeight: '600',
-  },
-  sparklineContainer: {
-    marginVertical: SPACING.xs,
-    borderRadius: 8,
-    overflow: 'hidden',
-  },
-  sessionFooter: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  sessionHint: {
-    fontSize: FONT_SIZE.xs,
-    color: COLORS.textTertiary,
-  },
-  sessionTime: {
-    flex: 1,
-    fontSize: FONT_SIZE.md,
-    color: COLORS.text,
-    fontWeight: '500',
-  },
   emptyContainer: {
     flex: 1,
-    alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: SPACING.xl,
+    alignItems: 'center',
+    paddingVertical: SPACING.xl * 3,
   },
   emptyTitle: {
     fontSize: FONT_SIZE.xl,
-    color: COLORS.text,
     fontWeight: 'bold',
     marginTop: SPACING.lg,
   },
   emptyText: {
     fontSize: FONT_SIZE.md,
-    color: COLORS.textSecondary,
     textAlign: 'center',
     marginTop: SPACING.sm,
+    paddingHorizontal: SPACING.xl,
   },
-  refreshButton: {
-    marginTop: SPACING.xl,
-    borderRadius: BORDER_RADIUS.md,
-    overflow: 'hidden',
+  sessionCard: {
+    padding: SPACING.md,
+    borderRadius: BORDER_RADIUS.lg,
+    borderWidth: 1,
+    marginBottom: SPACING.md,
   },
-  refreshGradient: {
+  sessionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: SPACING.md,
+  },
+  sessionHeaderLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: SPACING.lg,
-    paddingVertical: SPACING.md,
-    gap: SPACING.sm,
+    gap: SPACING.xs,
   },
-  refreshButtonText: {
+  sessionDate: {
     fontSize: FONT_SIZE.md,
-    color: COLORS.text,
-    fontWeight: 'bold',
+    fontWeight: '600',
+  },
+  sessionTime: {
+    fontSize: FONT_SIZE.sm,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: SPACING.sm,
+  },
+  statItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.xs,
+  },
+  statValue: {
+    fontSize: FONT_SIZE.sm,
+    fontWeight: '600',
+  },
+  badgeContainer: {
+    marginBottom: SPACING.sm,
+  },
+  gpsBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    paddingHorizontal: SPACING.sm,
+    paddingVertical: 4,
+    borderRadius: BORDER_RADIUS.sm,
+    gap: 4,
+  },
+  gpsBadgeText: {
+    fontSize: FONT_SIZE.xs,
+    fontWeight: '600',
+  },
+  actionRow: {
+    flexDirection: 'row',
+    gap: SPACING.sm,
+    marginTop: SPACING.sm,
+  },
+  actionButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: SPACING.sm,
+    borderRadius: BORDER_RADIUS.md,
+    borderWidth: 1,
+    gap: SPACING.xs,
+  },
+  actionButtonText: {
+    fontSize: FONT_SIZE.xs,
+    fontWeight: '600',
   },
 });

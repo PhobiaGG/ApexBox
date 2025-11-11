@@ -1,15 +1,18 @@
-import { TelemetrySimulator, TelemetryData } from '../utils/telemetry';
+// src/services/MockBleService.ts
+import { TelemetryData } from './RealBleService';
 
 export interface BleDevice {
   id: string;
   name: string;
   signal: 'excellent' | 'good' | 'fair' | 'weak';
+  rssi?: number;
 }
 
 export interface BleStatus {
   isScanning: boolean;
   isConnected: boolean;
   connectedDevice: BleDevice | null;
+  error: string | null;
 }
 
 export type TelemetryCallback = (data: TelemetryData) => void;
@@ -19,38 +22,38 @@ class MockBleService {
     isScanning: false,
     isConnected: false,
     connectedDevice: null,
+    error: null,
   };
 
   private mockDevices: BleDevice[] = [
-    { id: '001', name: 'ApexBox-001', signal: 'excellent' },
-    { id: '002', name: 'ApexBox-002', signal: 'fair' },
+    { id: '001', name: 'ApexBox-001', signal: 'excellent', rssi: -50 },
+    { id: '002', name: 'ApexBox-002', signal: 'fair', rssi: -75 },
   ];
 
-  private telemetrySimulator: TelemetrySimulator = new TelemetrySimulator();
-  private telemetryInterval: NodeJS.Timeout | null = null;
+  private telemetryInterval: ReturnType<typeof setInterval> | null = null;
   private telemetryCallbacks: Set<TelemetryCallback> = new Set();
 
   async scan(): Promise<BleDevice[]> {
-    console.log('[BLE] Scanning for devices...');
+    console.log('[MockBLE] Scanning for devices...');
     this.status.isScanning = true;
     
     return new Promise((resolve) => {
       setTimeout(() => {
         this.status.isScanning = false;
-        console.log('[BLE] Found devices:', this.mockDevices);
+        console.log('[MockBLE] Found devices:', this.mockDevices);
         resolve(this.mockDevices);
       }, 1500);
     });
   }
 
   async connect(device: BleDevice): Promise<boolean> {
-    console.log('[BLE] Connecting to:', device.name);
+    console.log('[MockBLE] Connecting to:', device.name);
     
     return new Promise((resolve) => {
       setTimeout(() => {
         this.status.isConnected = true;
         this.status.connectedDevice = device;
-        console.log('[BLE] Connected to:', device.name);
+        console.log('[MockBLE] Connected to:', device.name);
         
         // Start telemetry streaming
         this.startTelemetryStream();
@@ -61,7 +64,7 @@ class MockBleService {
   }
 
   async disconnect(): Promise<void> {
-    console.log('[BLE] Disconnecting...');
+    console.log('[MockBLE] Disconnecting...');
     
     return new Promise((resolve) => {
       setTimeout(() => {
@@ -70,7 +73,7 @@ class MockBleService {
         
         this.status.isConnected = false;
         this.status.connectedDevice = null;
-        console.log('[BLE] Disconnected');
+        console.log('[MockBLE] Disconnected');
         resolve();
       }, 500);
     });
@@ -81,11 +84,11 @@ class MockBleService {
       throw new Error('Not connected to any device');
     }
     
-    console.log('[BLE] Sending command:', command);
+    console.log('[MockBLE] Sending command:', command);
     
     return new Promise((resolve) => {
       setTimeout(() => {
-        console.log('[BLE] Command sent successfully:', command);
+        console.log('[MockBLE] Command sent successfully:', command);
         resolve();
       }, 500);
     });
@@ -95,30 +98,47 @@ class MockBleService {
     return { ...this.status };
   }
 
-  /**
-   * Subscribe to telemetry updates
-   */
   onTelemetry(callback: TelemetryCallback): () => void {
     this.telemetryCallbacks.add(callback);
-    console.log('[BLE] Telemetry subscriber added. Total:', this.telemetryCallbacks.size);
+    console.log('[MockBLE] Telemetry subscriber added. Total:', this.telemetryCallbacks.size);
     
-    // Return unsubscribe function
     return () => {
       this.telemetryCallbacks.delete(callback);
-      console.log('[BLE] Telemetry subscriber removed. Total:', this.telemetryCallbacks.size);
+      console.log('[MockBLE] Telemetry subscriber removed. Total:', this.telemetryCallbacks.size);
     };
   }
 
-  /**
-   * Start streaming telemetry data (20Hz = 50ms interval)
-   */
+  private generateMockData(): TelemetryData {
+    const time = Date.now() / 1000;
+    const speed = 40 + Math.sin(time / 10) * 30 + Math.random() * 10;
+    
+    return {
+      speed: Math.max(0, speed),
+      rpm: Math.floor(speed * 50 + Math.random() * 500),
+      obdSpeed: Math.max(0, speed * 1.60934),
+      temperature: 20 + Math.random() * 20,
+      humidity: 40 + Math.random() * 40,
+      pressure: 1000 + Math.random() * 50,
+      altitude: 500 + Math.random() * 100,
+      heading: (Date.now() / 100) % 360,
+      pitch: (Math.random() - 0.5) * 10,
+      roll: (Math.random() - 0.5) * 10,
+      lux: Math.random() * 1000,
+      gas: 3000 + Math.random() * 1000,
+      satellites: Math.floor(Math.random() * 12) + 4,
+      latitude: 47.6062 + (Math.random() - 0.5) * 0.01,
+      longitude: -122.3321 + (Math.random() - 0.5) * 0.01,
+      obdConnected: Math.random() > 0.3,
+      gForce: Math.abs(Math.sin(time / 2) * 2 + Math.random() * 0.5),
+    };
+  }
+
   private startTelemetryStream() {
     if (this.telemetryInterval) {
-      return; // Already streaming
+      return;
     }
 
-    console.log('[BLE] Starting telemetry stream at 20Hz');
-    this.telemetrySimulator.reset();
+    console.log('[MockBLE] Starting telemetry stream at 20Hz');
 
     this.telemetryInterval = setInterval(() => {
       if (!this.status.isConnected) {
@@ -126,28 +146,28 @@ class MockBleService {
         return;
       }
 
-      const data = this.telemetrySimulator.generateSample();
+      const data = this.generateMockData();
       
-      // Broadcast to all subscribers
       this.telemetryCallbacks.forEach(callback => {
         try {
           callback(data);
         } catch (error) {
-          console.error('[BLE] Error in telemetry callback:', error);
+          console.error('[MockBLE] Error in telemetry callback:', error);
         }
       });
-    }, 50); // 20Hz update rate
+    }, 50);
   }
 
-  /**
-   * Stop telemetry streaming
-   */
   private stopTelemetryStream() {
     if (this.telemetryInterval) {
       clearInterval(this.telemetryInterval);
       this.telemetryInterval = null;
-      console.log('[BLE] Telemetry stream stopped');
+      console.log('[MockBLE] Telemetry stream stopped');
     }
+  }
+
+  destroy() {
+    this.disconnect();
   }
 }
 

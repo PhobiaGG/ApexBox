@@ -1,6 +1,7 @@
 {
   "cli": {
-    "version": ">= 5.9.0"
+    "version": ">= 5.9.0",
+    "appVersionSource": "remote"
   },
   "build": {
     "development": {
@@ -26,22 +27,18 @@
         "autoIncrement": true
       },
       "android": {
+        "buildType": "app-bundle",
         "autoIncrement": true
       },
       "env": {
-        "NODE_ENV": "production"
+        "NODE_ENV": "production",
+        "NPM_CONFIG_LEGACY_PEER_DEPS": "true"
       }
     }
   },
   "submit": {
     "production": {
-      "ios": {
-        "appleId": "your-apple-id@email.com",
-        "ascAppId": "your-app-store-connect-id",
-        "appleTeamId": "your-apple-team-id"
-      },
       "android": {
-        "serviceAccountKeyPath": "./path/to/service-account-key.json",
         "track": "internal"
       }
     }

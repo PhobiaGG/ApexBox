@@ -14,6 +14,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { SPACING, FONT_SIZE, BORDER_RADIUS } from '../constants/theme';
 import * as Haptics from 'expo-haptics';
+import { default as MapViewType } from 'react-native-maps';
 
 // Conditional import for react-native-maps (not available on web)
 let MapView: any = null;
@@ -69,7 +70,7 @@ export default function TrackReplayScreen() {
   const { profile } = useAuth();
   const { colors, getCurrentAccent } = useTheme();
   const accentColor = getCurrentAccent();
-  const mapRef = useRef<MapView>(null);
+  const mapRef = useRef<MapViewType>(null);
 
   const [gpsData, setGpsData] = useState<GPSPoint[]>([]);
   const [isPlaying, setIsPlaying] = useState(false);

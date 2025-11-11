@@ -1,9 +1,62 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import RealBleService from '../services/RealBleService';
-import MockBleService, { BleDevice, BleStatus } from '../services/MockBleService';
-import { TelemetryData } from '../utils/telemetry';
-import { BleDeviceMemory } from '../services/BleDeviceMemory';
+import { Platform } from 'react-native';
+import Constants from 'expo-constants';
 import * as Haptics from 'expo-haptics';
+import { BleDeviceMemory } from '../services/BleDeviceMemory';
+import { useAuth } from './AuthContext'; // ✅ Add this import
+
+// Lazy import BLE services to avoid crashes in Expo Go
+let RealBleService: any = null;
+let MockBleService: any = null;
+
+// Detect if running in Expo Go
+const isExpoGo = Constants.appOwnership === 'expo';
+
+// Import appropriate service
+if (isExpoGo || __DEV__) {
+  console.log('[BleContext] Running in Expo Go or dev mode - using MockBleService');
+  MockBleService = require('../services/MockBleService').default;
+} else {
+  console.log('[BleContext] Running in standalone build - using RealBleService');
+  RealBleService = require('../services/RealBleService').default;
+}
+
+// Get the service to use
+const BleService = isExpoGo ? MockBleService : RealBleService;
+
+export interface BleDevice {
+  id: string;
+  name: string;
+  signal: 'excellent' | 'good' | 'fair' | 'weak';
+  rssi?: number;
+}
+
+export interface BleStatus {
+  isScanning: boolean;
+  isConnected: boolean;
+  connectedDevice: BleDevice | null;
+  error: string | null;
+}
+
+export interface TelemetryData {
+  speed: number;
+  rpm: number;
+  obdSpeed: number;
+  temperature: number;
+  humidity: number;
+  pressure: number;
+  altitude: number;
+  heading: number;
+  pitch: number;
+  roll: number;
+  lux: number;
+  gas: number;
+  satellites: number;
+  latitude: number;
+  longitude: number;
+  obdConnected: boolean;
+  gForce: number;
+}
 
 interface BleContextType {
   status: BleStatus;
@@ -20,56 +73,69 @@ interface BleContextType {
 
 const BleContext = createContext<BleContextType | undefined>(undefined);
 
-export function BleProvider({ children }: { children: ReactNode }) {
-  const [status, setStatus] = useState<BleStatus>(RealBleService.getStatus());
+// ✅ Create internal provider component that has access to useAuth
+function BleProviderInternal({ children }: { children: ReactNode }) {
+  const { user } = useAuth(); // ✅ Get user from AuthContext
+  const [status, setStatus] = useState<BleStatus>(BleService.getStatus());
   const [devices, setDevices] = useState<BleDevice[]>([]);
   const [telemetry, setTelemetry] = useState<TelemetryData | null>(null);
-  const [usingRealBle, setUsingRealBle] = useState(true);
+  const [usingRealBle] = useState(!isExpoGo);
   const [autoConnectAttempted, setAutoConnectAttempted] = useState(false);
 
   // Subscribe to telemetry updates
   useEffect(() => {
-    const unsubscribe = RealBleService.onTelemetry((data) => {
+    const unsubscribe = BleService.onTelemetry((data: TelemetryData) => {
       setTelemetry(data);
     });
 
     return unsubscribe;
   }, []);
 
-  // Auto-connect on mount if we have a remembered device
+  // ✅ Auto-connect only when user is logged in
   useEffect(() => {
+    if (!user) {
+      console.log('[BleContext] User not logged in, skipping auto-connect');
+      setAutoConnectAttempted(false);
+      return;
+    }
+
     if (!autoConnectAttempted) {
+      console.log('[BleContext] User logged in, attempting auto-connect');
       setAutoConnectAttempted(true);
       tryAutoConnect();
     }
-  }, []);
+  }, [user, autoConnectAttempted]);
 
   const tryAutoConnect = async (): Promise<boolean> => {
     try {
       console.log('[BleContext] Attempting auto-connect...');
       const remembered = await BleDeviceMemory.getRememberedDevice();
-      
+
       if (!remembered) {
         console.log('[BleContext] No remembered device');
         return false;
       }
 
-      // Scan for the remembered device
-      const foundDevices = await RealBleService.scan();
-      const targetDevice = foundDevices.find(d => d.id === remembered.id);
+      const foundDevices = await BleService.scan();
+      setDevices(foundDevices);
+      setStatus(BleService.getStatus());
+
+      const targetDevice = foundDevices.find((d: BleDevice) => d.id === remembered.id);
 
       if (targetDevice) {
         console.log('[BleContext] Found remembered device, connecting...');
-        await RealBleService.connect(targetDevice);
-        setStatus(RealBleService.getStatus());
-        setDevices(foundDevices);
-        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        return true;
+        const success = await BleService.connect(targetDevice);
+        setStatus(BleService.getStatus());
+        
+        if (success) {
+          await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          return true;
+        }
       } else {
         console.log('[BleContext] Remembered device not found');
-        setDevices(foundDevices);
-        return false;
       }
+
+      return false;
     } catch (error) {
       console.error('[BleContext] Auto-connect error:', error);
       return false;
@@ -79,9 +145,9 @@ export function BleProvider({ children }: { children: ReactNode }) {
   const scan = async () => {
     try {
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      const foundDevices = await RealBleService.scan();
+      const foundDevices = await BleService.scan();
       setDevices(foundDevices);
-      setStatus(RealBleService.getStatus());
+      setStatus(BleService.getStatus());
     } catch (error) {
       console.error('[BleContext] Scan error:', error);
     }
@@ -90,13 +156,15 @@ export function BleProvider({ children }: { children: ReactNode }) {
   const connect = async (device: BleDevice) => {
     try {
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-      await RealBleService.connect(device);
-      setStatus(RealBleService.getStatus());
-      
-      // Remember this device for future auto-connect
-      await BleDeviceMemory.rememberDevice(device.id, device.name);
-      
-      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      const success = await BleService.connect(device);
+      setStatus(BleService.getStatus());
+
+      if (success) {
+        await BleDeviceMemory.rememberDevice(device.id, device.name);
+        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      } else {
+        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      }
     } catch (error) {
       console.error('[BleContext] Connect error:', error);
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
@@ -106,8 +174,9 @@ export function BleProvider({ children }: { children: ReactNode }) {
   const disconnect = async () => {
     try {
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      await RealBleService.disconnect();
-      setStatus(RealBleService.getStatus());
+      await BleService.disconnect();
+      setStatus(BleService.getStatus());
+      setTelemetry(null);
     } catch (error) {
       console.error('[BleContext] Disconnect error:', error);
     }
@@ -127,7 +196,7 @@ export function BleProvider({ children }: { children: ReactNode }) {
   const sendCommand = async (command: string) => {
     try {
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-      await RealBleService.sendCommand(command);
+      await BleService.sendCommand(command);
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch (error) {
       console.error('[BleContext] Command error:', error);
@@ -154,6 +223,11 @@ export function BleProvider({ children }: { children: ReactNode }) {
       {children}
     </BleContext.Provider>
   );
+}
+
+// ✅ Export wrapper that ensures AuthContext is available
+export function BleProvider({ children }: { children: ReactNode }) {
+  return <BleProviderInternal>{children}</BleProviderInternal>;
 }
 
 export function useBle() {

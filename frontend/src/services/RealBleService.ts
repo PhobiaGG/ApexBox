@@ -39,6 +39,17 @@ export interface TelemetryData {
   longitude: number;       // GPS lon (renamed from lon)
   obdConnected: boolean;
   gForce: number;          // Calculated from acceleration
+
+  // Extended OBD2 data (all fields from Arduino)
+  obdRPM?: number;         // Same as rpm, but explicitly from OBD
+  obdCoolantTemp?: number; // Coolant temperature in Celsius
+  obdThrottle?: number;    // Throttle position (0-100%)
+  obdFuel?: number;        // Fuel level (0-100%)
+  obdLoad?: number;        // Engine load (0-100%)
+  obdMAF?: number;         // Mass air flow (grams/sec)
+  obdIntakeTemp?: number;  // Intake air temperature in Celsius
+  obdTiming?: number;      // Timing advance (degrees)
+  obdRuntime?: number;     // Engine runtime (seconds)
 }
 
 export type TelemetryCallback = (data: TelemetryData) => void;
@@ -236,7 +247,7 @@ class RealBleService {
           // Map ESP32 data to TelemetryData format
           const telemetry: TelemetryData = {
             speed: jsonData.speed || 0,
-            rpm: jsonData.rpm || 0,
+            rpm: jsonData.rpm || jsonData.obdRPM || 0,
             obdSpeed: jsonData.obdSpeed || 0,
             temperature: jsonData.temp || 0,
             humidity: jsonData.humidity || 0,
@@ -252,6 +263,17 @@ class RealBleService {
             longitude: jsonData.lon || 0,
             obdConnected: jsonData.obdConnected || false,
             gForce: 0, // Calculate from acceleration if needed
+
+            // Extended OBD2 data
+            obdRPM: jsonData.obdRPM,
+            obdCoolantTemp: jsonData.obdCoolantTemp,
+            obdThrottle: jsonData.obdThrottle,
+            obdFuel: jsonData.obdFuel,
+            obdLoad: jsonData.obdLoad,
+            obdMAF: jsonData.obdMAF,
+            obdIntakeTemp: jsonData.obdIntakeTemp,
+            obdTiming: jsonData.obdTiming,
+            obdRuntime: jsonData.obdRuntime,
           };
 
           // Broadcast to all subscribers

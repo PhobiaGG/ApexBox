@@ -56,6 +56,17 @@ export interface TelemetryData {
   longitude: number;
   obdConnected: boolean;
   gForce: number;
+
+  // Extended OBD2 data
+  obdRPM?: number;
+  obdCoolantTemp?: number;
+  obdThrottle?: number;
+  obdFuel?: number;
+  obdLoad?: number;
+  obdMAF?: number;
+  obdIntakeTemp?: number;
+  obdTiming?: number;
+  obdRuntime?: number;
 }
 
 interface BleContextType {
